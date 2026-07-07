@@ -1,4 +1,5 @@
 import type { Epreuve } from "../types";
+import { EpreuveLogoDisplay, hasFullLogo } from "./EpreuveLogoDisplay";
 
 interface Props {
   epreuves: Epreuve[];
@@ -63,8 +64,12 @@ export function EpreuveGrid({
               disabled={disabled}
               onClick={() => onToggle(ep.id)}
             >
-              <span className="tile-logo">{ep.logo}</span>
-              <span className="tile-nom">{ep.nom}</span>
+              <div className="tile-logo">
+                <EpreuveLogoDisplay epreuveId={ep.id} />
+              </div>
+              {!hasFullLogo(ep.id) && (
+                <span className="tile-nom">{ep.nom}</span>
+              )}
             </button>
           );
         })}
