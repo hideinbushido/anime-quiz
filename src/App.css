@@ -446,6 +446,18 @@
   text-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
 }
 
+.beats-header-logo {
+  width: min(520px, 78vw);
+  height: clamp(150px, 22vw, 250px);
+  display: flex;
+  align-items: center;
+}
+
+.beats-header-logo .logo-display {
+  height: 100%;
+  justify-content: flex-start;
+}
+
 .beats-score {
   min-width: 140px;
   padding: 12px 16px;
@@ -484,6 +496,10 @@
   align-items: stretch;
 }
 
+.beats-stage-revealed {
+  grid-template-columns: 1fr;
+}
+
 .beats-player-card,
 .beats-mixer {
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -508,6 +524,12 @@
     "turntable feedback";
   gap: 18px 28px;
   align-items: center;
+}
+
+.beats-player-card-revealed {
+  grid-template-columns: 1fr;
+  grid-template-areas: "reveal";
+  min-height: 520px;
 }
 
 .beats-player-card::before {
@@ -692,6 +714,96 @@
   color: #ff9aa4;
 }
 
+.beats-reveal-scene {
+  grid-area: reveal;
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.86fr) minmax(280px, 1fr);
+  gap: clamp(18px, 4vw, 42px);
+  align-items: center;
+}
+
+.beats-reveal-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  max-height: min(52vh, 430px);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 207, 67, 0.18), transparent 36%),
+    linear-gradient(145deg, rgba(230, 32, 46, 0.2), rgba(8, 8, 13, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+}
+
+.beats-reveal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: rgba(8, 8, 13, 0.72);
+}
+
+.beats-reveal-placeholder {
+  height: 100%;
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: rgba(247, 240, 234, 0.58);
+  font-family: var(--font-modern);
+  font-size: clamp(34px, 5vw, 74px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.beats-reveal-info {
+  display: grid;
+  gap: 16px;
+}
+
+.beats-reveal-info > span {
+  font-family: var(--font-tech);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 207, 67, 0.78);
+}
+
+.beats-reveal-info strong {
+  font-family: var(--font-modern);
+  font-size: clamp(46px, 7vw, 92px);
+  line-height: 0.86;
+  color: #f7f0ea;
+  text-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+}
+
+.beats-reveal-info p {
+  font-family: var(--font-tech);
+  font-size: 22px;
+  line-height: 1.25;
+  color: rgba(247, 240, 234, 0.72);
+}
+
+.beats-reveal-info audio {
+  width: 100%;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.28));
+}
+
+.beats-reveal-audio-missing {
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 207, 67, 0.34);
+  background: rgba(255, 207, 67, 0.08);
+  color: rgba(247, 240, 234, 0.68);
+  font-family: var(--font-tech);
+  font-size: 20px;
+  font-weight: 700;
+}
+
 .beats-reveal {
   width: 100%;
   display: grid;
@@ -847,7 +959,8 @@
 
 @media (max-width: 900px) {
   .beats-stage,
-  .beats-player-card {
+  .beats-player-card,
+  .beats-reveal-scene {
     grid-template-columns: 1fr;
   }
 

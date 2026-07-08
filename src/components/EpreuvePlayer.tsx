@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Epreuve, EpreuveResult } from "../types";
 import { isAnswerCorrect } from "../utils";
+import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
 
 const POINTS_PAR_BONNE_REPONSE = 100;
 const MANCHE_LABELS = [
@@ -63,6 +64,8 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
   }
 
   if (isBeats) {
+    const revealed = feedback !== "none";
+
     return (
       <div className="screen beats-session">
         <div className="beats-ambient" aria-hidden>
@@ -73,7 +76,9 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
         <header className="beats-header">
           <div>
             <p className="beats-kicker">Blind test instrumental</p>
-            <h1>Les Beats de Killer Bee</h1>
+            <div className="beats-header-logo">
+              <EpreuveLogoDisplay epreuveId={epreuve.id} />
+            </div>
           </div>
           <div className="beats-score">
             <span>Score</span>
@@ -81,31 +86,40 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
           </div>
         </header>
 
-        <main className="beats-stage">
-          <section className="beats-player-card">
-            <div className="beats-now-playing">
-              <span>Manche {questionIndex + 1}</span>
-              <strong>{MANCHE_LABELS[questionIndex] ?? "Mix"}</strong>
-            </div>
+        <main className={"beats-stage" + (revealed ? " beats-stage-revealed" : "")}>
+          <section
+            className={
+              "beats-player-card" + (revealed ? " beats-player-card-revealed" : "")
+            }
+          >
+            {!revealed ? (
+              <>
+                <div className="beats-now-playing">
+                  <span>Manche {questionIndex + 1}</span>
+                  <strong>{MANCHE_LABELS[questionIndex] ?? "Mix"}</strong>
+                </div>
 
-            <div className="beats-turntable" aria-hidden>
-              <div className="beats-vinyl">
-                <span />
-              </div>
-              <div className="beats-arm" />
-            </div>
+                <div className="beats-turntable" aria-hidden>
+                  <div className="beats-vinyl">
+                    <span />
+                  </div>
+                  <div className="beats-arm" />
+                </div>
 
-            {question.audioSrc && (
-              <audio controls src={question.audioSrc} className="beats-audio">
-                Ton navigateur ne supporte pas la lecture audio.
-              </audio>
-            )}
+                {question.audioSrc && (
+                  <audio
+                    controls
+                    preload="auto"
+                    src={question.audioSrc}
+                    className="beats-audio"
+                  >
+                    Ton navigateur ne supporte pas la lecture audio.
+                  </audio>
+                )}
 
-            <p className="beats-prompt">{question.prompt}</p>
+                <p className="beats-prompt">{question.prompt}</p>
 
-            <div className="beats-answer-row beats-answer-judge">
-              {feedback === "none" && (
-                <>
+                <div className="beats-answer-row beats-answer-judge">
                   <button
                     className="beats-judge beats-judge-correct"
                     onClick={() => handleManualResult(true)}
@@ -118,50 +132,63 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
                   >
                     X
                   </button>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            ) : (
+              <div className={"beats-reveal-scene beats-feedback-" + feedback}>
+                <div className="beats-reveal-media">
+                  {question.imageSrc ? (
+                    <img src={question.imageSrc} alt={question.answer} />
+                  ) : (
+                    <div className="beats-reveal-placeholder">
+                      <span>Image anime</span>
+                    </div>
+                  )}
+                </div>
 
-            {feedback !== "none" && (
-              <div className={"beats-feedback beats-feedback-" + feedback}>
-                {feedback === "correct" ? (
-                  <p>Bonne réponse, le son est validé.</p>
-                ) : (
-                  <p>Réponse attendue : {question.answer}</p>
-                )}
-                {(question.imageSrc || question.revealAudioSrc) && (
-                  <div className="beats-reveal">
-                    {question.imageSrc && (
-                      <img src={question.imageSrc} alt={question.answer} />
-                    )}
-                    {question.revealAudioSrc && (
-                      <audio controls src={question.revealAudioSrc}>
-                        Ton navigateur ne supporte pas la lecture audio.
-                      </audio>
-                    )}
-                  </div>
-                )}
-                <button className="beats-submit" onClick={handleNext}>
-                  {isLastQuestion ? "Terminer l'épreuve" : "Manche suivante"}
-                </button>
+                <div className="beats-reveal-info">
+                  <span>Réponse</span>
+                  <strong>{question.answer}</strong>
+                  <p>
+                    {feedback === "correct"
+                      ? "Bonne réponse, on lance la version avec paroles."
+                      : "Mauvaise réponse, on révèle le morceau."}
+                  </p>
+
+                  {question.revealAudioSrc ? (
+                    <audio controls autoPlay preload="auto" src={question.revealAudioSrc}>
+                      Ton navigateur ne supporte pas la lecture audio.
+                    </audio>
+                  ) : (
+                    <div className="beats-reveal-audio-missing">
+                      Musique avec paroles à ajouter
+                    </div>
+                  )}
+
+                  <button className="beats-submit" onClick={handleNext}>
+                    {isLastQuestion ? "Terminer l'épreuve" : "Manche suivante"}
+                  </button>
+                </div>
               </div>
             )}
           </section>
 
-          <aside className="beats-mixer" aria-hidden>
-            <div className="beats-meter">
-              {Array.from({ length: 18 }).map((_, i) => (
-                <span key={i} style={{ animationDelay: `${i * 0.06}s` }} />
-              ))}
-            </div>
-            <div className="beats-faders">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <span key={i}>
-                  <i style={{ top: `${22 + i * 14}%` }} />
-                </span>
-              ))}
-            </div>
-          </aside>
+          {!revealed && (
+            <aside className="beats-mixer" aria-hidden>
+              <div className="beats-meter">
+                {Array.from({ length: 18 }).map((_, i) => (
+                  <span key={i} style={{ animationDelay: `${i * 0.06}s` }} />
+                ))}
+              </div>
+              <div className="beats-faders">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <span key={i}>
+                    <i style={{ top: `${22 + i * 14}%` }} />
+                  </span>
+                ))}
+              </div>
+            </aside>
+          )}
         </main>
 
         <nav className="beats-rounds" aria-label="Progression des manches">
@@ -200,7 +227,7 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
 
       <div className="question-card">
         {question.audioSrc && (
-          <audio controls src={question.audioSrc} className="audio-player">
+          <audio controls preload="auto" src={question.audioSrc} className="audio-player">
             Ton navigateur ne supporte pas la lecture audio.
           </audio>
         )}
