@@ -9,6 +9,8 @@
 
   --font-arcade: "Press Start 2P", "Courier New", monospace;
   --font-lcd: "VT323", monospace;
+  --font-modern: "Outfit", system-ui, sans-serif;
+  --font-tech: "Rajdhani", system-ui, sans-serif;
 
   color-scheme: dark;
   color: var(--text);
@@ -45,7 +47,7 @@ body::before {
     to bottom,
     rgba(0, 0, 0, 0) 0px,
     rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.18) 3px
+    rgba(0, 0, 0, 0.08) 3px
   );
   mix-blend-mode: multiply;
 }

@@ -39,6 +39,12 @@ export function addLeaderboardEntry(entry: LeaderboardEntry): LeaderboardEntry[]
   return entries;
 }
 
+export function removeLeaderboardEntry(date: string): LeaderboardEntry[] {
+  const entries = loadLeaderboard().filter((entry) => entry.date !== date);
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+  return entries;
+}
+
 export function normalize(text: string): string {
   return text
     .trim()

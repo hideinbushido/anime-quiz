@@ -1,7 +1,5 @@
 import type { Epreuve } from "../types";
 
-// Contenu d'exemple à remplacer par tes propres questions/fichiers audio.
-// Place tes fichiers audio dans public/audio/ et reprends le nom dans audioSrc.
 export const epreuves: Epreuve[] = [
   {
     id: "blind-test-openings",
@@ -14,34 +12,46 @@ export const epreuves: Epreuve[] = [
       {
         id: "bt-1",
         prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
-        audioSrc: "/audio/instru-1.mp3",
+        audioSrc: "/Beats%20killer%20Bee/1ere%20manche.MP3",
         answer: "One Piece",
       },
       {
         id: "bt-2",
         prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
-        audioSrc: "/audio/instru-2.mp3",
+        audioSrc: "/Beats%20killer%20Bee/2e%20manche.MP3",
         answer: "Naruto",
       },
       {
         id: "bt-3",
         prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
-        audioSrc: "/audio/instru-3.mp3",
+        audioSrc: "/Beats%20killer%20Bee/3e%20Manche.MP3",
         answer: "Attack on Titan",
         acceptableAnswers: ["L'Attaque des Titans", "Shingeki no Kyojin"],
       },
       {
         id: "bt-4",
         prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
-        audioSrc: "/audio/instru-4.mp3",
+        audioSrc: "/Beats%20killer%20Bee/4e%20manche.MP3",
         answer: "Demon Slayer",
         acceptableAnswers: ["Kimetsu no Yaiba"],
       },
       {
         id: "bt-5",
         prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
-        audioSrc: "/audio/instru-5.mp3",
+        audioSrc: "/Beats%20killer%20Bee/5e%20manche.MP3",
         answer: "Jujutsu Kaisen",
+      },
+      {
+        id: "bt-6",
+        prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
+        audioSrc: "/Beats%20killer%20Bee/6e%20manche.MP3",
+        answer: "À compléter",
+      },
+      {
+        id: "bt-7",
+        prompt: "Écoute l'instrumental et trouve le nom de l'anime.",
+        audioSrc: "/Beats%20killer%20Bee/7e%20manche.MP3",
+        answer: "À compléter",
       },
     ],
   },

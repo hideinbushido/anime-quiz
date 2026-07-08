@@ -4,6 +4,8 @@ export interface Question {
   id: string;
   prompt: string;
   audioSrc?: string;
+  revealAudioSrc?: string;
+  imageSrc?: string;
   answer: string;
   acceptableAnswers?: string[];
   choices?: string[];
@@ -26,7 +28,7 @@ export interface EpreuveResult {
   bonusDoubleUtilise: boolean;
 }
 
-export type Phase = "title" | "selection" | "playing" | "recap";
+export type Phase = "title" | "selection" | "playing" | "recap" | "scores";
 
 export interface SessionState {
   phase: Phase;
@@ -41,4 +43,5 @@ export interface LeaderboardEntry {
   name: string;
   score: number;
   date: string;
+  epreuveIds?: string[];
 }

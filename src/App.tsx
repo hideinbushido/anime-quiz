@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { epreuves } from "./data/epreuves";
-import type { EpreuveResult, Phase } from "./types";
+import type { EpreuveResult, Phase, SessionState } from "./types";
 import { TitleScreen } from "./components/TitleScreen";
 import { EpreuveGrid } from "./components/EpreuveGrid";
 import { EpreuvePlayer } from "./components/EpreuvePlayer";
 import { Recap } from "./components/Recap";
 import { Navbar } from "./components/Navbar";
+import { Scoreboard } from "./components/Scoreboard";
 import {
   addLeaderboardEntry,
   clearSession,
@@ -16,13 +17,12 @@ import "./App.css";
 
 const MAX_SELECTION = 5;
 
-// Chaque écran a sa propre URL pour que le bouton précédent/suivant du
-// navigateur fonctionne comme sur un site normal, au lieu de quitter l'appli.
 const PHASE_PATH: Record<Phase, string> = {
   title: "/",
   selection: "/menu",
   playing: "/jeu",
   recap: "/recap",
+  scores: "/scores",
 };
 
 function phaseFromPath(pathname: string): Phase {
@@ -33,48 +33,46 @@ function phaseFromPath(pathname: string): Phase {
 }
 
 function App() {
-  const savedSession = loadSession();
-  const [phase, setPhase] = useState<Phase>(savedSession?.phase ?? "title");
-  const [playerName, setPlayerName] = useState(savedSession?.playerName ?? "");
-  const [selectedIds, setSelectedIds] = useState<string[]>(
-    savedSession?.selectedIds ?? []
+  const [savedSession, setSavedSession] = useState<SessionState | null>(() =>
+    loadSession()
   );
-  const [currentIndex, setCurrentIndex] = useState(
-    savedSession?.currentIndex ?? 0
+  const [phase, setPhase] = useState<Phase>(() =>
+    phaseFromPath(window.location.pathname)
   );
-  const [results, setResults] = useState<EpreuveResult[]>(
-    savedSession?.results ?? []
-  );
-  const [recorded, setRecorded] = useState(savedSession?.recorded ?? false);
+  const [playerName, setPlayerName] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [results, setResults] = useState<EpreuveResult[]>([]);
+  const [recorded, setRecorded] = useState(false);
   const mountedRef = useRef(false);
   const isPoppingRef = useRef(false);
 
   const score = results.reduce((sum, r) => sum + r.points, 0);
 
-  // Sauvegarde continue pour pouvoir reprendre la partie après une fermeture accidentelle.
   useEffect(() => {
-    if (phase === "title") {
-      clearSession();
-      return;
-    }
-    saveSession({ phase, playerName, selectedIds, currentIndex, results, recorded });
+    if (phase === "title" || phase === "scores") return;
+    const session = { phase, playerName, selectedIds, currentIndex, results, recorded };
+    saveSession(session);
+    setSavedSession(session);
   }, [phase, playerName, selectedIds, currentIndex, results, recorded]);
 
-  // Enregistre le score final dans le classement une seule fois par partie.
   useEffect(() => {
     if (phase === "recap" && !recorded) {
-      addLeaderboardEntry({ name: playerName, score, date: new Date().toISOString() });
+      addLeaderboardEntry({
+        name: playerName,
+        score,
+        date: new Date().toISOString(),
+        epreuveIds: results.map((result) => result.epreuveId),
+      });
       setRecorded(true);
     }
-  }, [phase, recorded, playerName, score]);
+  }, [phase, recorded, playerName, results, score]);
 
-  // Aligne l'URL sur l'écran affiché, sans ajouter d'entrée d'historique au premier rendu.
   useEffect(() => {
     window.history.replaceState({ phase }, "", PHASE_PATH[phase]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Chaque changement d'écran (hors retour navigateur) devient une entrée d'historique.
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
@@ -87,7 +85,6 @@ function App() {
     window.history.pushState({ phase }, "", PHASE_PATH[phase]);
   }, [phase]);
 
-  // Bouton précédent/suivant du navigateur : on resynchronise l'écran affiché.
   useEffect(() => {
     function handlePopState(event: PopStateEvent) {
       const nextPhase =
@@ -113,12 +110,47 @@ function App() {
   function startSession() {
     setResults([]);
     setCurrentIndex(0);
+    setRecorded(false);
     setPhase("playing");
   }
 
+  function startNewPlayer(name: string) {
+    clearSession();
+    setSavedSession(null);
+    setPlayerName(name);
+    setSelectedIds([]);
+    setResults([]);
+    setCurrentIndex(0);
+    setRecorded(false);
+    setPhase("selection");
+  }
+
+  function continueSavedSession() {
+    if (!savedSession) return;
+    setPlayerName(savedSession.playerName);
+    setSelectedIds(savedSession.selectedIds);
+    setCurrentIndex(savedSession.currentIndex);
+    setResults(savedSession.results);
+    setRecorded(savedSession.recorded);
+    setPhase(savedSession.phase);
+  }
+
+  function showScores() {
+    setPhase("scores");
+  }
+
+  function deleteSavedSession() {
+    clearSession();
+    setSavedSession(null);
+    setPlayerName("");
+    setSelectedIds([]);
+    setCurrentIndex(0);
+    setResults([]);
+    setRecorded(false);
+    setPhase("title");
+  }
+
   function handleEpreuveComplete(result: EpreuveResult) {
-    // Indexé sur l'épreuve elle-même (pas sur currentIndex) pour rester correct
-    // si l'utilisateur revient en arrière puis rejoue une épreuve déjà validée.
     setResults((prev) => [
       ...prev.filter((r) => r.epreuveId !== result.epreuveId),
       result,
@@ -142,12 +174,18 @@ function App() {
   if (phase === "title") {
     return (
       <TitleScreen
-        onPlay={(name) => {
-          setPlayerName(name);
-          setPhase("selection");
-        }}
+        savedSession={savedSession}
+        epreuves={epreuves}
+        onPlay={startNewPlayer}
+        onContinue={continueSavedSession}
+        onScores={showScores}
+        onDeleteSession={deleteSavedSession}
       />
     );
+  }
+
+  if (phase === "scores") {
+    return <Scoreboard epreuves={epreuves} onBack={() => setPhase("title")} />;
   }
 
   return (
