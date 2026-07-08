@@ -3,6 +3,7 @@ import { EpreuveLogoDisplay, hasFullLogo } from "./EpreuveLogoDisplay";
 
 interface Props {
   epreuves: Epreuve[];
+  playerName: string;
   selectedIds: string[];
   playedIds: string[];
   maxSelection: number;
@@ -13,6 +14,7 @@ interface Props {
 
 export function EpreuveGrid({
   epreuves,
+  playerName,
   selectedIds,
   playedIds,
   maxSelection,
@@ -24,10 +26,16 @@ export function EpreuveGrid({
     <div className="screen">
       <header className="header">
         <div>
-          <p className="eyebrow">QUIZ ANIME</p>
+          <p className="eyebrow">QUIZ'ANIMANGA</p>
           <h1>CHOIX DE L'ÉPREUVE</h1>
         </div>
         <div className="header-right">
+          {playerName && (
+            <div className="player-tag">
+              <span className="player-tag-label">JOUEUR</span>
+              <span className="player-tag-name">{playerName}</span>
+            </div>
+          )}
           <div className="joues">
             <span className="joues-label">ÉPREUVES JOUÉES</span>
             <div className="joues-dots">
@@ -47,7 +55,7 @@ export function EpreuveGrid({
       </header>
 
       <div className="grid">
-        {epreuves.map((ep) => {
+        {epreuves.map((ep, index) => {
           const isSelected = selectedIds.includes(ep.id);
           const isPlayed = playedIds.includes(ep.id);
           const disabled =
@@ -60,7 +68,10 @@ export function EpreuveGrid({
                 (isSelected ? " tile-selected" : "") +
                 (isPlayed ? " tile-played" : "")
               }
-              style={{ ["--tile-color" as string]: ep.couleur }}
+              style={{
+                ["--tile-color" as string]: ep.couleur,
+                animationDelay: `${index * 0.06}s`,
+              }}
               disabled={disabled}
               onClick={() => onToggle(ep.id)}
             >

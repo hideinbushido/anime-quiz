@@ -25,3 +25,20 @@ export interface EpreuveResult {
   bonusIndiceUtilise: boolean;
   bonusDoubleUtilise: boolean;
 }
+
+export type Phase = "title" | "selection" | "playing" | "recap";
+
+export interface SessionState {
+  phase: Phase;
+  playerName: string;
+  selectedIds: string[];
+  currentIndex: number;
+  results: EpreuveResult[];
+  recorded: boolean;
+}
+
+export interface LeaderboardEntry {
+  name: string;
+  score: number;
+  date: string;
+}
