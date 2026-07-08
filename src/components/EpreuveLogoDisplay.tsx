@@ -3,13 +3,6 @@ interface Props {
   className?: string;
 }
 
-// Epreuves dont le logo integre deja son nom : pas besoin d'un libelle texte a cote.
-const EPREUVES_AVEC_LOGO_COMPLET = new Set(["blind-test-openings"]);
-
-export function hasFullLogo(epreuveId: string): boolean {
-  return EPREUVES_AVEC_LOGO_COMPLET.has(epreuveId);
-}
-
 export function EpreuveLogoDisplay({ epreuveId, className = "" }: Props) {
   // Logo "Les Beats de Killer Bee" - Design exact du fichier original, mis a l'echelle
   // via viewBox pour tenir dans le cadre de la tuile.

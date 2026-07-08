@@ -78,7 +78,11 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              feedback === "none" ? handleSubmit() : handleNext();
+              if (feedback === "none") {
+                handleSubmit();
+              } else {
+                handleNext();
+              }
             }
           }}
         />

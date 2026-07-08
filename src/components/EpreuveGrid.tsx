@@ -1,5 +1,6 @@
 import type { Epreuve } from "../types";
-import { EpreuveLogoDisplay, hasFullLogo } from "./EpreuveLogoDisplay";
+import { hasFullLogo } from "../epreuveLogoUtils";
+import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
 
 interface Props {
   epreuves: Epreuve[];
