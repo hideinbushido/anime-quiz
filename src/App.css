@@ -530,7 +530,7 @@
 .beats-player-card-revealed {
   grid-template-columns: 1fr;
   grid-template-areas: "reveal";
-  min-height: min(72vh, 650px);
+  min-height: min(76vh, 720px);
   padding: clamp(18px, 3vw, 34px);
 }
 
@@ -720,18 +720,20 @@
   grid-area: reveal;
   min-height: 100%;
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(260px, 420px) minmax(300px, 1fr);
   gap: clamp(18px, 4vw, 42px);
   align-items: center;
+  justify-content: center;
   position: relative;
 }
 
 .beats-reveal-media {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: min(100%, 390px);
+  justify-self: center;
+  aspect-ratio: 3 / 4;
   min-height: 0;
-  max-height: min(54vh, 460px);
+  max-height: min(66vh, 560px);
   border-radius: 8px;
   overflow: hidden;
   background:
@@ -1012,6 +1014,11 @@
   .beats-player-card,
   .beats-reveal-scene {
     grid-template-columns: 1fr;
+  }
+
+  .beats-reveal-media {
+    width: min(100%, 340px);
+    max-height: 52vh;
   }
 
   .beats-player-card {
