@@ -255,20 +255,10 @@ function CharacterCard({
   character: LogicCharacter;
   compact?: boolean;
 }) {
-  const initials = character.name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("");
-
   return (
     <span className={"links-character" + (compact ? " links-character-compact" : "")}>
-      <span className="links-character-mark">{initials}</span>
-      <span className="links-character-copy">
-        <strong>{character.name}</strong>
-        <em>{character.anime}</em>
-      </span>
+      <strong>{character.name}</strong>
+      <em>{character.anime}</em>
       {!compact && (
         <>
           <span className="links-character-grid">
