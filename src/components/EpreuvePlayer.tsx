@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Epreuve, EpreuveResult } from "../types";
 import { isAnswerCorrect } from "../utils";
 import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
@@ -26,10 +26,59 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<Feedback>("none");
   const [points, setPoints] = useState(0);
+  const questionAudioRef = useRef<HTMLAudioElement>(null);
+  const revealAudioRef = useRef<HTMLAudioElement>(null);
 
   const question = epreuve.questions[questionIndex];
+  const nextQuestion = epreuve.questions[questionIndex + 1];
   const isLastQuestion = questionIndex === epreuve.questions.length - 1;
   const isBeats = epreuve.id === "blind-test-openings";
+
+  useEffect(() => {
+    if (!isBeats) return;
+
+    const assets = [
+      { href: question.audioSrc, as: "audio", type: "audio/mpeg" },
+      { href: question.revealAudioSrc, as: "audio", type: "audio/mpeg" },
+      { href: question.imageSrc, as: "image", type: "" },
+      { href: nextQuestion?.audioSrc, as: "audio", type: "audio/mpeg" },
+      { href: nextQuestion?.revealAudioSrc, as: "audio", type: "audio/mpeg" },
+      { href: nextQuestion?.imageSrc, as: "image", type: "" },
+    ].filter((asset): asset is { href: string; as: string; type: string } =>
+      Boolean(asset.href)
+    );
+
+    const links = assets.map((asset) => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = asset.as;
+      link.href = asset.href;
+      if (asset.type) link.type = asset.type;
+      document.head.appendChild(link);
+      return link;
+    });
+
+    return () => links.forEach((link) => link.remove());
+  }, [
+    isBeats,
+    question.audioSrc,
+    question.imageSrc,
+    question.revealAudioSrc,
+    nextQuestion?.audioSrc,
+    nextQuestion?.imageSrc,
+    nextQuestion?.revealAudioSrc,
+  ]);
+
+  useEffect(() => {
+    if (!isBeats || feedback === "none") return;
+
+    questionAudioRef.current?.pause();
+    const revealAudio = revealAudioRef.current;
+    if (!revealAudio) return;
+
+    revealAudio.currentTime = 0;
+    revealAudio.play().catch(() => undefined);
+  }, [feedback, isBeats, question.id]);
 
   function handleSubmit() {
     if (feedback !== "none") return;
@@ -108,6 +157,7 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
 
                 {question.audioSrc && (
                   <audio
+                    ref={questionAudioRef}
                     controls
                     preload="auto"
                     src={question.audioSrc}
@@ -138,7 +188,12 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
               <div className={"beats-reveal-scene beats-feedback-" + feedback}>
                 <div className="beats-reveal-media">
                   {question.imageSrc ? (
-                    <img src={question.imageSrc} alt={question.answer} />
+                    <img
+                      src={question.imageSrc}
+                      alt={question.answer}
+                      loading="eager"
+                      decoding="async"
+                    />
                   ) : (
                     <div className="beats-reveal-placeholder">
                       <span>Image anime</span>
@@ -156,9 +211,21 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
                   </p>
 
                   {question.revealAudioSrc ? (
-                    <audio controls autoPlay preload="auto" src={question.revealAudioSrc}>
-                      Ton navigateur ne supporte pas la lecture audio.
-                    </audio>
+                    <div className="beats-reveal-audio-panel">
+                      <div>
+                        <span>Version avec paroles</span>
+                        <strong>Lecture de la reponse</strong>
+                      </div>
+                      <audio
+                        ref={revealAudioRef}
+                        controls
+                        preload="auto"
+                        src={question.revealAudioSrc}
+                        className="beats-reveal-audio"
+                      >
+                        Ton navigateur ne supporte pas la lecture audio.
+                      </audio>
+                    </div>
                   ) : (
                     <div className="beats-reveal-audio-missing">
                       Musique avec paroles à ajouter

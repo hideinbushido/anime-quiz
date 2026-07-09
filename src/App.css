@@ -362,8 +362,8 @@
 
 /* Les Beats de Killer Bee */
 .beats-session {
-  min-height: calc(100vh - 96px);
-  padding: clamp(20px, 4vw, 42px);
+  min-height: 100vh;
+  padding: clamp(18px, 3vw, 34px);
   overflow: hidden;
   isolation: isolate;
   background:
@@ -422,6 +422,7 @@
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .beats-kicker {
@@ -529,7 +530,8 @@
 .beats-player-card-revealed {
   grid-template-columns: 1fr;
   grid-template-areas: "reveal";
-  min-height: 520px;
+  min-height: min(72vh, 650px);
+  padding: clamp(18px, 3vw, 34px);
 }
 
 .beats-player-card::before {
@@ -718,9 +720,10 @@
   grid-area: reveal;
   min-height: 100%;
   display: grid;
-  grid-template-columns: minmax(280px, 0.86fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(280px, 0.9fr) minmax(300px, 0.85fr);
   gap: clamp(18px, 4vw, 42px);
   align-items: center;
+  position: relative;
 }
 
 .beats-reveal-media {
@@ -728,14 +731,19 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   min-height: 0;
-  max-height: min(52vh, 430px);
+  max-height: min(54vh, 460px);
   border-radius: 8px;
   overflow: hidden;
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     radial-gradient(circle at 50% 42%, rgba(255, 207, 67, 0.18), transparent 36%),
-    linear-gradient(145deg, rgba(230, 32, 46, 0.2), rgba(8, 8, 13, 0.82));
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+    linear-gradient(145deg, rgba(230, 32, 46, 0.22), rgba(8, 8, 13, 0.88));
+  background-size: 24px 24px, 24px 24px, auto, auto;
+  border: 1px solid rgba(255, 207, 67, 0.2);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .beats-reveal-media img {
@@ -743,7 +751,8 @@
   height: 100%;
   object-fit: contain;
   display: block;
-  background: rgba(8, 8, 13, 0.72);
+  padding: clamp(10px, 1.8vw, 18px);
+  background: rgba(8, 8, 13, 0.62);
 }
 
 .beats-reveal-placeholder {
@@ -762,6 +771,7 @@
 .beats-reveal-info {
   display: grid;
   gap: 16px;
+  align-content: center;
 }
 
 .beats-reveal-info > span {
@@ -783,14 +793,54 @@
 
 .beats-reveal-info p {
   font-family: var(--font-tech);
-  font-size: 22px;
+  font-size: clamp(17px, 2vw, 22px);
   line-height: 1.25;
   color: rgba(247, 240, 234, 0.72);
 }
 
-.beats-reveal-info audio {
+.beats-reveal-audio-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 207, 67, 0.22);
+  background:
+    linear-gradient(90deg, rgba(255, 207, 67, 0.12), transparent 42%),
+    rgba(8, 8, 13, 0.68);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+}
+
+.beats-reveal-audio-panel > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.beats-reveal-audio-panel span {
+  font-family: var(--font-tech);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 207, 67, 0.78);
+}
+
+.beats-reveal-audio-panel strong {
+  font-family: var(--font-tech);
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1;
+  color: #f7f0ea;
+  text-shadow: none;
+}
+
+.beats-reveal-audio {
   width: 100%;
   filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.28));
+  accent-color: #ffcf43;
 }
 
 .beats-reveal-audio-missing {

@@ -190,12 +190,14 @@ function App() {
 
   return (
     <>
-      <Navbar
-        phase={phase}
-        playerName={playerName}
-        canGoRecap={recorded || phase === "recap"}
-        onNavigate={setPhase}
-      />
+      {phase !== "playing" && (
+        <Navbar
+          phase={phase}
+          playerName={playerName}
+          canGoRecap={recorded || phase === "recap"}
+          onNavigate={setPhase}
+        />
+      )}
 
       {phase === "playing" &&
         (() => {
