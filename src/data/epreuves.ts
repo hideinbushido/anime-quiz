@@ -1,4 +1,5 @@
 import type { Epreuve } from "../types";
+import { ayanokojiPuzzles } from "./logicLinks";
 
 export const epreuves: Epreuve[] = [
   {
@@ -56,6 +57,22 @@ export const epreuves: Epreuve[] = [
         answer: "Opening 7",
       },
     ],
+  },
+  {
+    id: "liens-ayanokoji",
+    nom: "Les Liens d'Ayanokoji",
+    logo: "♟",
+    couleur: "#e11d48",
+    theme: "Placement logique de personnages anime",
+    type: "logic-links",
+    questions: [
+      {
+        id: "liens-intro",
+        prompt: "Place les cartes dans le bon ordre.",
+        answer: "Ordre logique",
+      },
+    ],
+    logicPuzzles: ayanokojiPuzzles,
   },
   {
     id: "citations-cultes",

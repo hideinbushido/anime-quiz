@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Epreuve, EpreuveResult } from "../types";
 import { isAnswerCorrect } from "../utils";
 import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
+import { LogicLinksPlayer } from "./LogicLinksPlayer";
 
 const POINTS_PAR_BONNE_REPONSE = 100;
 const MANCHE_LABELS = [
@@ -110,6 +111,10 @@ export function EpreuvePlayer({ epreuve, onComplete }: Props) {
     setQuestionIndex((i) => i + 1);
     setInput("");
     setFeedback("none");
+  }
+
+  if (epreuve.type === "logic-links") {
+    return <LogicLinksPlayer epreuve={epreuve} onComplete={onComplete} />;
   }
 
   if (isBeats) {

@@ -14,7 +14,9 @@ interface Props {
 }
 
 function getTypeLabel(type: Epreuve["type"]): string {
-  return type === "blind-test" ? "Audio" : "Citation";
+  if (type === "blind-test") return "Audio";
+  if (type === "logic-links") return "Logique";
+  return "Citation";
 }
 
 export function EpreuveGrid({

@@ -1,4 +1,4 @@
-export type EpreuveType = "blind-test" | "citation";
+export type EpreuveType = "blind-test" | "citation" | "logic-links";
 
 export interface Question {
   id: string;
@@ -19,6 +19,34 @@ export interface Epreuve {
   theme: string;
   type: EpreuveType;
   questions: Question[];
+  logicPuzzles?: LogicLinksPuzzle[];
+}
+
+export interface LogicCharacter {
+  id: string;
+  name: string;
+  anime: string;
+  year: number;
+  age: string;
+  hair: string;
+  role: string;
+  weapon: string;
+  power: string;
+  tags: string[];
+}
+
+export interface LogicRule {
+  id: string;
+  text: string;
+}
+
+export interface LogicLinksPuzzle {
+  id: string;
+  title: string;
+  intro: string;
+  characters: LogicCharacter[];
+  rules: LogicRule[];
+  solutionIds: string[];
 }
 
 export interface EpreuveResult {

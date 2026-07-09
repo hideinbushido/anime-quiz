@@ -276,6 +276,7 @@ export function EpreuveLogoDisplay({ epreuveId, className = "" }: Props) {
   // Logo par défaut (emoji)
   const logos: { [key: string]: string } = {
     "citations-cultes": "💬",
+    "liens-ayanokoji": "♟",
   };
 
   return (
