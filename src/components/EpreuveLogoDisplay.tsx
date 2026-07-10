@@ -274,9 +274,210 @@ export function EpreuveLogoDisplay({ epreuveId, className = "" }: Props) {
   }
 
   // Logo par défaut (emoji)
+  if (epreuveId === "liens-ayanokoji") {
+    return (
+      <div className={`logo-display logo-links-ayanokoji ${className}`}>
+        <style>{`
+          @keyframes ayanoScanGlow {
+            0%,100%{opacity:.52}
+            50%{opacity:1}
+          }
+          @keyframes ayanoEyeBlink {
+            0%,92%,100%{opacity:1;transform:scaleY(1)}
+            94%{opacity:.22;transform:scaleY(.16)}
+            96%{opacity:1;transform:scaleY(1)}
+          }
+          .ayanokoji-logo-svg {
+            filter: drop-shadow(0 16px 24px rgba(0,0,0,.5));
+          }
+          .ayanokoji-logo-eye {
+            transform-box: fill-box;
+            transform-origin: center;
+          }
+        `}</style>
+
+        <svg
+          className="ayanokoji-logo-svg"
+          width="100%"
+          height="100%"
+          viewBox="0 0 460 580"
+          fill="none"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            <radialGradient id="ayanoGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(61,255,122,.24)" />
+              <stop offset="72%" stopColor="rgba(61,255,122,0)" />
+            </radialGradient>
+            <linearGradient id="ayanoCard" x1="20%" y1="0%" x2="82%" y2="100%">
+              <stop offset="0%" stopColor="#0e1712" />
+              <stop offset="100%" stopColor="#080b09" />
+            </linearGradient>
+            <filter id="ayanoBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+          </defs>
+
+          <rect
+            x="1"
+            y="1"
+            width="458"
+            height="578"
+            rx="14"
+            fill="url(#ayanoCard)"
+            stroke="rgba(61,255,122,.18)"
+            strokeWidth="2"
+          />
+          <path
+            d="M24 58 H436"
+            stroke="rgba(61,255,122,.25)"
+            strokeWidth="1"
+            strokeDasharray="7 7"
+          />
+          <text
+            x="24"
+            y="39"
+            fill="#5f7d6a"
+            fontFamily="'Share Tech Mono', monospace"
+            fontSize="13"
+            letterSpacing="3"
+          >
+            DOSSIER_ELEVE.SYS
+          </text>
+          <text
+            x="340"
+            y="39"
+            fill="#3dff7a"
+            fontFamily="'Share Tech Mono', monospace"
+            fontSize="13"
+            letterSpacing="2"
+          >
+            CLASSE ??
+          </text>
+
+          <ellipse
+            cx="230"
+            cy="198"
+            rx="142"
+            ry="142"
+            fill="url(#ayanoGlow)"
+            filter="url(#ayanoBlur)"
+            style={{ animation: "ayanoScanGlow 3.2s ease-in-out infinite" }}
+          />
+
+          <g transform="translate(110 82)">
+            <path
+              d="M8 260 C8 185 42 158 78 148 L162 148 C198 158 232 185 232 260 Z"
+              fill="#0a0a0a"
+              stroke="rgba(61,255,122,.3)"
+              strokeWidth="2"
+            />
+            <polygon points="78,148 120,196 162,148" fill="#e9e9ec" />
+            <polygon points="78,148 120,196 58,215" fill="#8a1c28" />
+            <polygon points="162,148 120,196 182,215" fill="#8a1c28" />
+            <polygon points="112,152 120,196 128,152 120,168" fill="#0a0a0a" />
+            <ellipse
+              cx="120"
+              cy="93"
+              rx="52"
+              ry="60"
+              fill="#0a0a0a"
+              stroke="rgba(61,255,122,.3)"
+              strokeWidth="2"
+            />
+            <path
+              d="M62,74 C56,44 76,16 114,14 C138,13 158,22 168,42 C173,52 172,64 166,74 C160,54 146,42 124,40 C132,49 133,58 127,64 C121,52 108,47 96,50 C104,57 104,64 97,68 C87,58 74,57 65,66 C63,69 63,72 62,74 Z"
+              fill="#040404"
+            />
+            <path
+              className="ayanokoji-logo-eye"
+              d="M90,98 Q103,91 118,98"
+              stroke="#c8ffdc"
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              style={{
+                filter: "drop-shadow(0 0 8px #3dff7a) drop-shadow(0 0 16px #3dff7a)",
+                animation: "ayanoEyeBlink 5s ease-in-out infinite",
+              }}
+            />
+            <path
+              d="M130,99 Q141,94 152,99"
+              stroke="rgba(61,255,122,.3)"
+              strokeWidth="2.4"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
+
+          <g stroke="#3dff7a" strokeWidth="2" fill="none" opacity=".7">
+            <path d="M70 122 L70 92 L100 92" />
+            <path d="M360 92 L390 92 L390 122" />
+            <path d="M390 352 L390 382 L360 382" />
+            <path d="M100 382 L70 382 L70 352" />
+          </g>
+
+          <text
+            x="230"
+            y="418"
+            textAnchor="middle"
+            fill="#5f7d6a"
+            fontFamily="'Share Tech Mono', monospace"
+            fontSize="18"
+            letterSpacing="7"
+          >
+            LES LIENS DE
+          </text>
+          <text
+            x="230"
+            y="468"
+            textAnchor="middle"
+            fill="#eafff0"
+            fontFamily="'Chakra Petch', sans-serif"
+            fontSize="48"
+            fontWeight="700"
+            letterSpacing="1"
+            style={{
+              filter: "drop-shadow(0 0 6px #3dff7a) drop-shadow(0 0 20px rgba(61,255,122,.5))",
+            }}
+          >
+            AYANOKOJI
+          </text>
+
+          <g
+            transform="translate(139 520)"
+            fontFamily="'Share Tech Mono', monospace"
+            fontSize="15"
+            letterSpacing="1"
+          >
+            {["A", "B", "C"].map((label, index) => (
+              <g key={label} transform={`translate(${index * 78} 0)`}>
+                <rect
+                  x="0"
+                  y="-19"
+                  width="32"
+                  height="28"
+                  rx="3"
+                  fill="rgba(61,255,122,.06)"
+                  stroke="rgba(61,255,122,.42)"
+                />
+                <text x="16" y="0" textAnchor="middle" fill="#3dff7a">
+                  {label}
+                </text>
+              </g>
+            ))}
+            <path d="M40 -6 H72" stroke="#3a5346" strokeWidth="2" />
+            <path d="M68 -11 L76 -6 L68 -1" fill="none" stroke="#3a5346" strokeWidth="2" />
+            <path d="M118 -6 H150" stroke="#3a5346" strokeWidth="2" />
+            <path d="M146 -11 L154 -6 L146 -1" fill="none" stroke="#3a5346" strokeWidth="2" />
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
   const logos: { [key: string]: string } = {
     "citations-cultes": "💬",
-    "liens-ayanokoji": "♟",
   };
 
   return (

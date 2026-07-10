@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Epreuve, EpreuveResult, LogicCharacter } from "../types";
+import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
 
 const POINTS_PAR_CASE = 100;
 
@@ -133,12 +134,17 @@ export function LogicLinksPlayer({ epreuve, onComplete }: Props) {
       <div className="links-bg" aria-hidden />
 
       <header className="links-header">
-        <div>
-          <p className="links-kicker">Placement logique</p>
-          <h1>{epreuve.nom}</h1>
-          <span>
-            Manche {puzzleIndex + 1}/{puzzles.length}
-          </span>
+        <div className="links-title-lockup">
+          <div className="links-title-logo">
+            <EpreuveLogoDisplay epreuveId={epreuve.id} />
+          </div>
+          <div>
+            <p className="links-kicker">Placement logique</p>
+            <h1>{epreuve.nom}</h1>
+            <span>
+              Manche {puzzleIndex + 1}/{puzzles.length}
+            </span>
+          </div>
         </div>
 
         <div className="links-score">
