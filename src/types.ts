@@ -33,6 +33,8 @@ export interface LogicCharacter {
   weapon: string;
   power: string;
   tags: string[];
+  details?: string[];
+  source?: string;
 }
 
 export interface LogicRule {

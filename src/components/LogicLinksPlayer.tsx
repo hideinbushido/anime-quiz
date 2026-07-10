@@ -261,6 +261,14 @@ function CharacterCard({
   character: LogicCharacter;
   compact?: boolean;
 }) {
+  const details =
+    character.details ?? [
+      `Age ${character.age}`,
+      String(character.year),
+      character.hair,
+      character.role,
+    ];
+
   return (
     <span className={"links-character" + (compact ? " links-character-compact" : "")}>
       <strong>{character.name}</strong>
@@ -268,14 +276,11 @@ function CharacterCard({
       {!compact && (
         <>
           <span className="links-character-grid">
-            <span>Age {character.age}</span>
-            <span>{character.year}</span>
-            <span>{character.hair}</span>
-            <span>{character.role}</span>
+            {details.slice(0, 4).map((detail) => (
+              <span key={detail}>{detail}</span>
+            ))}
           </span>
-          <small>
-            {character.weapon} / {character.power}
-          </small>
+          <small>{character.weapon}</small>
         </>
       )}
     </span>
