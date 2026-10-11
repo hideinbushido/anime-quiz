@@ -10,7 +10,7 @@ const LOGO_KEYFRAMES = `
   @keyframes qaFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 `;
 
-function Joystick({ scale = 1 }: { scale?: number }) {
+function Joystick({ scale = 1, electric = false }: { scale?: number; electric?: boolean }) {
   const w = 118 * scale;
   const h = 146 * scale;
   return (
@@ -44,7 +44,7 @@ function Joystick({ scale = 1 }: { scale?: number }) {
             position: "absolute",
             inset: 0,
             transformOrigin: "50% 100%",
-            animation: "qaWiggle 2.4s ease-in-out infinite",
+            animation: electric ? undefined : "qaWiggle 2.4s ease-in-out infinite",
           }}
         >
           <div
@@ -69,9 +69,12 @@ function Joystick({ scale = 1 }: { scale?: number }) {
               width: 56 * scale,
               height: 56 * scale,
               borderRadius: "50%",
-              background: "radial-gradient(35% 35% at 38% 30%, #ffd0e8, #ff2d95 58%, #b0135f)",
-              boxShadow:
-                "0 0 16px #ff2d95, 0 0 34px rgba(255,45,149,.7), inset 0 -7px 14px rgba(0,0,0,.35)",
+              background: electric
+                ? "radial-gradient(35% 35% at 38% 30%, #eaf7ff, #008cff 58%, #003ea6)"
+                : "radial-gradient(35% 35% at 38% 30%, #ffd0e8, #ff2d95 58%, #b0135f)",
+              boxShadow: electric
+                ? "0 0 18px #008cff66, inset 0 -7px 14px #001a5266"
+                : "0 0 16px #ff2d95, 0 0 34px rgba(255,45,149,.7), inset 0 -7px 14px rgba(0,0,0,.35)",
             }}
           />
         </div>
@@ -82,6 +85,14 @@ function Joystick({ scale = 1 }: { scale?: number }) {
 
 interface Props {
   className?: string;
+}
+
+/** Home-only evolution of the original joystick and Quiz'Animanga wordmark. */
+export function LogoDuel() {
+  return <div className="arena-brand" aria-label="Quiz'Animanga">
+    <span aria-hidden="true"><Joystick scale={0.4} electric /></span>
+    <span className="arena-brand-wordmark" aria-hidden="true"><span>QUIZ'</span><strong>ANIMANGA</strong></span>
+  </div>;
 }
 
 export function LogoHeader({ className = "" }: Props) {

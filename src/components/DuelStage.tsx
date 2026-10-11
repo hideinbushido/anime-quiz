@@ -1,0 +1,33 @@
+import type { DuelSession, Epreuve, GameControls, PlayerId } from "../types";
+import { currentFeedback, resolveEpreuve } from "../duel/engine";
+import { DuelHeader } from "./DuelHeader";
+import { EpreuvePlayer } from "./EpreuvePlayer";
+import { EpisodeCard } from "./EpisodeCard";
+
+interface Props extends GameControls {
+  session: DuelSession;
+  epreuve: Epreuve;
+  onRespondent: (id: PlayerId) => void;
+}
+
+export function RespondentPicker({ progress, players, onRespondent }: Pick<Props, "progress" | "onRespondent"> & { players: DuelSession["players"] }) {
+  return <div className="duel-respondent" role="group" aria-label="Joueur qui répond">
+    <span>À qui attribuer cette réponse ?</span>
+    {(["player1", "player2"] as const).map(id => <button key={id} className={id} aria-pressed={progress.respondent === id}
+      disabled={Boolean(currentFeedback(progress))} onClick={() => onRespondent(id)}>{players[id].name}</button>)}
+    <small>{currentFeedback(progress) ? "Réponse enregistrée" : "Le présentateur choisit avant validation."}</small>
+  </div>;
+}
+
+export function DuelStage({ session, epreuve, onRespondent, ...controls }: Props) {
+  const current = session.selected[session.currentIndex];
+  const active = resolveEpreuve(epreuve, current.difficulty);
+  const chooser = current.selectedBy === "host" ? "Présentateur" : session.players[current.selectedBy].name;
+  return <div className="duel-stage">
+    <EpisodeCard key={`${session.id}-${current.epreuveId}`} label="ÉPISODE" step={`${session.currentIndex + 1}/5`} name={epreuve.nom} difficulty={current.difficulty} chooser={`Choix de ${chooser}`} color={epreuve.couleur} />
+    <DuelHeader players={session.players} current={current} epreuveName={epreuve.nom} index={session.currentIndex} />
+    {epreuve.id !== "blind-test-openings" && <RespondentPicker players={session.players} progress={controls.progress} onRespondent={onRespondent} />}
+    {epreuve.difficulties[current.difficulty].status === "shared" && <p className="duel-notice">Classe {current.difficulty} · {epreuve.difficulties[current.difficulty].description}</p>}
+    <EpreuvePlayer key={`${session.id}-${current.epreuveId}`} epreuve={active} players={session.players} difficulty={current.difficulty} {...controls} />
+  </div>;
+}

@@ -1,7 +1,12 @@
 import type { LogicLinksPuzzle } from "../types";
 import { narutoIds, pickNarutoCharacters } from "./narutoCharacters";
 
-export const ayanokojiPuzzles: LogicLinksPuzzle[] = [
+export { puzzlesByClass, ayanokojiPuzzles } from "./logicLinksDemos";
+
+// Historical puzzles retained as editorial material; their uniqueness was not verified.
+export const legacyAyanokojiPuzzles: (Omit<LogicLinksPuzzle, "rules"> & {
+  rules: { id: string; text: string }[];
+})[] = [
   {
     id: "ayanokoji-naruto-1",
     title: "Equipe 7 et ombres Uchiwa",

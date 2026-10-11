@@ -1,0 +1,160 @@
+/* Barre de score du duel : deux plaques diagonales de part et d'autre du VS. */
+.duel-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: var(--night);
+  border-bottom: 1px solid var(--line);
+}
+
+.duel-player {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "tag score" "name score";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 2px;
+  min-width: 0;
+  padding: 12px clamp(20px, 3vw, 44px) 12px var(--gutter);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--player-color) 26%, var(--night)), var(--night) 82%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%);
+  border-bottom: 3px solid var(--player-color);
+}
+
+.duel-header .player2 {
+  padding: 12px var(--gutter) 12px clamp(20px, 3vw, 44px);
+  grid-template-areas: "score tag" "score name";
+  grid-template-columns: auto minmax(0, 1fr);
+  text-align: right;
+  background: linear-gradient(260deg, color-mix(in srgb, var(--player-color) 26%, var(--night)), var(--night) 82%);
+  clip-path: polygon(24px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.duel-player > span {
+  grid-area: tag;
+  font: 700 11px / 1 var(--f-label);
+  letter-spacing: 0.3em;
+  color: var(--player-color);
+}
+
+.duel-player > strong {
+  grid-area: name;
+  font: 400 clamp(16px, 2.1vw, 30px) / 1.05 var(--f-display);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+}
+
+.duel-player > b {
+  grid-area: score;
+  font: 400 clamp(30px, 4vw, 56px) / 1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--player-color);
+  text-shadow: 0 0 28px color-mix(in srgb, var(--player-color) 55%, transparent);
+}
+
+.duel-player > b small {
+  font: 700 11px / 1 var(--f-label);
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-shadow: none;
+}
+
+.duel-header-center {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 8px clamp(14px, 3vw, 40px);
+  text-align: center;
+  font: 600 13px / 1.2 var(--f-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.duel-vs {
+  font: 400 clamp(24px, 3vw, 40px) / 1 var(--f-display);
+  color: var(--text);
+  transform: skewX(-8deg);
+  text-shadow: 2px 2px 0 var(--magenta), 4px 4px 0 var(--violet);
+}
+
+.duel-class {
+  padding: 5px 14px;
+  font: 700 12px / 1 var(--f-label);
+  letter-spacing: 0.22em;
+  color: var(--night);
+  background: var(--sun);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.duel-stage {
+  position: relative;
+}
+
+.duel-respondent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px var(--gutter);
+  background: var(--night-2);
+  font: 600 14px / 1.3 var(--f-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.duel-respondent button {
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid var(--player-color);
+  background: transparent;
+  color: var(--player-color);
+  font: 400 16px / 1 var(--f-display);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  transition: background var(--d-fast), color var(--d-fast);
+}
+
+.duel-respondent button[aria-pressed="true"] {
+  background: var(--player-color);
+  color: var(--night);
+}
+
+.duel-respondent small {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+@media (max-width: 650px) {
+  .duel-header {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .duel-player,
+  .duel-header .player2 {
+    grid-template-columns: 1fr;
+    grid-template-areas: "tag" "name" "score";
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  .duel-header .player2 {
+    text-align: right;
+  }
+
+  .duel-header-center {
+    padding: 8px 8px;
+    font-size: 10px;
+  }
+
+  .duel-header-center > span:not(.duel-eyebrow):not(.duel-class) {
+    display: none;
+  }
+}

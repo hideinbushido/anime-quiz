@@ -1,5 +1,19 @@
-import type { Epreuve } from "../types";
-import { ayanokojiPuzzles } from "./logicLinks";
+import { killerBeeDifficulties } from "./killerBeeTracks";
+import type { DifficultyClass, DifficultyConfig, Epreuve } from "../types";
+import { ayanokojiPuzzles, puzzlesByClass } from "./logicLinks";
+
+const labels: Record<DifficultyClass, string> = { D: "Introduction", C: "Intermédiaire", B: "Difficile", A: "Élite" };
+function sharedDifficulties(): Record<DifficultyClass, DifficultyConfig> {
+  return Object.fromEntries((["D", "C", "B", "A"] as const).map(level => [level, {
+    label: labels[level], status: "shared", description: "Contenu actuel commun aux quatre classes. Variantes à venir.",
+  }])) as Record<DifficultyClass, DifficultyConfig>;
+}
+const logicDifficulties = Object.fromEntries((["D", "C", "B", "A"] as const).map(level => [level, {
+  label: labels[level], status: "ready", logicPuzzles: puzzlesByClass[level],
+  description: { D: "6 cartes, aucun leurre. Transmission entre maîtres et élèves.",
+    C: "8 cartes, 2 leurres. Plusieurs maîtres possibles.", B: "10 cartes, 4 leurres. Des branches valides mènent à une impasse.",
+    A: "12 cartes, 6 leurres. Événement narratif, maître commun et succession." }[level],
+}])) as Record<DifficultyClass, DifficultyConfig>;
 
 export const epreuves: Epreuve[] = [
   {
@@ -7,8 +21,9 @@ export const epreuves: Epreuve[] = [
     nom: "Les Beats de Killer Bee",
     logo: "🎧",
     couleur: "#3b82f6",
-    theme: "Instrumentales d'openings d'animes cultes",
+    theme: "Duel musical au buzzer : trouve le nom de l?anime",
     type: "blind-test",
+    difficulties: killerBeeDifficulties,
     questions: [
       {
         id: "bt-1",
@@ -65,6 +80,7 @@ export const epreuves: Epreuve[] = [
     couleur: "#e11d48",
     theme: "Placement logique de personnages anime",
     type: "logic-links",
+    difficulties: logicDifficulties,
     questions: [
       {
         id: "liens-intro",
@@ -81,6 +97,7 @@ export const epreuves: Epreuve[] = [
     couleur: "#f59e0b",
     theme: "Répliques célèbres de personnages d'anime",
     type: "citation",
+    difficulties: sharedDifficulties(),
     questions: [
       {
         id: "cit-1",

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export function TitleReadyScene() {
+export function TitleReadyScene({ electric = false }: { electric?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function TitleReadyScene() {
       scene.add(group);
 
       const ambient = new THREE.AmbientLight(0x9ab6ff, 1.15);
-      const key = new THREE.PointLight(0xff4058, 19, 8);
+      const key = new THREE.PointLight(electric ? 0x008cff : 0xff4058, 19, 8);
       key.position.set(-2.6, 2.3, 3.2);
       const rim = new THREE.PointLight(0x82f6ff, 24, 9);
       rim.position.set(2.7, -0.4, 2.8);
@@ -50,22 +50,22 @@ export function TitleReadyScene() {
         metalness: 0.42,
       });
       const red = new THREE.MeshStandardMaterial({
-        color: 0xff334e,
-        emissive: 0x820015,
+        color: electric ? 0x008cff : 0xff334e,
+        emissive: electric ? 0x003b82 : 0x820015,
         emissiveIntensity: 0.85,
         roughness: 0.22,
         metalness: 0.4,
       });
       const gold = new THREE.MeshStandardMaterial({
-        color: 0xffcf43,
-        emissive: 0x7a5200,
+        color: electric ? 0x26e7ff : 0xffcf43,
+        emissive: electric ? 0x006a7a : 0x7a5200,
         emissiveIntensity: 0.65,
         roughness: 0.22,
         metalness: 0.48,
       });
       const violet = new THREE.MeshStandardMaterial({
-        color: 0x8f5dff,
-        emissive: 0x30136f,
+        color: electric ? 0x6366ff : 0x8f5dff,
+        emissive: electric ? 0x162a70 : 0x30136f,
         emissiveIntensity: 0.7,
         roughness: 0.24,
         metalness: 0.42,
@@ -132,7 +132,7 @@ export function TitleReadyScene() {
 
         ctx.fillStyle = "rgba(248,251,255,.56)";
         ctx.font = "700 34px Rajdhani, Arial, sans-serif";
-        ctx.fillText("QUIZ CARD", 320, 724);
+        ctx.fillText(electric ? "ANIMANGA" : "QUIZ CARD", 320, 724);
 
         const texture = new THREE.CanvasTexture(labelCanvas);
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -173,10 +173,16 @@ export function TitleReadyScene() {
         return card;
       }
 
-      addCard("?", "QUESTION", "#82f6ff", [0, 0.3, 0.35], [-0.1, 0, 0], 1.18);
-      addCard("♪", "OPENING", "#ffcf43", [-1.1, 0.1, -0.05], [-0.16, 0.38, -0.22], 0.78);
-      addCard("“”", "CITATION", "#ff334e", [1.08, 0.08, -0.08], [-0.16, -0.38, 0.22], 0.78);
-      addCard("XP", "SCORE", "#8f5dff", [0.04, -0.36, -0.28], [-0.42, 0, 0.05], 0.7);
+      if (electric) {
+        addCard("♪", "OPENING", "#008cff", [-1.1, 0.4, -0.4], [-0.16, 0.38, -0.22], 0.64);
+        addCard("“”", "CITATION", "#26e7ff", [1.1, 0.4, -0.4], [-0.16, -0.38, 0.22], 0.64);
+        addCard("?", "LOGIQUE", "#6366ff", [0, -0.55, -0.55], [-0.42, 0, 0.05], 0.48);
+      } else {
+        addCard("?", "QUESTION", "#82f6ff", [0, 0.3, 0.35], [-0.1, 0, 0], 1.18);
+        addCard("♪", "OPENING", "#ffcf43", [-1.1, 0.1, -0.05], [-0.16, 0.38, -0.22], 0.78);
+        addCard("“”", "CITATION", "#ff334e", [1.08, 0.08, -0.08], [-0.16, -0.38, 0.22], 0.78);
+        addCard("XP", "SCORE", "#8f5dff", [0.04, -0.36, -0.28], [-0.42, 0, 0.05], 0.7);
+      }
 
       const deck = new THREE.Mesh(new THREE.CylinderGeometry(1.18, 1.42, 0.2, 6), dark);
       deck.position.y = -1.18;
@@ -184,11 +190,11 @@ export function TitleReadyScene() {
       group.add(deck);
 
       const ring = new THREE.Mesh(new THREE.TorusGeometry(1.72, 0.025, 10, 128), cyan);
-      ring.position.y = -0.2;
+      ring.position.y = electric ? -0.75 : -0.2;
       ring.rotation.x = Math.PI / 2.35;
       group.add(ring);
 
-      const chipData = [
+      const chipData = electric ? [] : [
         { label: "A", x: -1.46, y: -0.76, material: red },
         { label: "B", x: -0.5, y: -0.9, material: gold },
         { label: "C", x: 0.5, y: -0.9, material: cyan },
@@ -263,10 +269,11 @@ export function TitleReadyScene() {
 
       let frame = 0;
       const clock = new THREE.Clock();
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
       function animate() {
         frame = window.requestAnimationFrame(animate);
-        const t = clock.getElapsedTime();
+        const t = reducedMotion.matches ? 0 : clock.getElapsedTime();
 
         group.rotation.y += (pointer.x - group.rotation.y) * 0.05;
         group.rotation.x += (pointer.y - group.rotation.x) * 0.05;
@@ -274,14 +281,16 @@ export function TitleReadyScene() {
         ring.rotation.z = t * 0.5;
         particleField.rotation.z = t * 0.08;
 
-        cardGroups.forEach((card, index) => {
-          card.position.y += Math.sin(t * 1.4 + index) * 0.0018;
-          card.rotation.z += Math.sin(t * 1.1 + index) * 0.0008;
-        });
-        chips.forEach((chip, index) => {
-          chip.position.y += Math.sin(t * 2 + index) * 0.0016;
-          chip.rotation.z = t * (0.35 + index * 0.05);
-        });
+        if (!reducedMotion.matches) {
+          cardGroups.forEach((card, index) => {
+            card.position.y += Math.sin(t * 1.4 + index) * 0.0018;
+            card.rotation.z += Math.sin(t * 1.1 + index) * 0.0008;
+          });
+          chips.forEach((chip, index) => {
+            chip.position.y += Math.sin(t * 2 + index) * 0.0016;
+            chip.rotation.z = t * (0.35 + index * 0.05);
+          });
+        }
 
         renderer.render(scene, camera);
       }
@@ -310,13 +319,14 @@ export function TitleReadyScene() {
       };
     }
 
-    void setupScene();
+    // The HTML duel and CTA remain usable when WebGL is unavailable.
+    void setupScene().catch(() => { currentCanvas.style.display = "none"; });
 
     return () => {
       disposed = true;
       stopScene?.();
     };
-  }, []);
+  }, [electric]);
 
   return <canvas ref={canvasRef} className="title-ready-scene" />;
 }

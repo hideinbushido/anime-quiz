@@ -1,0 +1,363 @@
+/* Sélection : un catalogue d'épisodes en coins coupés. */
+.duel-selection {
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+.duel-selection .duel-header {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.duel-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.duel-steps > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 22px;
+  font: 400 clamp(14px, 1.6vw, 19px) / 1 var(--f-display);
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  transition: background var(--d-base), color var(--d-base);
+}
+
+.duel-steps > div b {
+  font: 700 14px / 1 var(--f-label);
+  letter-spacing: 0.1em;
+}
+
+.duel-steps .active {
+  color: var(--night);
+  background: var(--player-color);
+}
+
+.duel-selection-heading {
+  display: grid;
+  gap: 8px;
+  animation: riseIn var(--d-slow) var(--ease-out) backwards;
+}
+
+.duel-selection-heading h1 {
+  font: 400 clamp(32px, 5.4vw, 76px) / 0.98 var(--f-display);
+  transform: skewX(-6deg);
+  transform-origin: left;
+}
+
+.duel-selection-heading p {
+  font: 500 clamp(16px, 1.6vw, 20px) / 1.4 var(--f-body);
+  color: var(--muted);
+}
+
+.menu-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: clamp(16px, 2.4vw, 32px);
+  align-items: start;
+}
+
+.menu-logo-board {
+  min-width: 0;
+}
+
+.menu-board-header,
+.menu-panel-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.menu-board-header strong,
+.menu-panel-label {
+  font: 700 13px / 1 var(--f-label);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--sun);
+}
+
+.menu-board-header span,
+.menu-panel-top strong {
+  font: 400 20px / 1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: clamp(14px, 2vw, 26px);
+}
+
+.duel-tile-wrap {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  animation: cardIn 700ms var(--ease-out) backwards;
+}
+
+.duel-tile-wrap:nth-child(2) { animation-delay: 90ms; }
+.duel-tile-wrap:nth-child(3) { animation-delay: 180ms; }
+.duel-tile-wrap:nth-child(4) { animation-delay: 270ms; }
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) rotate(2deg);
+  }
+}
+
+/* Carte : fond dégradé couleur d'épreuve, 2 coins coupés, liseré lumineux. */
+.menu-logo-tile {
+  --tile: var(--tile-color, var(--violet));
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 300px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  padding: 16px 14px 18px;
+  border: 0;
+  color: var(--text);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tile) 55%, var(--night)), var(--night) 78%);
+  clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 34px 100%, 0 calc(100% - 34px));
+  transition: transform var(--d-base) var(--ease-out), filter var(--d-base);
+}
+
+.menu-logo-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.6px) 0 0 / 10px 10px,
+    repeating-linear-gradient(115deg, transparent 0 30px, rgba(255, 255, 255, 0.05) 30px 31px);
+  mask-image: linear-gradient(180deg, #000, transparent 85%);
+}
+
+.menu-logo-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 2px solid color-mix(in srgb, var(--tile) 70%, white);
+  clip-path: inherit;
+  opacity: 0.55;
+  transition: opacity var(--d-base);
+}
+
+.menu-logo-tile:hover:enabled {
+  transform: translateY(-8px) rotate(-1deg);
+  filter: brightness(1.12);
+}
+
+.menu-logo-tile:hover:enabled::after {
+  opacity: 1;
+}
+
+.menu-logo-status {
+  justify-self: start;
+  padding: 5px 10px;
+  font: 700 11px / 1 var(--f-label);
+  letter-spacing: 0.18em;
+  color: var(--night);
+  background: var(--text);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.menu-logo-mark {
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.menu-logo-mark .logo-display {
+  min-height: 0;
+  height: 150px;
+}
+
+.menu-logo-name {
+  font: 400 clamp(16px, 1.5vw, 20px) / 1.1 var(--f-display);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.duel-tile-wrap .menu-logo-tile-selected {
+  filter: saturate(0.5) brightness(0.8);
+}
+
+.duel-tile-wrap .menu-logo-tile-selected .menu-logo-status {
+  background: var(--sun);
+}
+
+.duel-tile-wrap .menu-logo-status {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Programme du LIVE : liste d'épisodes. */
+.menu-panel {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  background: var(--panel);
+  border-top: 3px solid var(--magenta);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+}
+
+.menu-panel .links-secondary,
+.menu-panel .btn-primary {
+  width: 100%;
+}
+
+.duel-program {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  counter-reset: ep;
+}
+
+.duel-program li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px 10px 52px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--player-color);
+  counter-increment: ep;
+  min-width: 0;
+}
+
+.duel-program li::before {
+  content: counter(ep);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  font: 400 26px / 1 var(--f-display);
+  color: var(--player-color);
+}
+
+.duel-program small {
+  font: 700 11px / 1 var(--f-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--player-color);
+}
+
+.duel-program strong {
+  font: 400 15px / 1.15 var(--f-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.duel-program .duel-class {
+  justify-self: start;
+}
+
+/* Choix de classe : quatre rangs. */
+.duel-class-picker {
+  display: grid;
+  gap: 18px;
+  padding: clamp(20px, 3vw, 34px);
+  background: var(--panel);
+  border-top: 3px solid var(--sun);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%);
+  animation: riseIn var(--d-slow) var(--ease-out) backwards;
+}
+
+.duel-class-picker h2 {
+  font: 400 clamp(26px, 3.6vw, 48px) / 1 var(--f-display);
+}
+
+.duel-class-picker p:not(.duel-eyebrow) {
+  font: 500 16px / 1.5 var(--f-body);
+  color: var(--muted);
+}
+
+.duel-class-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.duel-class-options button {
+  min-height: 92px;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  transition: background var(--d-base), color var(--d-base), transform var(--d-base) var(--ease-pop);
+}
+
+.duel-class-options b {
+  font: 400 40px / 1 var(--f-display);
+}
+
+.duel-class-options span {
+  font: 700 12px / 1 var(--f-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.duel-class-options button:hover {
+  transform: translateY(-3px);
+}
+
+.duel-class-options .active {
+  background: var(--sunset);
+  color: var(--night);
+  border-color: transparent;
+}
+
+.duel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1000px) {
+  .menu-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .duel-steps > div {
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .menu-logo-tile {
+    height: 260px;
+  }
+
+  .duel-class-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duel-actions .btn-primary,
+  .duel-actions .links-secondary {
+    width: 100%;
+  }
+}

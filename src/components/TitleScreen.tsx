@@ -1,214 +1,55 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Epreuve, SessionState } from "../types";
-import { loadLeaderboard } from "../utils";
-import { LogoHero } from "./Logo";
-import { TitleReadyScene } from "./TitleReadyScene";
+import type { DuelSession } from "../types";
+import { LogoDuel } from "./Logo";
+import { DuelPlayerCard } from "./title/DuelPlayerCard";
+import { DuelVsStage } from "./title/DuelVsStage";
+import { TitleSessionResume } from "./title/TitleSessionResume";
+import { useTitlePlayers } from "./title/useTitlePlayers";
 
 interface Props {
-  savedSession: SessionState | null;
-  epreuves: Epreuve[];
-  onPlay: (playerName: string) => void;
+  savedSession: DuelSession | null;
+  onPlay: (name1: string, name2: string) => void;
   onContinue: () => void;
   onScores: () => void;
   onDeleteSession: () => void;
 }
 
-const MAX_VISIBLE_SCORES = 4;
-
-function getSessionMode(session: SessionState, epreuves: Epreuve[]): string {
-  if (session.phase === "selection") return "Sélection";
-  if (session.phase === "recap") return "Récap";
-
-  const lastResultId = session.results.at(-1)?.epreuveId;
-  const currentId = session.selectedIds[session.currentIndex] ?? lastResultId;
-  return epreuves.find((epreuve) => epreuve.id === currentId)?.nom ?? "Menu";
-}
-
-function getSessionScore(session: SessionState): number {
-  return session.results.reduce((sum, result) => sum + result.points, 0);
-}
-
-export function TitleScreen({
-  savedSession,
-  epreuves,
-  onPlay,
-  onContinue,
-  onScores,
-  onDeleteSession,
-}: Props) {
-  const [name, setName] = useState(savedSession?.playerName ?? "");
-  const [leaving, setLeaving] = useState(false);
-  const [muted, setMuted] = useState(false);
-  const [blocked, setBlocked] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
-  const leaderboard = useMemo(() => loadLeaderboard(), []);
-  const totalScore = leaderboard.reduce((sum, entry) => sum + entry.score, 0);
-  const sessionScore = savedSession ? getSessionScore(savedSession) : 0;
-  const sessionMode = savedSession ? getSessionMode(savedSession, epreuves) : "";
-
-  useEffect(() => {
-    audioRef.current?.play().catch(() => setBlocked(true));
-  }, []);
-
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    glowRef.current?.style.setProperty("--mx", `${x * 30}px`);
-    glowRef.current?.style.setProperty("--my", `${y * 30}px`);
-  }
-
-  function ensureAudioPlaying() {
-    if (audioRef.current?.paused) {
-      audioRef.current.play().then(() => setBlocked(false)).catch(() => {});
-    }
-  }
-
-  function toggleMute() {
-    setMuted((m) => !m);
-    ensureAudioPlaying();
-  }
-
-  function handleReady() {
-    if (!name.trim() || leaving) return;
-    setLeaving(true);
-    window.setTimeout(() => onPlay(name.trim()), 480);
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    handleReady();
-  }
-
-  function handleContinue() {
-    if (!savedSession || leaving) return;
-    setLeaving(true);
-    window.setTimeout(onContinue, 320);
-  }
-
-  function handleDeleteSession() {
-    if (!savedSession || leaving) return;
-    onDeleteSession();
-    setName("");
-  }
-
-  return (
-    <div
-      className={"title-screen" + (leaving ? " title-leaving" : "")}
-      onMouseMove={handleMouseMove}
-    >
-      <audio ref={audioRef} src="/audio/theme-titre.mp3" loop muted={muted} autoPlay />
-
-      <div ref={glowRef} className="title-glows" aria-hidden>
-        <span className="title-glow title-glow-red" />
-        <span className="title-glow title-glow-blue" />
-      </div>
-      <div className="title-cabinet-lines" aria-hidden />
-      <div className="title-vignette" aria-hidden />
-
-      <button
-        type="button"
-        className="title-music-toggle"
-        onClick={toggleMute}
-        title={muted ? "Activer le son" : "Couper le son"}
-      >
-        {muted ? "OFF" : "ON"}
-      </button>
-      {blocked && !muted && <p className="title-music-hint">Audio en attente</p>}
-
-      <div className="title-content">
-        <section className="title-hero animate-fade-up" style={{ animationDelay: "0.05s" }}>
-          <div className="title-logo">
-            <LogoHero />
+export function TitleScreen({ savedSession, onPlay, onContinue, onScores, onDeleteSession }: Props) {
+  const { names, setName, reset, clearDraft, draftUnavailable } = useTitlePlayers(savedSession);
+  const canStart = names.every(name => Boolean(name.trim()));
+  return <div className="arena-home">
+    <div className="arena-background" aria-hidden="true"><span /><span /><span /></div>
+    <div className="arena-sun" aria-hidden="true" />
+    <div className="arena-shell">
+      <header className="arena-topbar">
+        <LogoDuel />
+        <button className="arena-history" type="button" onClick={onScores}><span aria-hidden="true">↗</span> Historique des duels</button>
+      </header>
+      <main className="arena-main">
+        <div className="arena-heading">
+          <p className="arena-overline"><span className="arena-live-dot" /> LE DUEL ANIME</p>
+          <h1>L'arène <span>vous attend.</span></h1>
+          <p>Deux joueurs. Une rencontre à écrire.</p>
+        </div>
+        <form className="arena-form" onSubmit={event => {
+          event.preventDefault();
+          if (!canStart) return;
+          clearDraft();
+          onPlay(names[0].trim(), names[1].trim());
+        }}>
+          <div className="arena-matchup">
+            <DuelPlayerCard player={1} name={names[0]} onChange={name => setName(0, name)} />
+            <DuelVsStage />
+            <DuelPlayerCard player={2} name={names[1]} onChange={name => setName(1, name)} />
           </div>
-
-          <form className="title-form" onSubmit={handleSubmit}>
-            <label className="title-label" htmlFor="player-name">
-              Nom du joueur
-            </label>
-            <div className="title-launch-row">
-              <input
-                id="player-name"
-                className="title-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onFocus={ensureAudioPlaying}
-                placeholder="Entre ton nom"
-                autoFocus
-                maxLength={20}
-              />
-            </div>
-          </form>
-
-          <button className="title-total-score" type="button" onClick={onScores}>
-            <span>Score total des participants</span>
-            <strong>{totalScore}</strong>
-          </button>
-
-          {savedSession && (
-            <div className="title-session-actions">
-              <button className="title-continue" type="button" onClick={handleContinue}>
-                Continuer la partie en cours
-              </button>
-              <button
-                className="title-delete-session"
-                type="button"
-                onClick={handleDeleteSession}
-              >
-                Supprimer
-              </button>
-            </div>
-          )}
-        </section>
-
-        <section className="title-stage animate-fade-up" style={{ animationDelay: "0.14s" }}>
-          <button
-            type="button"
-            className="title-platform-wrap"
-            onClick={handleReady}
-            disabled={!name.trim()}
-            aria-label="Entrer dans le menu"
-          >
-            <TitleReadyScene />
-            <span className="title-platform-core">
-              <span>READY</span>
-            </span>
-          </button>
-
-          {savedSession && (
-            <div className="title-side-panel">
-              <div className="title-stat">
-                <span>MODE</span>
-                <strong>{sessionMode}</strong>
-              </div>
-              <div className="title-stat">
-                <span>JOUEUR</span>
-                <strong>{savedSession.playerName}</strong>
-              </div>
-              <div className="title-stat">
-                <span>SCORE</span>
-                <strong>{sessionScore}</strong>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {leaderboard.length > 0 && (
-          <section className="title-scores animate-fade-up" style={{ animationDelay: "0.22s" }}>
-            <p className="title-scores-label">Top runs</p>
-            <ol className="title-scores-list">
-              {leaderboard.slice(0, MAX_VISIBLE_SCORES).map((entry, i) => (
-                <li key={`${entry.name}-${entry.date}`} className="title-scores-row">
-                  <span className="title-scores-rank">0{i + 1}</span>
-                  <span className="title-scores-name">{entry.name}</span>
-                  <span className="title-scores-points">{entry.score}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        )}
-      </div>
+          <div className="arena-launch">
+            <button className="arena-cta" type="submit" disabled={!canStart} aria-describedby="arena-launch-hint">Entrer dans l'arène <span aria-hidden="true">→</span></button>
+            <p id="arena-launch-hint">{canStart ? "Prochaine étape : choisissez vos épreuves." : "Renseignez vos deux pseudos pour commencer."}</p>
+          </div>
+        </form>
+        {draftUnavailable && <p className="arena-storage-warning" role="status">Les noms ne peuvent pas être mémorisés dans ce navigateur.</p>}
+        {savedSession && <TitleSessionResume session={savedSession} onContinue={onContinue} onDelete={() => { onDeleteSession(); reset(); }} />}
+      </main>
+      <footer className="arena-footer"><span>QUIZ'ANIMANGA <span className="arena-footer-divider">/</span> L'ANIME ENTRE EN JEU.</span><span>DUEL LOCAL <span className="arena-footer-dot" /></span></footer>
     </div>
-  );
+  </div>;
 }

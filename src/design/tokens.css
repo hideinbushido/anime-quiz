@@ -1,0 +1,49 @@
+/* OPENING — direction artistique « générique d'anime ».
+   Nuit profonde, dégradé crépuscule (violet → magenta → soleil), formes en diagonales
+   et coins coupés. Les durées suivent la règle « la sortie est plus rapide que l'entrée ». */
+:root {
+  --night: #06071a;
+  --night-2: #0b0d29;
+  --dusk: #17164a;
+  --panel: rgba(14, 15, 46, 0.82);
+  --panel-solid: #0f1032;
+
+  --violet: #7357ff;
+  --magenta: #ff3d8b;
+  --coral: #ff6b4a;
+  --sun: #ffc247;
+  --ice: #7fe7ff;
+  --mint: #5df2b0;
+  --danger: #ff5a6e;
+
+  --text: #f7f4ff;
+  --muted: #b4b1d6;
+  --line: rgba(170, 160, 255, 0.24);
+  --line-strong: rgba(200, 190, 255, 0.5);
+
+  --p1: var(--ice);
+  --p2: var(--magenta);
+
+  --sunset: linear-gradient(115deg, var(--violet) 0%, var(--magenta) 52%, var(--sun) 100%);
+  --sunset-soft: linear-gradient(115deg, rgba(115, 87, 255, 0.35), rgba(255, 61, 139, 0.3) 55%, rgba(255, 194, 71, 0.25));
+
+  --f-display: "Dela Gothic One", "Anton", "Arial Black", sans-serif;
+  --f-body: "Outfit", system-ui, sans-serif;
+  --f-label: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d-fast: 160ms;
+  --d-base: 280ms;
+  --d-slow: 560ms;
+
+  --cut: 18px;
+  --gutter: clamp(16px, 4vw, 56px);
+
+  color-scheme: dark;
+}
+
+.player1 { --player-color: var(--p1); }
+.player2 { --player-color: var(--p2); }
+.host { --player-color: var(--sun); }

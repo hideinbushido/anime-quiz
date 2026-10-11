@@ -1,93 +1,26 @@
 import { useState } from "react";
 import type { Epreuve } from "../types";
-import { loadLeaderboard, removeLeaderboardEntry } from "../utils";
+import { readHistory } from "../duel/storage";
+import { loadLeaderboard } from "../utils";
+import { Recap } from "./Recap";
+import { winnerLabel } from "../duel/engine";
 
-interface Props {
-  epreuves: Epreuve[];
-  onBack: () => void;
-}
-
-function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
-}
-
-export function Scoreboard({ epreuves, onBack }: Props) {
-  const [entries, setEntries] = useState(() => loadLeaderboard());
-  const totalScore = entries.reduce((sum, entry) => sum + entry.score, 0);
-
-  function handleDelete(date: string) {
-    setEntries(removeLeaderboardEntry(date));
-  }
-
-  return (
-    <div className="screen scores-screen">
-      <header className="scores-header">
-        <div>
-          <p className="menu-eyebrow">Classement</p>
-          <h1>Scores des participants</h1>
-        </div>
-        <button className="scores-back" type="button" onClick={onBack}>
-          Retour
-        </button>
-      </header>
-
-      <section className="scores-summary">
-        <div className="scores-summary-item">
-          <span>Participants</span>
-          <strong>{entries.length}</strong>
-        </div>
-        <div className="scores-summary-item">
-          <span>Score total</span>
-          <strong>{totalScore}</strong>
-        </div>
-      </section>
-
-      <section className="scores-list">
-        {entries.length === 0 ? (
-          <div className="scores-empty">Aucun score enregistré pour le moment.</div>
-        ) : (
-          entries.map((entry, index) => {
-            const played = (entry.epreuveIds ?? [])
-              .map((id) => epreuves.find((epreuve) => epreuve.id === id))
-              .filter((epreuve): epreuve is Epreuve => Boolean(epreuve));
-
-            return (
-              <article key={`${entry.name}-${entry.date}`} className="scores-row">
-                <span className="scores-rank">#{index + 1}</span>
-                <div className="scores-main">
-                  <div className="scores-name-line">
-                    <strong>{entry.name}</strong>
-                    <span>{formatDate(entry.date)}</span>
-                  </div>
-                  <div className="scores-epreuves">
-                    {played.length > 0 ? (
-                      played.map((epreuve) => (
-                        <span key={epreuve.id}>{epreuve.nom}</span>
-                      ))
-                    ) : (
-                      <span>Épreuves non détaillées</span>
-                    )}
-                  </div>
-                </div>
-                <strong className="scores-points">{entry.score}</strong>
-                <button
-                  className="scores-delete"
-                  type="button"
-                  onClick={() => handleDelete(entry.date)}
-                  aria-label={`Supprimer le score de ${entry.name}`}
-                >
-                  Supprimer
-                </button>
-              </article>
-            );
-          })
-        )}
-      </section>
-    </div>
-  );
+export function Scoreboard({ epreuves, onBack }: { epreuves: Epreuve[]; onBack: () => void }) {
+  const [entries] = useState(() => readHistory(epreuves));
+  const [legacy] = useState(loadLeaderboard);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = entries.find(entry => entry.id === selectedId);
+  if (selected) return <><button className="links-secondary" onClick={() => setSelectedId(null)}>Retour à l'historique</button><Recap epreuves={epreuves} session={selected} onRestart={onBack} /></>;
+  return <div className="screen scores-screen">
+    <header className="scores-header"><div><p className="menu-eyebrow">Les derniers LIVE</p><h1>Historique des duels</h1></div><button className="scores-back" onClick={onBack}>Retour</button></header>
+    <p>Les 20 derniers duels terminés sont conservés dans ce navigateur.</p>
+    <section className="duel-results">
+      {!entries.length && <p className="scores-empty">Aucun duel terminé pour le moment.</p>}
+      {entries.map(entry => <article key={entry.id}><h2>{entry.players.player1.name} VS {entry.players.player2.name}</h2>
+        <p>{entry.players.player1.score} — {entry.players.player2.score} · {winnerLabel(entry)}</p>
+        <button className="links-secondary" onClick={() => setSelectedId(entry.id)}>Voir les 5 épreuves</button>
+      </article>)}
+    </section>
+    {legacy.length > 0 && <details><summary>Archives solo ({legacy.length})</summary><ul>{legacy.map((entry, index) => <li key={`${entry.date}-${index}`}>{entry.name} · {entry.score} pts</li>)}</ul></details>}
+  </div>;
 }

@@ -25,7 +25,10 @@ export function clearSession(): void {
 export function loadLeaderboard(): LeaderboardEntry[] {
   try {
     const raw = localStorage.getItem(LEADERBOARD_KEY);
-    return raw ? (JSON.parse(raw) as LeaderboardEntry[]) : [];
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((entry): entry is LeaderboardEntry =>
+      entry !== null && typeof entry === "object" && typeof entry.name === "string"
+      && typeof entry.date === "string" && Number.isFinite(entry.score)) : [];
   } catch {
     return [];
   }

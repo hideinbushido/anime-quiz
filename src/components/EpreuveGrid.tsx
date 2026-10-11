@@ -1,175 +1,93 @@
-import type { Epreuve } from "../types";
-import { hasFullLogo } from "../epreuveLogoUtils";
+import { useEffect, useRef, useState } from "react";
+import type { DifficultyClass, DuelSession, Epreuve, Selector } from "../types";
+import { CLASSES, SELECTION_ORDER } from "../duel/engine";
 import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
+import { DuelHeader } from "./DuelHeader";
 
 interface Props {
   epreuves: Epreuve[];
-  playerName: string;
-  selectedIds: string[];
-  playedIds: string[];
-  maxSelection: number;
-  score: number;
-  onToggle: (id: string) => void;
+  session: DuelSession;
+  onSelect: (id: string, difficulty: DifficultyClass) => void;
+  onUndo: () => void;
   onStart: () => void;
+  onPreview: (id: string, difficulty: DifficultyClass) => void;
 }
 
-function getTypeLabel(type: Epreuve["type"]): string {
-  if (type === "blind-test") return "Audio";
-  if (type === "logic-links") return "Logique";
-  return "Citation";
+function selectorName(selector: Selector, session: DuelSession): string {
+  return selector === "host" ? "Présentateur" : session.players[selector].name;
 }
 
-export function EpreuveGrid({
-  epreuves,
-  playerName,
-  selectedIds,
-  playedIds,
-  maxSelection,
-  score,
-  onToggle,
-  onStart,
-}: Props) {
-  const focusedEpreuve =
-    epreuves.find((epreuve) => epreuve.id === selectedIds.at(-1)) ?? epreuves[0];
-
-  return (
-    <div className="screen menu-screen">
-      <header className="menu-header">
-        <div>
-          <p className="menu-eyebrow">Session</p>
-          <h1>Sélection d'épreuves</h1>
-        </div>
-
-        <div className="menu-stats">
-          <div className="menu-stat">
-            <span>Joueur</span>
-            <strong>{playerName || "-"}</strong>
-          </div>
-          <div className="menu-stat">
-            <span>Score</span>
-            <strong>{score}</strong>
-          </div>
-          <div className="menu-stat">
-            <span>Jouées</span>
-            <strong>
-              {playedIds.length}/{maxSelection}
-            </strong>
-          </div>
-        </div>
-      </header>
-
-      <main className="menu-layout">
-        <section className="menu-logo-board">
-          <div className="menu-board-header">
-            <div>
-              <span className="menu-panel-label">Cadre des épreuves</span>
-              <strong>{epreuves.length} logos</strong>
-            </div>
-            <span>
-              {selectedIds.length}/{maxSelection}
-            </span>
-          </div>
-
-          <div className="menu-logo-grid" aria-label="Liste des épreuves">
-            {epreuves.map((epreuve, index) => {
-              const isSelected = selectedIds.includes(epreuve.id);
-              const isPlayed = playedIds.includes(epreuve.id);
-              const disabled =
-                isPlayed || (!isSelected && selectedIds.length >= maxSelection);
-
-              return (
-                <button
-                  key={epreuve.id}
-                  className={
-                    "menu-logo-tile" +
-                    (isSelected ? " menu-logo-tile-selected" : "") +
-                    (isPlayed ? " menu-logo-tile-played" : "")
-                  }
-                  style={{
-                    ["--tile-color" as string]: epreuve.couleur,
-                    animationDelay: `${index * 0.04}s`,
-                  }}
-                  disabled={disabled}
-                  onClick={() => onToggle(epreuve.id)}
-                >
-                  <span className="menu-logo-status">
-                    {isPlayed ? "Terminé" : isSelected ? "Prêt" : getTypeLabel(epreuve.type)}
-                  </span>
-                  <span className="menu-logo-mark">
-                    <EpreuveLogoDisplay epreuveId={epreuve.id} />
-                  </span>
-                  {!hasFullLogo(epreuve.id) && (
-                    <span className="menu-logo-name">{epreuve.nom}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <aside className="menu-panel">
-          <div className="menu-panel-top">
-            <span className="menu-panel-label">Deck actif</span>
-            <strong>
-              {selectedIds.length}/{maxSelection}
-            </strong>
-          </div>
-
-          <div className="menu-progress" aria-hidden>
-            {Array.from({ length: maxSelection }).map((_, i) => (
-              <span
-                key={i}
-                className={
-                  "menu-progress-dot" +
-                  (i < selectedIds.length ? " menu-progress-dot-selected" : "") +
-                  (i < playedIds.length ? " menu-progress-dot-played" : "")
-                }
-              />
-            ))}
-          </div>
-
-          {focusedEpreuve && (
-            <div
-              className="menu-focus-card"
-              style={{ ["--tile-color" as string]: focusedEpreuve.couleur }}
-            >
-              <span>{getTypeLabel(focusedEpreuve.type)}</span>
-              <strong>{focusedEpreuve.nom}</strong>
-              <p>{focusedEpreuve.theme}</p>
-            </div>
-          )}
-
-          <div className="menu-selected-list">
-            {selectedIds.length === 0 ? (
-              <p>Aucune épreuve sélectionnée</p>
-            ) : (
-              selectedIds.map((id, index) => {
-                const epreuve = epreuves.find((ep) => ep.id === id);
-                if (!epreuve) return null;
-                return (
-                  <div key={id} className="menu-selected-item">
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{epreuve.nom}</strong>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </aside>
-      </main>
-
-      <footer className="menu-footer">
-        <p>
-          {selectedIds.length}/{maxSelection} épreuves sélectionnées
-        </p>
-        <button
-          className="btn-primary menu-start"
-          disabled={selectedIds.length === 0}
-          onClick={onStart}
-        >
-          Lancer la session
-        </button>
-      </footer>
+export function EpreuveGrid({ epreuves, session, onSelect, onUndo, onStart, onPreview }: Props) {
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [difficulty, setDifficulty] = useState<DifficultyClass>("D");
+  const classPickerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!pendingId) return;
+    classPickerRef.current?.scrollIntoView({ block: "center" });
+    classPickerRef.current?.focus({ preventScroll: true });
+  }, [pendingId]);
+  const currentSelector = SELECTION_ORDER[session.selected.length];
+  const pending = epreuves.find(epreuve => epreuve.id === pendingId);
+  const ready = session.phase === "ready";
+  return <div className="screen menu-screen duel-selection">
+    <DuelHeader players={session.players} label={ready ? "PROGRAMME DU LIVE" : "LA SÉLECTION"} />
+    <div className="duel-steps" aria-label="Étapes de sélection">
+      {(["player1", "player2", "host"] as const).map(selector => <div key={selector} className={selector + (currentSelector === selector ? " active" : "")} aria-current={currentSelector === selector ? "step" : undefined}>
+        <span>{selectorName(selector, session)}</span><b>{session.selected.filter(item => item.selectedBy === selector).length}/{selector === "host" ? 1 : 2}</b>
+      </div>)}
     </div>
-  );
+    {!ready && <div className="duel-selection-heading"><h1>À {selectorName(currentSelector, session)} de choisir</h1><p>Choisis une épreuve, puis sa classe.</p></div>}
+    {epreuves.length < 5 && <p className="duel-notice" role="status">{epreuves.length} épreuves disponibles. Le LIVE pourra démarrer quand le catalogue en proposera au moins 5. Tu peux déjà préparer la sélection et essayer chaque épreuve.</p>}
+    <main className="menu-layout">
+      <section className="menu-logo-board">
+        <div className="menu-board-header"><strong>Les épreuves</strong><span>{session.selected.length}/5 verrouillées</span></div>
+        <div className="menu-logo-grid">
+          {epreuves.map(epreuve => {
+            const selected = session.selected.find(item => item.epreuveId === epreuve.id);
+            return <article key={epreuve.id} className="duel-tile-wrap">
+              <button className={"menu-logo-tile" + (selected ? " menu-logo-tile-selected" : "")}
+                style={{ ["--tile-color" as string]: epreuve.couleur }}
+                disabled={Boolean(selected) || ready} aria-label={`Choisir ${epreuve.nom}`}
+                onClick={() => { setPendingId(epreuve.id); setDifficulty("D"); }}>
+                <span className="menu-logo-status">{selected ? `Classe ${selected.difficulty} · ${selectorName(selected.selectedBy, session)}` : "D / C / B / A"}</span>
+                <span className="menu-logo-mark"><EpreuveLogoDisplay epreuveId={epreuve.id} /></span>
+                <span className="menu-logo-name">{epreuve.nom}</span>
+              </button>
+              <button className="duel-text-button" onClick={() => { setPendingId(epreuve.id); setDifficulty(selected?.difficulty ?? "D"); }}>Essayer / voir les classes</button>
+            </article>;
+          })}
+        </div>
+      </section>
+      <aside className="menu-panel">
+        <div className="menu-panel-top"><span className="menu-panel-label">Programme du LIVE</span><strong>{session.selected.length}/5</strong></div>
+        <ol className="duel-program">
+          {SELECTION_ORDER.map((selector, index) => {
+            const selection = session.selected[index];
+            return <li key={index} className={selector}>
+              <small>{index + 1} · {selectorName(selector, session)}</small>
+              <strong>{selection ? epreuves.find(epreuve => epreuve.id === selection.epreuveId)?.nom : "Épreuve à choisir"}</strong>
+              {selection && <span className="duel-class">Classe {selection.difficulty}</span>}
+            </li>;
+          })}
+        </ol>
+        <button className="links-secondary" disabled={!session.selected.length} onClick={() => { setPendingId(null); onUndo(); }}>Annuler le dernier choix</button>
+        <button className="btn-primary" disabled={!ready} onClick={onStart}>Lancer le duel</button>
+      </aside>
+    </main>
+    {pending && <section ref={classPickerRef} tabIndex={-1} className="duel-class-picker" aria-labelledby="class-title">
+      <div><p className="duel-eyebrow">CHOIX DE CLASSE</p><h2 id="class-title">{pending.nom}</h2></div>
+      <div className="duel-class-options" role="group" aria-label="Classe de difficulté">
+        {CLASSES.map(level => <button key={level} aria-pressed={difficulty === level} className={difficulty === level ? "active" : ""} onClick={() => setDifficulty(level)}>
+          <b>{level}</b><span>{pending.difficulties[level].label}</span>
+        </button>)}
+      </div>
+      <p>{pending.difficulties[difficulty].description}</p>
+      <div className="duel-actions">
+        <button className="links-secondary" onClick={() => setPendingId(null)}>Fermer</button>
+        <button className="links-secondary" onClick={() => onPreview(pending.id, difficulty)}>Essayer la classe {difficulty}</button>
+        <button className="btn-primary" disabled={ready || session.selected.some(item => item.epreuveId === pending.id)}
+          onClick={() => { onSelect(pending.id, difficulty); setPendingId(null); }}>Verrouiller la classe {difficulty}</button>
+      </div>
+    </section>}
+  </div>;
 }

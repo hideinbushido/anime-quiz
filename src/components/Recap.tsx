@@ -1,46 +1,19 @@
-import type { Epreuve, EpreuveResult } from "../types";
+import type { DuelSession, Epreuve } from "../types";
+import { DuelHeader } from "./DuelHeader";
+import { winnerLabel } from "../duel/engine";
 
-interface Props {
-  epreuves: Epreuve[];
-  results: EpreuveResult[];
-  onRestart: () => void;
-}
-
-export function Recap({ epreuves, results, onRestart }: Props) {
-  const total = results.reduce((sum, r) => sum + r.points, 0);
-
-  return (
-    <div className="screen">
-      <header className="header">
-        <div>
-          <p className="eyebrow">SESSION TERMINÉE</p>
-          <h1>RÉCAPITULATIF</h1>
-        </div>
-        <div className="score-box">
-          <span className="score-label">SCORE FINAL</span>
-          <span className="score-value">{total}</span>
-        </div>
-      </header>
-
-      <div className="recap-list">
-        {results.map((r) => {
-          const ep = epreuves.find((e) => e.id === r.epreuveId);
-          if (!ep) return null;
-          return (
-            <div key={r.epreuveId} className="recap-row">
-              <span className="tile-logo">{ep.logo}</span>
-              <span className="recap-nom">{ep.nom}</span>
-              <span className="recap-points">{r.points} pts</span>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="footer">
-        <button className="btn-primary" onClick={onRestart}>
-          Nouvelle session
-        </button>
-      </div>
+export function Recap({ epreuves, session, onRestart }: { epreuves: Epreuve[]; session: DuelSession; onRestart: () => void }) {
+  return <div className="screen duel-recap">
+    <DuelHeader players={session.players} label="LIVE TERMINÉ · 5/5" />
+    <h1>{winnerLabel(session)}</h1>
+    <div className="duel-results">
+      {session.results.map((result, index) => <article key={result.epreuveId}>
+        <h2>{index + 1}. {epreuves.find(epreuve => epreuve.id === result.epreuveId)?.nom}</h2>
+        <p>Classe {result.difficulty} · Choix de {result.selectedBy === "host" ? "Présentateur" : session.players[result.selectedBy].name}</p>
+        <div className="duel-result-scores"><span className="player1">{session.players.player1.name} : +{result.scorePlayer1}</span><span className="player2">{session.players.player2.name} : +{result.scorePlayer2}</span></div>
+        <details><summary>Détail des manches</summary><ol>{result.rounds.map((round, i) => <li key={round.roundId}>Manche {i + 1} · {session.players[round.playerId].name} · {round.correct ? "Réussie" : "Partielle ou incorrecte"} · {round.points} pts</li>)}</ol></details>
+      </article>)}
     </div>
-  );
+    <button className="btn-primary" onClick={onRestart}>Préparer un nouveau LIVE</button>
+  </div>;
 }

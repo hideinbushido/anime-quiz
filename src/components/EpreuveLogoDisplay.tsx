@@ -476,13 +476,17 @@ export function EpreuveLogoDisplay({ epreuveId, className = "" }: Props) {
     );
   }
 
-  const logos: { [key: string]: string } = {
-    "citations-cultes": "💬",
-  };
+  if (epreuveId === "citations-cultes") {
+    return (
+      <div className={`logo-display logo-quotes ${className}`}>
+        <svg viewBox="0 0 260 200" fill="none" role="img" aria-label="Répliques Cultes">
+          <path d="M22 26 H238 V132 H128 L92 172 V132 H22 Z" fill="#0b0d29" stroke="#ffc247" strokeWidth="6" strokeLinejoin="round" />
+          <path d="M58 58 h34 v26 c0 18 -10 28 -28 30 l-4 -10 c9 -2 14 -7 15 -16 h-17 Z M112 58 h34 v26 c0 18 -10 28 -28 30 l-4 -10 c9 -2 14 -7 15 -16 h-17 Z" fill="#ffc247" />
+          <path d="M172 66 H214 M172 84 H214 M172 102 H200" stroke="#f7f4ff" strokeWidth="7" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
 
-  return (
-    <div className={`logo-display ${className}`}>
-      {logos[epreuveId] || "🎧"}
-    </div>
-  );
+  return <div className={`logo-display ${className}`} />;
 }
