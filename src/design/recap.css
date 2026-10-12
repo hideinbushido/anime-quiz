@@ -1,0 +1,265 @@
+/* LA FIN DU LIVE — le vainqueur, les scores, la feuille de match.
+   Le haut tient sur un écran de live : un nom géant dans la couleur du
+   vainqueur, les deux scores qui grimpent, l'or qui pleut. */
+.duel-recap {
+  --w: var(--gold-2);
+  --w-deep: var(--gold-4);
+  width: 100%;
+  max-width: none;
+  padding-top: 0;
+  gap: clamp(18px, 3vh, 34px);
+  align-items: stretch;
+}
+.duel-recap.player1 { --w: var(--sapphire); --w-deep: var(--sapphire-deep); }
+.duel-recap.player2 { --w: var(--ruby); --w-deep: var(--ruby-deep); }
+.duel-recap .player1 { --c: var(--sapphire); }
+.duel-recap .player2 { --c: var(--ruby); }
+.duel-recap .tie { --c: var(--gold-2); }
+
+/* ── Le vainqueur ── */
+.recap-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--gutter));
+  min-height: min(70vh, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.4vh, 16px);
+  padding: clamp(20px, 4vh, 48px) var(--gutter);
+  text-align: center;
+  background:
+    radial-gradient(70% 90% at 50% 40%, color-mix(in srgb, var(--w-deep) 78%, transparent), transparent 72%),
+    var(--ink);
+  border-bottom: 1px solid var(--hair);
+}
+/* Les rayons qui tournent derrière le nom */
+.recap-burst {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: -1;
+  width: 170vmax;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--w) 20%, transparent) 0deg 4deg, transparent 4deg 14deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 46%);
+  mask-image: radial-gradient(circle, #000 0%, transparent 46%);
+  animation: arenaSealTurn 80s linear infinite, introFade 1200ms ease-out 400ms both;
+}
+.recap-kicker {
+  font: 700 clamp(11px, 1.1vw, 15px) / 1 var(--f-accent);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+  animation: introFade 600ms ease-out 200ms both;
+}
+.recap-seal {
+  width: clamp(54px, 9vmin, 96px);
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(243, 214, 126, 0.6));
+  animation: zkSealIn 1000ms var(--spring) 250ms both, arenaSealTurn 24s linear 1250ms infinite;
+}
+.recap-hero h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 1vh, 12px);
+  transform: none;
+}
+.recap-name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.22em;
+  font: 900 clamp(3.2rem, 12.5vw, 14rem) / 0.84 var(--f-title);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+}
+.recap-word {
+  display: inline-flex;
+  overflow: hidden;
+  padding-top: 0.2em;
+  margin-top: -0.14em;
+}
+.recap-word > span {
+  display: inline-block;
+  padding-top: 0.2em;
+  margin-top: -0.2em;
+  color: var(--w);
+  text-shadow: 0 0 70px color-mix(in srgb, var(--w) 60%, transparent);
+  transform: translateY(112%);
+  animation: introLetter 1000ms var(--spring) forwards;
+  animation-delay: calc(600ms + var(--i) * 55ms);
+}
+.duel-recap.tie .recap-word > span {
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+.recap-sub {
+  padding: 0.42em 1em 0.3em;
+  background: var(--foil);
+  color: var(--ink);
+  font: 900 clamp(1.1rem, 2.6vw, 2.6rem) / 1 var(--f-title);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  clip-path: polygon(18px 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+  animation: zkStamp 800ms var(--spring) 1300ms both;
+}
+
+.recap-scores {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 6vw, 110px);
+  margin-top: clamp(8px, 2vh, 24px);
+  animation: arenaSettle 900ms var(--spring) 1500ms both;
+}
+.recap-scores > div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  justify-content: end;
+  gap: clamp(8px, 1.6vh, 16px) 8px;
+  opacity: 0.62;
+}
+.recap-scores > div.player2 { justify-content: start; }
+.recap-scores > div.is-winner,
+.duel-recap.tie .recap-scores > div { opacity: 1; }
+/* le nom au-dessus du score ; le chiffre lui-même est dans un span du <b>, qu'il ne faut pas viser */
+.recap-scores > div > span {
+  grid-column: 1 / -1;
+  font: 800 clamp(0.95rem, 1.6vw, 1.6rem) / 1 var(--f-title);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c);
+  text-align: right;
+}
+.recap-scores > .player2 > span { text-align: left; }
+.recap-scores b {
+  font: 900 clamp(3rem, 8.6vw, 8.6rem) / 0.82 var(--f-title);
+  font-variant-numeric: tabular-nums;
+  color: var(--c);
+}
+.recap-scores .is-winner b { text-shadow: 0 0 50px color-mix(in srgb, var(--c) 70%, transparent); }
+.recap-scores small {
+  font: 700 clamp(11px, 1vw, 14px) / 1 var(--f-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+/* La pluie d'or : chaque éclat a sa colonne, sa taille et son rythme */
+.recap-confetti { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.recap-confetti i {
+  position: absolute;
+  top: -6%;
+  left: calc(var(--i) * 2.3% + 0.5%);
+  width: calc(6px + mod(var(--i), 4) * 3px);
+  height: calc(10px + mod(var(--i), 3) * 7px);
+  background: var(--gold-2);
+  opacity: 0;
+  animation: recapFall calc(2600ms + mod(var(--i), 7) * 420ms) cubic-bezier(0.3, 0, 0.7, 1) calc(1300ms + mod(var(--i) * 7, 13) * 190ms) 3 both;
+}
+.recap-confetti i:nth-child(3n) { background: var(--gold-1); }
+.recap-confetti i:nth-child(4n) { background: var(--w); }
+.recap-confetti i:nth-child(5n) { background: var(--paper); border-radius: 50%; }
+@keyframes recapFall {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg) rotateY(0deg); }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(78vh) rotate(calc(260deg + var(--i) * 31deg)) rotateY(900deg); }
+}
+
+/* ── La feuille de match ── */
+.recap-sheet { display: grid; gap: 14px; }
+.recap-sheet-title {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hair);
+  font: 700 12px / 1 var(--f-accent);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+.duel-recap .duel-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: clamp(10px, 1.2vw, 18px);
+}
+.duel-recap .duel-results article {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 16px 10px;
+  border: 1px solid var(--hair);
+  border-top: 3px solid var(--c);
+  border-left: 1px solid var(--hair);
+  background:
+    radial-gradient(120% 70% at 100% 0%, color-mix(in srgb, var(--c) 18%, transparent), transparent 62%),
+    linear-gradient(180deg, #17120b, #0d0a07);
+  animation: zkSettle 900ms var(--spring) both;
+  animation-delay: calc(2200ms + var(--i) * 120ms);
+}
+.recap-card-logo { width: clamp(84px, 9vw, 132px); align-self: center; }
+.duel-recap .duel-results h2 {
+  padding-top: 0.14em;
+  font: 900 clamp(1.15rem, 1.7vw, 1.7rem) / 0.96 var(--f-title);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--paper);
+  transform: none;
+}
+.duel-recap .duel-results article > p {
+  font: 600 11px / 1.3 var(--f-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.duel-recap .duel-result-scores { display: grid; gap: 4px; margin-top: auto; padding-top: 6px; }
+.duel-recap .duel-result-scores span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0.3em 0.5em 0.2em;
+  font: 800 clamp(0.95rem, 1.3vw, 1.3rem) / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c);
+  opacity: 0.7;
+}
+.duel-recap .duel-result-scores span.is-lead { background: var(--c); color: var(--ink); opacity: 1; }
+.duel-recap .duel-results summary {
+  min-height: 40px;
+  font: 600 11px / 1 var(--f-label);
+  letter-spacing: 0.16em;
+  color: var(--paper-dim);
+}
+.duel-recap .duel-results ol { font-size: 13px; color: var(--paper-dim); }
+
+.duel-recap > .btn-primary {
+  align-self: center;
+  min-height: clamp(56px, 8vh, 76px);
+  padding: 0.12em clamp(28px, 4vw, 60px) 0;
+  background: var(--foil);
+  background-size: 220% 100%;
+  color: var(--ink);
+  font: 900 clamp(1.3rem, 2.3vw, 2.2rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  transition: transform 700ms var(--spring);
+  animation: arenaFoil 3.6s ease-in-out infinite alternate;
+}
+.duel-recap > .btn-primary:hover:enabled { transform: scale(1.06); }
+
+@media (max-width: 700px) {
+  .recap-scores { gap: 18px; }
+  .recap-scores > div,
+  .recap-scores > div.player2 { justify-content: center; }
+  .recap-scores > div > span,
+  .recap-scores > .player2 > span { text-align: center; }
+}

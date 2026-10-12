@@ -14,7 +14,7 @@ export function EpreuvePreview({ epreuve, difficulty, onBack }: { epreuve: Epreu
   players.player1.score = scoreRounds(progress.rounds, "player1");
   players.player2.score = scoreRounds(progress.rounds, "player2");
   return <div className="duel-stage">
-    <EpisodeCard label="RÉPÉTITION" name={epreuve.nom} difficulty={difficulty} chooser="Aucun résultat enregistré" color={epreuve.couleur} />
+    <EpisodeCard label="Répétition" name={epreuve.nom} difficulty={difficulty} chooser="Aucun résultat enregistré" epreuveId={epreuve.id} />
     <div className="duel-preview-bar"><p>ESSAI · {epreuve.nom} · Classe {difficulty} · Aucun résultat enregistré</p><button className="links-secondary" onClick={onBack}>Retour à la sélection</button></div>
     <DuelHeader players={players} label={finished ? "ESSAI TERMINÉ" : "RÉPÉTITION"} />
     {!finished ? <>

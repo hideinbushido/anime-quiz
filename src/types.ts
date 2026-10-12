@@ -137,6 +137,8 @@ export interface DuelEpreuveResult extends SelectedEpreuve {
 export interface DuelSession {
   version: 2;
   id: string;
+  /** Date de fin du duel (ISO), posée à son entrée dans l'historique. Absente des duels plus anciens. */
+  finishedAt?: string;
   phase: "selection" | "ready" | "playing" | "recap";
   players: Record<PlayerId, DuelPlayer>;
   selected: SelectedEpreuve[];

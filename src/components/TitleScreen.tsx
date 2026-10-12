@@ -10,25 +10,40 @@ interface Props {
   onPlay: (name1: string, name2: string) => void;
   onContinue: () => void;
   onScores: () => void;
+  onRules: () => void;
   onDeleteSession: () => void;
 }
 
-export function TitleScreen({ savedSession, onPlay, onContinue, onScores, onDeleteSession }: Props) {
+const TITLE = ["Qui", "entre", "dans", "l'arène", "?"];
+
+export function TitleScreen({ savedSession, onPlay, onContinue, onScores, onRules, onDeleteSession }: Props) {
   const { names, setName, reset, clearDraft, draftUnavailable } = useTitlePlayers(savedSession);
-  const canStart = names.every(name => Boolean(name.trim()));
-  return <div className="arena-home">
-    <div className="arena-background" aria-hidden="true"><span /><span /><span /></div>
-    <div className="arena-sun" aria-hidden="true" />
+  const ready = names.map(name => Boolean(name.trim()));
+  const canStart = ready.every(Boolean);
+  let letter = 0;
+  return <div className={"arena-home" + (canStart ? " is-armed" : "")}>
+    {/* Le fond : une moitié par joueur, séparées par le trait d'or */}
+    <div className="arena-split" aria-hidden="true">
+      <span className={"arena-half arena-half-1" + (ready[0] ? " is-lit" : "")} />
+      <span className={"arena-half arena-half-2" + (ready[1] ? " is-lit" : "")} />
+      <span className="arena-blade" />
+    </div>
     <div className="arena-shell">
       <header className="arena-topbar">
         <LogoDuel />
-        <button className="arena-history" type="button" onClick={onScores}><span aria-hidden="true">↗</span> Historique des duels</button>
+        <div className="arena-topbar-links">
+          <button className="arena-history" type="button" onClick={onRules}>Les règles</button>
+          <button className="arena-history" type="button" onClick={onScores}>Historique des duels</button>
+        </div>
       </header>
       <main className="arena-main">
         <div className="arena-heading">
-          <p className="arena-overline"><span className="arena-live-dot" /> LE DUEL ANIME</p>
-          <h1>L'arène <span>vous attend.</span></h1>
-          <p>Deux joueurs. Une rencontre à écrire.</p>
+          <p className="arena-overline"><span className="arena-live-dot" /> Le duel anime · 1 contre 1</p>
+          <h1 aria-label={TITLE.join(" ")}>
+            {TITLE.map((word, w) => <span key={w} className="arena-word" aria-hidden="true">
+              {[...word].map((char, c) => <span key={c} style={{ ["--i" as string]: letter++ }}>{char}</span>)}
+            </span>)}
+          </h1>
         </div>
         <form className="arena-form" onSubmit={event => {
           event.preventDefault();
@@ -38,18 +53,20 @@ export function TitleScreen({ savedSession, onPlay, onContinue, onScores, onDele
         }}>
           <div className="arena-matchup">
             <DuelPlayerCard player={1} name={names[0]} onChange={name => setName(0, name)} />
-            <DuelVsStage />
+            <DuelVsStage armed={canStart} />
             <DuelPlayerCard player={2} name={names[1]} onChange={name => setName(1, name)} />
           </div>
           <div className="arena-launch">
-            <button className="arena-cta" type="submit" disabled={!canStart} aria-describedby="arena-launch-hint">Entrer dans l'arène <span aria-hidden="true">→</span></button>
-            <p id="arena-launch-hint">{canStart ? "Prochaine étape : choisissez vos épreuves." : "Renseignez vos deux pseudos pour commencer."}</p>
+            <button className="arena-cta" type="submit" disabled={!canStart} aria-describedby="arena-launch-hint">
+              <span>Entrer dans l'arène</span>
+            </button>
+            <p id="arena-launch-hint">{canStart ? "Prochaine étape : le choix des épreuves." : "Saisis les deux pseudos pour ouvrir l'arène."}</p>
           </div>
         </form>
         {draftUnavailable && <p className="arena-storage-warning" role="status">Les noms ne peuvent pas être mémorisés dans ce navigateur.</p>}
         {savedSession && <TitleSessionResume session={savedSession} onContinue={onContinue} onDelete={() => { onDeleteSession(); reset(); }} />}
       </main>
-      <footer className="arena-footer"><span>QUIZ'ANIMANGA <span className="arena-footer-divider">/</span> L'ANIME ENTRE EN JEU.</span><span>DUEL LOCAL <span className="arena-footer-dot" /></span></footer>
+      <footer className="arena-footer"><span>Quiz'Animanga</span><span>Présenté par Zenkai</span></footer>
     </div>
   </div>;
 }

@@ -4,6 +4,7 @@ import { currentFeedback } from "../duel/engine";
 import { isAnswerCorrect } from "../utils";
 import { KillerBeePlayer } from "./KillerBeePlayer";
 import { LogicLinksPlayer } from "./LogicLinksPlayer";
+import { EpreuveLogo } from "./EpreuveLogo";
 
 const POINTS_PAR_BONNE_REPONSE = 100;
 interface Props extends GameControls {
@@ -51,6 +52,7 @@ function QuestionPlayer({ epreuve, progress, onEdit, onValidate, onNext }: Props
   return (
     <div className="screen quote-session">
       <header className="header">
+        <div className="zk-quote-logo"><EpreuveLogo epreuveId={epreuve.id} /></div>
         <div>
           <p className="eyebrow">{epreuve.nom}</p>
           <h1>

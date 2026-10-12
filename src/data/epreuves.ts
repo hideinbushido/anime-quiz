@@ -21,7 +21,7 @@ export const epreuves: Epreuve[] = [
     nom: "Les Beats de Killer Bee",
     logo: "🎧",
     couleur: "#3b82f6",
-    theme: "Duel musical au buzzer : trouve le nom de l?anime",
+    theme: "Duel musical au buzzer : trouve le nom de l'anime",
     type: "blind-test",
     difficulties: killerBeeDifficulties,
     questions: [

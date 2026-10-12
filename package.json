@@ -9,18 +9,21 @@
     "lint": "oxlint",
     "test": "node --import ./scripts/register-ts.mjs --test tests/*.test.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node --import ./scripts/register-ts.mjs server/index.ts"
   },
   "dependencies": {
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.0",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",

@@ -111,7 +111,10 @@ export function readHistory(catalog: Epreuve[]): DuelSession[] {
 export function saveDuel(session: DuelSession, catalog: Epreuve[]): void {
   localStorage.setItem(DUEL_KEY, JSON.stringify(session));
   if (session.phase === "recap") {
-    const previous = readHistory(catalog).filter(entry => entry.id !== session.id);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify([session, ...previous].slice(0, 20)));
+    const history = readHistory(catalog);
+    // Un duel terminé est réenregistré à chaque passage : il garde la date de sa première entrée
+    const finishedAt = history.find(entry => entry.id === session.id)?.finishedAt ?? new Date().toISOString();
+    const previous = history.filter(entry => entry.id !== session.id);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([{ ...session, finishedAt }, ...previous].slice(0, 20)));
   }
 }

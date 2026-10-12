@@ -957,3 +957,10 @@
     display: none;
   }
 }
+
+/* Compact music-player controls, including the mobile dock. */
+.beats-session .beats-transport { display: flex; align-items: center; gap: 12px; }
+.beats-session .beats-player-icon { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; justify-content: center; flex: none; }
+.beats-session .beats-player-icon.beats-play-start { width: 52px; height: 52px; }
+.beats-player-icon svg { width: 24px; height: 24px; fill: currentColor; }
+.beats-player-icon:focus-visible { outline: 2px solid var(--sun); outline-offset: 4px; }

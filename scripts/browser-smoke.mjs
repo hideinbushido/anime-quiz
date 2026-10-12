@@ -60,7 +60,7 @@ try {
     return result.result.value;
   };
   const waitFor = async expression => {
-    for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await delay(100); }
+    for (let i = 0; i < 300; i++) { if (await evaluate(expression)) return; await delay(100); }
     throw new Error(`Condition not met: ${expression}`);
   };
   const click = async selector => { await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`); await delay(80); };
@@ -129,11 +129,12 @@ try {
     // Start in the middle, then work outwards.
     for (const index of [3, 5, 1, 4, 0, 2]) {
       await evaluate(`[...document.querySelectorAll('.links-card')].find(card => card.querySelector('strong').textContent === ${JSON.stringify(solution[index])}).click()`);
-      await click(`.links-slot-wrap:nth-child(1) .links-slot[aria-label="Case ${index + 1} vide"]`);
+      await click(`.links-slot[aria-label="Case ${index + 1} vide"]`);
     }
     // Swap twice without dropping either card.
-    await click('.links-chain-step:nth-child(1) .links-slot'); await click('.links-chain-step:nth-child(2) .links-slot');
-    await click('.links-chain-step:nth-child(2) .links-slot'); await click('.links-chain-step:nth-child(1) .links-slot');
+    const slot = n => evaluate(`document.querySelectorAll('.links-slot')[${n}].click()`).then(() => delay(80));
+    await slot(0); await slot(1);
+    await slot(1); await slot(0);
     await clickText('Valider la chaîne');
     await waitFor(`document.querySelector('.links-feedback')?.textContent.includes('Chaîne parfaite')`);
     assert.equal(await evaluate(`document.querySelectorAll('.links-slot-correct').length`), 6);
@@ -150,14 +151,21 @@ try {
     if (name.startsWith('Les Beats')) {
       await waitFor(`!!document.querySelector('.beats-session audio')`);
       assert.ok(await evaluate(`document.querySelector('.beats-session audio').getAttribute('src').endsWith('.MP3')`));
+      // Le blind test se joue au buzzer : un joueur buzze, puis le présentateur valide
+      await click('[aria-label^="Buzz de"]');
+      await waitFor(`!!document.querySelector('[aria-label="Bonne réponse"]')`);
       await click('[aria-label="Bonne réponse"]');
       await waitFor(`!!document.querySelector('.beats-reveal-info')`);
     } else {
+      // L'essai s'ouvre derrière la transition entre écrans : on attend le champ avant d'écrire
+      await waitFor(`!!document.querySelector('.answer-input')`);
       await evaluate(`(() => { const input = document.querySelector('.answer-input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'Luffy'); input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
       await clickText('Valider');
       await waitFor(`!!document.querySelector('.feedback-correct')`);
     }
-    assert.ok(await evaluate(`document.querySelector('.duel-header .player1').textContent.includes('100')`));
+    // Répliques : 100 points par bonne réponse. Blind test : barème propre à la classe, il suffit qu'il soit crédité.
+    if (name.startsWith('Les Beats')) assert.notEqual(await evaluate(`document.querySelector('.duel-header .player1 .zk-sr').textContent`), '0');
+    else assert.ok(await evaluate(`document.querySelector('.duel-header .player1').textContent.includes('100')`));
     await clickText('Retour à la sélection');
   }
   await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });

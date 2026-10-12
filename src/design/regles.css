@@ -1,0 +1,367 @@
+/* LES RÈGLES — une page qu'on parcourt.
+   Une page de titre, puis un chapitre par idée. Chaque chapitre se pose une
+   seule fois, quand il entre à l'écran ; rien n'accroche le défilement. */
+.rules {
+  position: relative;
+  z-index: 1;
+  color: var(--paper);
+}
+.rules .player1 { --c: var(--sapphire); }
+.rules .player2 { --c: var(--ruby); }
+.rules .host { --c: var(--gold-2); }
+
+.rules-kicker {
+  font: 700 clamp(11px, 1vw, 14px) / 1 var(--f-accent);
+  letter-spacing: 0.46em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+
+/* ── La page de titre ── */
+.rules-cover {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100svh - 72px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 22px);
+  padding: clamp(24px, 5vh, 60px) var(--gutter);
+  text-align: center;
+  background:
+    radial-gradient(60% 70% at 50% 40%, rgba(215, 171, 63, 0.2), transparent 70%),
+    radial-gradient(50% 70% at 0% 70%, rgba(75, 140, 255, 0.16), transparent 70%),
+    radial-gradient(50% 70% at 100% 70%, rgba(255, 61, 98, 0.14), transparent 70%);
+  border-bottom: 1px solid var(--hair);
+}
+.rules-cover-seal {
+  width: clamp(70px, 13vmin, 130px);
+  height: auto;
+  filter: drop-shadow(0 0 36px rgba(243, 214, 126, 0.55));
+  animation: zkSealIn 1000ms var(--spring) 100ms both, arenaSealTurn 30s linear 1100ms infinite;
+}
+.rules-cover .rules-kicker { animation: introFade 600ms ease-out 300ms both; }
+.rules-cover h1,
+.rules-block h2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.22em;
+  text-transform: uppercase;
+  transform: none;
+}
+.rules-cover h1 {
+  justify-content: center;
+  font: 900 clamp(4rem, 19vw, 19rem) / 0.84 var(--f-title);
+}
+.rules-word {
+  display: inline-flex;
+  overflow: hidden;
+  padding-top: 0.2em;
+  margin-top: -0.14em;
+}
+.rules-word > span {
+  display: inline-block;
+  padding-top: 0.2em;
+  margin-top: -0.2em;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transform: translateY(112%);
+}
+.rules-cover .rules-word > span,
+.rules-block.is-in .rules-word > span {
+  animation: introLetter 900ms var(--spring) forwards;
+  animation-delay: calc(var(--i) * 34ms);
+}
+.rules-cover .rules-word > span { animation-delay: calc(350ms + var(--i) * 50ms); }
+.rules-lede {
+  max-width: 34em;
+  font: 500 clamp(1.05rem, 1.7vw, 1.5rem) / 1.4 var(--f-body);
+  color: var(--paper-dim);
+  animation: arenaSettle 900ms var(--spring) 900ms both;
+}
+.rules-index {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(8px, 2vh, 20px);
+  animation: arenaSettle 900ms var(--spring) 1050ms both;
+}
+.rules-index a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1em 18px 0;
+  border: 1px solid var(--hair-strong);
+  color: var(--gold-1);
+  font: 800 clamp(0.95rem, 1.3vw, 1.2rem) / 1 var(--f-title);
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 600ms var(--spring), background 200ms, color 200ms;
+}
+.rules-index a:hover { background: var(--gold-2); color: var(--ink); transform: translateY(-4px); }
+
+/* ── Les chapitres ── */
+.rules-block {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: clamp(56px, 11vh, 130px) var(--gutter);
+  scroll-margin-top: 60px;
+}
+.rules-block > * { opacity: 0; transform: translateY(26px); }
+.rules-block.is-in > * {
+  animation: rulesIn 900ms var(--spring) forwards;
+}
+.rules-block.is-in > :nth-child(2) { animation-delay: 80ms; }
+.rules-block.is-in > :nth-child(3) { animation-delay: 240ms; }
+.rules-block.is-in > :nth-child(4) { animation-delay: 380ms; }
+@keyframes rulesIn { to { opacity: 1; transform: none; } }
+.rules-block h2 {
+  margin: 10px 0 clamp(14px, 2.6vh, 28px);
+  font: 900 clamp(2.6rem, 8vw, 8rem) / 0.88 var(--f-title);
+}
+.rules-text {
+  max-width: 40em;
+  font: 500 clamp(1.05rem, 1.6vw, 1.45rem) / 1.5 var(--f-body);
+  color: var(--paper);
+}
+
+/* Le duel : trois chiffres */
+.rules-trio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: clamp(12px, 2vw, 30px);
+}
+.rules-trio > div {
+  padding: clamp(16px, 2vw, 28px);
+  border-top: 4px solid var(--c);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 14%, transparent), transparent 70%);
+}
+.rules-trio b {
+  display: block;
+  font: 900 clamp(5rem, 13vw, 12rem) / 0.8 var(--f-title);
+  color: var(--c);
+}
+.rules-trio span {
+  display: block;
+  margin: 8px 0 10px;
+  font: 800 clamp(1.2rem, 2vw, 2rem) / 1 var(--f-title);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rules-trio p { font-size: clamp(15px, 1.2vw, 18px); line-height: 1.45; color: var(--paper-dim); }
+
+/* Le choix : les cinq cases du programme, qui se remplissent l'une après l'autre */
+.rules-order {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(6px, 1vw, 14px);
+  margin: clamp(22px, 4vh, 44px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.rules-order li {
+  display: grid;
+  gap: 6px;
+  padding: clamp(12px, 1.6vw, 22px) 8px;
+  border: 1px solid var(--c);
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  text-align: center;
+  opacity: 0;
+}
+.rules-block.is-in .rules-order li { animation: zkSlot 700ms var(--spring) forwards, introFade 300ms forwards; animation-delay: calc(600ms + var(--i) * 140ms); }
+.rules-order b { font: 900 clamp(2.4rem, 6vw, 5.6rem) / 0.82 var(--f-title); color: var(--c); }
+.rules-order span {
+  font: 800 clamp(0.7rem, 1.3vw, 1.2rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+/* Les classes : quatre lettres, de plus en plus dorées */
+.rules-classes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(8px, 1.4vw, 20px);
+  margin-top: clamp(22px, 4vh, 44px);
+}
+.rules-classes > div {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: clamp(14px, 2.4vw, 34px) 6px;
+  border: 1px solid var(--hair);
+  background: rgba(243, 214, 126, calc(0.03 + var(--i) * 0.05));
+  opacity: 0;
+}
+.rules-block.is-in .rules-classes > div { animation: introFade 200ms forwards, zkStamp 800ms var(--spring); animation-delay: calc(500ms + var(--i) * 160ms); }
+.rules-classes b {
+  font: 900 clamp(4rem, 13vw, 12rem) / 0.8 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: saturate(calc(0.3 + var(--i) * 0.25)) brightness(calc(0.7 + var(--i) * 0.12));
+}
+.rules-classes span {
+  font: 700 clamp(10px, 1.1vw, 14px) / 1.2 var(--f-label);
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+/* Les points : trois faits */
+.rules-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(14px, 2.4vw, 36px);
+}
+.rules-facts p {
+  padding-top: 16px;
+  border-top: 1px solid var(--hair-strong);
+  font: 500 clamp(1rem, 1.3vw, 1.2rem) / 1.5 var(--f-body);
+  color: var(--paper-dim);
+}
+.rules-facts b {
+  display: block;
+  margin-bottom: 8px;
+  font: 900 clamp(1.5rem, 2.4vw, 2.3rem) / 0.96 var(--f-title);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+/* ── Les épreuves ── */
+.rules-epreuves { background: linear-gradient(180deg, transparent, rgba(243, 214, 126, 0.05) 30%, transparent); }
+.rules-epreuves-title { padding-bottom: 0; }
+.rules-epreuve {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr);
+  align-items: start;
+  gap: clamp(18px, 4vw, 70px);
+  padding-block: clamp(34px, 7vh, 80px);
+  border-top: 1px solid var(--hair);
+}
+.rules-epreuve:nth-of-type(odd) .rules-epreuve-logo { order: 2; }
+.rules-epreuve:nth-of-type(odd) { grid-template-columns: minmax(0, 2fr) minmax(0, 0.8fr); }
+.rules-epreuve-logo { max-width: 400px; justify-self: center; width: 100%; position: sticky; top: 90px; }
+/* deux animations : l'une rend le logo visible pour de bon, l'autre le fait frapper la page */
+.rules-block.is-in .rules-epreuve-logo { animation: rulesIn 1ms forwards, zkLogoStamp 1000ms var(--spring); }
+.rules-epreuve-logo .zk-logo::after { animation-delay: 700ms; }
+.rules-epreuve-body h3 {
+  padding-top: 0.14em;
+  font: 900 clamp(2.2rem, 5.6vw, 5.4rem) / 0.9 var(--f-title);
+  text-transform: uppercase;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rules-principe {
+  margin: 12px 0 clamp(16px, 3vh, 28px);
+  max-width: 34em;
+  font: 600 clamp(1.15rem, 1.9vw, 1.7rem) / 1.35 var(--f-body);
+  color: var(--paper);
+}
+.rules-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+.rules-steps li {
+  position: relative;
+  padding: 12px 14px 12px 64px;
+  border-left: 3px solid var(--gold-3);
+  background: rgba(255, 255, 255, 0.03);
+  font: 500 clamp(1rem, 1.3vw, 1.2rem) / 1.45 var(--f-body);
+  color: var(--paper-dim);
+  counter-increment: etape;
+}
+.rules-steps li::before {
+  content: counter(etape);
+  position: absolute;
+  left: 16px;
+  top: 6px;
+  font: 900 2.4rem / 1 var(--f-title);
+  color: var(--gold-2);
+}
+.rules-bareme {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--foil);
+  color: var(--ink);
+  font: 600 clamp(1rem, 1.3vw, 1.2rem) / 1.4 var(--f-body);
+}
+.rules-bareme span {
+  display: block;
+  margin-bottom: 4px;
+  font: 700 11px / 1 var(--f-accent);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+}
+.rules-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font: 800 clamp(1rem, 1.5vw, 1.4rem) / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.rules-table caption {
+  padding-bottom: 8px;
+  font: 700 11px / 1 var(--f-accent);
+  letter-spacing: 0.36em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.rules-table th,
+.rules-table td { padding: 10px 6px; border-bottom: 1px solid var(--hair); }
+.rules-table thead th { font: 700 clamp(9px, 0.9vw, 12px) / 1.2 var(--f-label); letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+.rules-table tbody th { color: var(--gold-1); font-size: 1.3em; }
+.rules-table td { color: var(--paper); }
+
+/* ── La fin ── */
+.rules-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 3vh, 30px);
+  text-align: center;
+  padding-bottom: clamp(80px, 14vh, 160px);
+}
+.rules-end img { width: clamp(60px, 10vmin, 100px); height: auto; filter: drop-shadow(0 0 30px rgba(243, 214, 126, 0.5)); }
+.rules-end h2 { justify-content: center; margin: 0; font-size: clamp(3rem, 12vw, 12rem); }
+.rules-cta {
+  min-height: clamp(58px, 8vh, 80px);
+  padding: 0.12em clamp(28px, 4vw, 64px) 0;
+  border: 0;
+  background: var(--foil);
+  background-size: 220% 100%;
+  color: var(--ink);
+  font: 900 clamp(1.3rem, 2.4vw, 2.3rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  clip-path: polygon(22px 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+  transition: transform 700ms var(--spring);
+  animation: arenaFoil 3.6s ease-in-out infinite alternate;
+}
+.rules-cta:hover { transform: scale(1.06); }
+
+@media (max-width: 760px) {
+  .rules-epreuve,
+  .rules-epreuve:nth-of-type(odd) { grid-template-columns: minmax(0, 1fr); }
+  .rules-epreuve:nth-of-type(odd) .rules-epreuve-logo { order: 0; }
+  .rules-epreuve-logo { position: static; max-width: 240px; }
+  .rules-table { font-size: 0.95rem; }
+  .rules-table th, .rules-table td { padding: 8px 2px; }
+}

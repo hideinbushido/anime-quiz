@@ -8,10 +8,16 @@ import './design/stage.css'
 import './design/select.css'
 import './design/killerbee.css'
 import './design/epreuves.css'
-import App from './App.tsx'
+import './design/gold.css'
+import './design/killerbee-or.css'
+import './design/epreuves-or.css'
+import './design/recap.css'
+import './design/regles.css'
+import './design/scores.css'
+import { Root } from './Root.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <Root />
   </StrictMode>,
 )

@@ -1,0 +1,329 @@
+/* LES LIENS D'AYANOKOJI et RÉPLIQUES CULTES — habillage or.
+   La mise en page reste celle d'epreuves.css ; ce fichier, chargé après, pose
+   l'identité or et grossit ce qui se lit depuis le live. Une bonne réponse est
+   en or, une mauvaise en blanc barré : le rouge reste la couleur du joueur 2. */
+
+/* ══ LES LIENS D'AYANOKOJI ══ */
+.links-session {
+  background:
+    radial-gradient(55% 45% at 50% 0%, rgba(215, 171, 63, 0.16), transparent 70%),
+    linear-gradient(180deg, var(--ink-2), var(--ink));
+}
+.links-session .links-bg {
+  background: repeating-linear-gradient(115deg, transparent 0 46px, rgba(243, 214, 126, 0.035) 46px 47px);
+}
+.links-session .links-title-logo {
+  flex: none;
+  width: clamp(96px, 15vh, 150px);
+  height: auto;
+  aspect-ratio: 1;
+}
+.links-session .links-title-logo .zk-logo { animation: zkLogoStamp 900ms var(--spring) 200ms both; }
+.links-session .links-title-lockup { align-items: center; }
+.links-session .links-kicker {
+  font: 700 clamp(10px, 0.95vw, 13px) / 1 var(--f-accent);
+  letter-spacing: 0.4em;
+  color: var(--gold-2);
+  background: none;
+  padding: 0;
+  clip-path: none;
+}
+.links-session .links-header h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(2rem, 5vw, 4.8rem) / 0.9 var(--f-title);
+  letter-spacing: 0.01em;
+  transform: none;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.links-session .links-meter strong {
+  font: 900 clamp(2.4rem, 4.6vw, 4.4rem) / 0.9 var(--f-title);
+  color: var(--gold-1);
+}
+.links-session .links-meter .links-meter-on { background: var(--foil); }
+.links-session .links-howto summary { color: var(--gold-2); }
+
+.links-session .links-board {
+  background: rgba(16, 12, 8, 0.86);
+  border-top: 3px solid var(--gold-3);
+}
+.links-session .links-panel-heading span,
+.links-session .links-board-heading span {
+  font: 700 12px / 1 var(--f-accent);
+  letter-spacing: 0.38em;
+  color: var(--gold-2);
+}
+.links-session .links-panel-heading strong { font: 800 1.2rem / 1 var(--f-title); letter-spacing: 0.06em; }
+.links-session .links-board-heading p { color: var(--paper); font-size: clamp(15px, 1.3vw, 18px); }
+
+/* Les cases de la chaîne */
+.links-session .links-slot {
+  border-color: var(--hair-strong);
+  transition: transform 600ms var(--spring), border-color 200ms, background 200ms, box-shadow 300ms;
+}
+.links-session .links-slot:hover:enabled {
+  border-color: var(--gold-1);
+  background: rgba(243, 214, 126, 0.08);
+  transform: translateY(-4px);
+}
+.links-session .links-slot-filled {
+  border-color: var(--gold-3);
+  background: linear-gradient(150deg, rgba(140, 102, 24, 0.5), rgba(16, 12, 8, 0.96) 65%);
+}
+.links-session .links-slot-filled .links-character { animation: zkPlace 600ms var(--spring); }
+@keyframes zkPlace { from { transform: scale(1.5) rotate(-6deg); opacity: 0; } }
+.links-session .links-slot-number {
+  background: var(--foil);
+  color: var(--ink);
+  font: 900 1rem / 1 var(--f-title);
+}
+.links-session .links-slot-empty {
+  font: 700 12px / 1.2 var(--f-label);
+  letter-spacing: 0.18em;
+  color: var(--paper-dim);
+}
+.links-session .links-chain-armed .links-slot:not(.links-card-selected) {
+  border-color: var(--gold-1);
+  animation: zkArmed 1.4s ease-in-out infinite;
+}
+@keyframes zkArmed { 50% { box-shadow: 0 0 26px rgba(243, 214, 126, 0.35); } }
+
+/* Les cartes des personnages */
+.links-session .links-character strong {
+  padding-top: 0.1em;
+  font: 800 clamp(1.05rem, 1.5vw, 1.5rem) / 1 var(--f-title);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.links-session .links-character em {
+  font: 600 11px / 1.2 var(--f-label);
+  letter-spacing: 0.1em;
+  color: var(--paper-dim);
+}
+.links-session .links-card {
+  background: linear-gradient(150deg, rgba(140, 102, 24, 0.55), rgba(16, 12, 8, 0.96) 62%);
+  box-shadow: inset 0 0 0 1px var(--hair-strong);
+  transition: transform 600ms var(--spring), filter 200ms;
+  animation: zkSettle 700ms var(--spring) backwards;
+}
+.links-session .links-card:hover:enabled { transform: translateY(-8px) rotate(-2deg); filter: brightness(1.2); }
+.links-session .links-card-selected,
+.links-session .links-slot.links-card-selected {
+  background: var(--foil);
+  color: var(--ink);
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 40px rgba(243, 214, 126, 0.35);
+}
+.links-session .links-card-selected .links-character em { color: rgba(10, 8, 6, 0.75); }
+
+/* Les relations entre deux cases */
+.links-session .links-rule {
+  border-top-color: var(--gold-4);
+  color: var(--paper-dim);
+}
+.links-session .links-rule::before,
+.links-session .links-rule::after { background: var(--gold-4); }
+.links-session .links-rule > span { color: var(--gold-2); }
+
+/* La correction */
+.links-session .links-slot-correct {
+  border-color: var(--gold-1);
+  box-shadow: inset 0 0 0 2px var(--gold-2), 0 0 34px rgba(243, 214, 126, 0.3);
+  animation: zkVerdict 700ms var(--spring) backwards;
+}
+.links-session .links-slot-wrong {
+  border-color: rgba(251, 246, 233, 0.5);
+  border-style: dashed;
+  box-shadow: none;
+  filter: saturate(0.2) brightness(0.72);
+  animation: zkVerdict 700ms var(--spring) backwards;
+}
+.links-session .links-slot-wrap:nth-of-type(n) .links-slot-correct,
+.links-session .links-slot-wrap .links-slot-wrong { animation-delay: calc(var(--i) * 90ms); }
+@keyframes zkVerdict { from { transform: scale(0.86); } }
+.links-session .links-position-status {
+  font: 800 0.95rem / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.links-session .links-slot-correct .links-position-status { color: var(--gold-1); }
+.links-session .links-slot-wrong .links-position-status { color: var(--paper); text-decoration: line-through; }
+.links-session .links-rule-valid,
+.links-session .links-rule-valid::before,
+.links-session .links-rule-valid::after { border-top-color: var(--gold-2); }
+.links-session .links-rule-valid::before,
+.links-session .links-rule-valid::after { background: var(--gold-2); }
+.links-session .links-rule-invalid { border-top-color: rgba(251, 246, 233, 0.4); }
+.links-session .links-rule-invalid::before,
+.links-session .links-rule-invalid::after { background: rgba(251, 246, 233, 0.4); }
+.links-session .links-valid { color: var(--gold-1); }
+.links-session .links-invalid { color: var(--paper-dim); text-decoration: line-through; }
+
+.links-session .links-primary {
+  min-height: clamp(52px, 7vh, 66px);
+  padding-top: 0.12em;
+  background: var(--foil);
+  background-size: 220% 100%;
+  color: var(--ink);
+  font: 900 clamp(1.2rem, 2vw, 1.9rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  transition: transform 600ms var(--spring), opacity 300ms;
+}
+.links-session .links-primary:enabled { animation: arenaFoil 3.6s ease-in-out infinite alternate; }
+.links-session .links-primary:hover:enabled { transform: scale(1.05); }
+.links-session .links-primary:disabled { opacity: 0.3; filter: grayscale(0.7); }
+.links-session .links-helper { color: var(--paper-dim); }
+
+.links-session .links-feedback {
+  border-left: 4px solid var(--gold-2);
+  background: rgba(243, 214, 126, 0.07);
+  animation: zkSettle 800ms var(--spring) both;
+}
+.links-session .links-feedback > strong {
+  padding-top: 0.14em;
+  font: 900 clamp(2.2rem, 5.4vw, 5rem) / 0.9 var(--f-title);
+  text-transform: uppercase;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.links-session .links-feedback > span {
+  font: 800 clamp(1rem, 1.6vw, 1.5rem) / 1.1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+.links-session .links-feedback h2 {
+  font: 700 12px / 1 var(--f-accent);
+  letter-spacing: 0.38em;
+  color: var(--paper-dim);
+}
+.links-session .links-solution strong {
+  font: 800 clamp(1.1rem, 1.6vw, 1.5rem) / 1.1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.links-session .links-solution p { color: var(--paper-dim); }
+
+/* ══ RÉPLIQUES CULTES ══ */
+.quote-session .header { align-items: center; }
+.quote-session .zk-quote-logo {
+  flex: none;
+  width: clamp(96px, 15vh, 150px);
+  margin-right: clamp(4px, 1vw, 14px);
+}
+.quote-session .zk-quote-logo .zk-logo { animation: zkLogoStamp 900ms var(--spring) 200ms both; }
+.quote-session .eyebrow {
+  font: 700 clamp(10px, 0.95vw, 13px) / 1 var(--f-accent);
+  letter-spacing: 0.4em;
+  color: var(--gold-2);
+  background: none;
+  padding: 0;
+  clip-path: none;
+}
+.quote-session .header h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(2.4rem, 6vw, 5.6rem) / 0.9 var(--f-title);
+  transform: none;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.quote-session .quote-step {
+  font: 900 1.2rem / 1 var(--f-title);
+  transition: transform 600ms var(--spring), background 300ms, color 300ms;
+}
+.quote-session .quote-step-current { background: var(--foil); color: var(--ink); }
+.quote-session .quote-step-correct { background: var(--gold-2); color: var(--ink); }
+.quote-session .quote-step-wrong { background: rgba(251, 246, 233, 0.22); color: var(--paper); text-decoration: line-through; }
+.quote-session .score-box {
+  background: rgba(16, 12, 8, 0.86);
+  border-right-color: var(--gold-2);
+}
+.quote-session .score-label { font-family: var(--f-accent); letter-spacing: 0.3em; color: var(--paper-dim); }
+.quote-session .score-value { font: 900 clamp(2.2rem, 4.4vw, 4.2rem) / 0.9 var(--f-title); color: var(--gold-1); }
+
+.quote-session .question-card {
+  background:
+    radial-gradient(60% 70% at 50% 35%, rgba(215, 171, 63, 0.26), transparent 70%),
+    linear-gradient(180deg, #17120b, #0b0906);
+  animation: zkSettle 900ms var(--spring) both;
+}
+.quote-session .question-prompt {
+  position: relative;
+  padding-top: 0.14em;
+  font: 900 clamp(2.2rem, 6vw, 6rem) / 0.94 var(--f-title);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fff 8%, var(--gold-1) 42%, var(--gold-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.7));
+  animation: zkSlam 800ms var(--spring) 150ms backwards;
+}
+.quote-session .answer-field label {
+  font: 700 clamp(11px, 1vw, 14px) / 1.2 var(--f-accent);
+  letter-spacing: 0.36em;
+  color: var(--gold-2);
+}
+.quote-session .answer-input {
+  min-height: clamp(64px, 9vh, 88px);
+  padding-top: 0.12em;
+  border-bottom: 4px solid var(--hair-strong);
+  background: rgba(10, 8, 6, 0.6);
+  color: var(--paper);
+  caret-color: var(--gold-2);
+  font: 900 clamp(1.8rem, 3.6vw, 3.4rem) / 1 var(--f-title);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.quote-session .answer-input::placeholder { color: rgba(184, 172, 146, 0.5); font: 500 0.5em / 1 var(--f-body); text-transform: none; }
+.quote-session .answer-input:focus-visible { border-bottom-color: var(--gold-1); background: rgba(10, 8, 6, 0.85); outline: 0; box-shadow: 0 14px 30px -18px var(--gold-2); }
+.quote-session .answer-hint { color: var(--paper-dim); }
+.quote-session .btn-primary {
+  min-height: clamp(52px, 7vh, 66px);
+  padding-top: 0.12em;
+  background: var(--foil);
+  background-size: 220% 100%;
+  color: var(--ink);
+  font: 900 clamp(1.2rem, 2vw, 1.9rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  transition: transform 600ms var(--spring);
+  animation: arenaFoil 3.6s ease-in-out infinite alternate;
+}
+.quote-session .btn-primary:hover:enabled { transform: scale(1.05); }
+.quote-session .feedback p {
+  padding: 0.5em 1.2em 0.38em;
+  font: 900 clamp(1.5rem, 3.2vw, 3rem) / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: zkSlam 700ms var(--spring) backwards;
+}
+.quote-session .feedback-correct p { background: var(--foil); color: var(--ink); }
+.quote-session .feedback-incorrect p { background: #efe7d2; color: var(--ink); }
+
+/* Le logo est le premier bloc de l'en-tête : le titre, juste après, garde sa mise en colonne */
+.quote-session .header { justify-content: flex-start; }
+.quote-session .header > .zk-quote-logo { display: block; }
+.quote-session .header > .zk-quote-logo + div { display: grid; gap: 8px; }
+.quote-session .header .score-box { margin-left: auto; }
+
+/* ── Tenir dans l'écran du live : moins d'air autour, le jeu remonte ── */
+.links-session,
+.quote-session { padding-top: clamp(8px, 1.4vh, 16px); gap: clamp(8px, 1.4vh, 16px); }
+.links-session .links-howto summary { min-height: 30px; }
+.links-session .links-board { padding-block: clamp(10px, 1.6vh, 20px); gap: clamp(8px, 1.4vh, 16px); }
+@media (min-width: 901px) {
+  .links-session .links-slot { min-height: clamp(110px, 15vh, 170px); padding-top: 30px; }
+  .links-session .links-rule { padding: 8px 8px 6px; font-size: 13px; line-height: 1.3; }
+  .links-session .links-card { min-height: 70px; }
+}
+.quote-session .question-card { padding-block: clamp(34px, 5.4vh, 60px); gap: clamp(10px, 1.8vh, 18px); }
+.quote-session .question-prompt { font-size: clamp(2rem, 5vw, 5rem); }

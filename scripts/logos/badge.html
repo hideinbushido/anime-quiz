@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  /* Le gabarit commun à tous les logos d'épreuve : 1024 x 1024, fond transparent.
+     Seuls le personnage et le nom changent d'un logo à l'autre. */
+  :root {
+    --ink: #0a0806;
+    --gold-1: #fff6d2;
+    --gold-2: #f3d67e;
+    --gold-3: #d7ab3f;
+    --gold-4: #8c6618;
+    --foil: linear-gradient(125deg, #8c6618 0%, #f3d67e 26%, #fff6d2 44%, #d7ab3f 62%, #8c6618 82%, #f3d67e 100%);
+    --cx: 512px;
+    --cy: 440px;
+    --r: 388px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1024px; height: 1024px; background: transparent; overflow: hidden; }
+  .badge { position: relative; width: 1024px; height: 1024px; }
+  .abs { position: absolute; }
+
+  /* Le médaillon : anneau d'or, fond sombre, rayons */
+  .ring {
+    left: calc(var(--cx) - var(--r) - 26px); top: calc(var(--cy) - var(--r) - 26px);
+    width: calc(var(--r) * 2 + 52px); height: calc(var(--r) * 2 + 52px);
+    border-radius: 50%;
+    background: var(--foil);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 0 0 3px rgba(255, 246, 210, 0.7);
+  }
+  .disc {
+    left: calc(var(--cx) - var(--r)); top: calc(var(--cy) - var(--r));
+    width: calc(var(--r) * 2); height: calc(var(--r) * 2);
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 38%, #3a2c14 0%, #17110a 46%, var(--ink) 100%);
+    box-shadow: inset 0 0 0 6px var(--ink), inset 0 0 0 9px var(--gold-3), inset 0 0 90px rgba(0, 0, 0, 0.8);
+  }
+  .rays {
+    inset: -20%;
+    background: repeating-conic-gradient(from 0deg at 50% 46%, rgba(243, 214, 126, 0.2) 0deg 5deg, transparent 5deg 15deg);
+    -webkit-mask-image: radial-gradient(circle at 50% 46%, transparent 12%, #000 34%, transparent 74%);
+  }
+  /* Le personnage : dans le médaillon pour le bas du corps, par-dessus l'anneau pour la tête */
+  .perso { filter: drop-shadow(0 0 0 #000); }
+  .perso img { position: absolute; display: block; }
+  .inside { left: 0; top: 0; width: 1024px; height: 1024px; clip-path: circle(calc(var(--r) - 9px) at var(--cx) var(--cy)); }
+  .over { left: 0; top: 0; width: 1024px; height: 1024px; clip-path: inset(0 0 calc(1024px - var(--cy)) 0); }
+  .glow img { filter: drop-shadow(0 0 2px var(--gold-1)) drop-shadow(0 0 18px rgba(243, 214, 126, 0.55)); }
+
+  /* Le cartouche du titre */
+  .plate {
+    left: 50%; top: 690px;
+    width: 900px; height: 272px;
+    transform: translateX(-50%) rotate(-4deg);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 46px;
+  }
+  .plate::before {
+    content: ""; position: absolute; inset: 22px 0 14px;
+    background: var(--foil);
+    clip-path: polygon(46px 0, 100% 0, calc(100% - 46px) 100%, 0 100%);
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.6));
+  }
+  .plate::after {
+    content: ""; position: absolute; inset: 30px 12px 22px;
+    background: linear-gradient(180deg, #1d160c, #0a0806);
+    clip-path: polygon(42px 0, 100% 0, calc(100% - 42px) 100%, 0 100%);
+  }
+  .small, .big { position: relative; z-index: 1; white-space: nowrap; text-transform: uppercase; }
+  .small {
+    font: 900 40px/1 "Cinzel", serif;
+    letter-spacing: 0.3em; text-indent: 0.3em;
+    color: var(--gold-1);
+  }
+  .big {
+    font: 900 150px/0.86 "Big Shoulders Display", Impact, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 0.1em 0.1em 0;
+    margin-top: 2px;
+    transform: skewX(-7deg);
+  }
+  /* Deux couches : un contour sombre épais, puis le remplissage or et blanc */
+  .big::before {
+    content: attr(data-t); position: absolute; left: 0; right: 0; top: 0; padding: inherit; text-align: center;
+    -webkit-text-stroke: 16px #0a0806; color: #0a0806;
+    filter: drop-shadow(0 6px 0 var(--gold-4));
+  }
+  .big span {
+    position: relative;
+    background: linear-gradient(180deg, #ffffff 4%, var(--gold-1) 30%, var(--gold-2) 52%, var(--gold-3) 74%, #a87d22 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .seal {
+    left: 50%; top: 930px; width: 80px; height: 80px; transform: translateX(-50%);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+  }
+  .seal::before {
+    content: ""; position: absolute; inset: -9px; border-radius: 50%;
+    background: var(--ink); box-shadow: 0 0 0 4px var(--gold-3);
+  }
+  .seal img { position: relative; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="badge">
+  <div class="abs ring"></div>
+  <div class="abs disc"><div class="abs rays"></div></div>
+  <div class="abs perso glow inside"><img class="p" alt=""></div>
+  <div class="abs perso glow over"><img class="p" alt=""></div>
+  <div class="abs plate">
+    <p class="small"></p>
+    <p class="big"><span></span></p>
+  </div>
+  <div class="abs seal"><img alt=""></div>
+</div>
+<script>
+  // Paramètres : ?perso=<url>&sceau=<url>&petit=<ligne du haut>&grand=<ligne du bas>&h=<hauteur du personnage>&x=<décalage>&y=<haut>
+  const q = new URLSearchParams(location.search);
+  const hauteur = Number(q.get("h") || 820), dx = Number(q.get("x") || 0), haut = Number(q.get("y") || 20);
+  for (const img of document.querySelectorAll("img.p")) {
+    img.src = q.get("perso");
+    img.style.height = hauteur + "px";
+    img.style.top = haut + "px";
+    img.style.left = "calc(50% + " + dx + "px)";
+    img.style.transform = "translateX(-50%)";
+  }
+  document.querySelector(".seal img").src = q.get("sceau");
+  document.querySelector(".small").textContent = q.get("petit") || "";
+  const big = document.querySelector(".big");
+  big.querySelector("span").textContent = q.get("grand") || "";
+  big.dataset.t = q.get("grand") || "";
+  // Le grand titre occupe toujours la même largeur : on ajuste le corps du texte au nom
+  document.fonts.ready.then(() => {
+    const cible = 740;
+    let size = 170;
+    big.style.fontSize = size + "px";
+    while (big.scrollWidth > cible && size > 60) big.style.fontSize = (size -= 2) + "px";
+    document.body.dataset.pret = "1";
+  });
+</script>
+</body>
+</html>

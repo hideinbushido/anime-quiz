@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 test-output/
+
+# rooms du serveur temps réel (état des parties en cours)
+server/data/

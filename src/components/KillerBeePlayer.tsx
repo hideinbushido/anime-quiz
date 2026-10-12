@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Epreuve, GameControls, PlayerId } from "../types";
 import { buzzedPlayer, canPlayerBuzz, newKillerBeeState, type DuelBuzzSource } from "../duel/killerBee";
 import { currentFeedback } from "../duel/engine";
-import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
+import { EpreuveLogo } from "./EpreuveLogo";
 import { KillerBeeDeck } from "./killerBee/KillerBeeDeck";
 
 interface Props extends GameControls {
@@ -25,8 +25,8 @@ function RevealJingle({ src }: { src: string }) {
   }, []);
   return <>
     <audio ref={audio} src={src} className="beats-reveal-audio" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
-    <button className="beats-jingle" aria-pressed={playing} onClick={() => { const el = audio.current; if (el?.paused) el.play().catch(() => undefined); else el?.pause(); }}>
-      <i aria-hidden="true" />{playing ? "Couper la musique" : "Relancer la musique"}
+    <button className="beats-play beats-player-icon beats-play-start" aria-label={playing ? "Mettre la révélation en pause" : "Lire la révélation"} onClick={() => { const el = audio.current; if (el?.paused) el.play().catch(() => undefined); else el?.pause(); }}>
+      <svg viewBox="0 0 24 24" aria-hidden="true">{playing ? <path d="M6 5h4v14H6zM14 5h4v14h-4z" /> : <path d="M8 4v16l13-8z" />}</svg>
     </button>
   </>;
 }
@@ -122,7 +122,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
     <div className="beats-backdrop" aria-hidden="true"><span>八</span><span>尾</span></div>
     {player && <div key={player + state.attempts[player]} className={`beats-impact ${player}`} aria-hidden="true" />}
     <header className="beats-header">
-      <div className="beats-header-logo"><EpreuveLogoDisplay epreuveId={epreuve.id} /></div>
+      <div className="beats-header-logo"><EpreuveLogo epreuveId={epreuve.id} /></div>
       <p className="beats-meta"><span>Classe {track.difficulty}</span>Morceau {progress.roundIndex + 1}/5</p>
     </header>
     <main className={"beats-stage" + (result ? " beats-stage-revealed" : "")}>

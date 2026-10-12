@@ -84,7 +84,7 @@ function drawTails(ctx: CanvasRenderingContext2D, size: number, levels: Float32A
       const nx = x + Math.cos(heading) * step;
       const ny = y + Math.sin(heading) * step;
       const heat = Math.min(1, s * 0.75 + level * 0.3);
-      ctx.strokeStyle = `hsl(${262 + heat * 86} 92% ${40 + heat * 22}%)`;
+      ctx.strokeStyle = `hsl(${38 + heat * 10} 86% ${40 + heat * 34}%)`;
       ctx.lineWidth = Math.max(1.5, width * (1 - Math.pow(s, 1.7)));
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -184,8 +184,8 @@ export function KillerBeeDeck({ audio }: { audio: RefObject<HTMLAudioElement | n
       <div className="beats-vinyl" ref={vinyl}>
         <svg className="beats-label" viewBox="0 0 100 100">
           <defs><path id="kb-label-ring" d="M50 50 m-37 0 a37 37 0 1 1 74 0 a37 37 0 1 1 -74 0" /></defs>
-          <circle cx="50" cy="50" r="50" fill="#e6202e" />
-          <circle cx="50" cy="50" r="46.5" fill="none" stroke="#7a0f18" strokeWidth="1.2" />
+          <circle cx="50" cy="50" r="50" fill="#d7ab3f" />
+          <circle cx="50" cy="50" r="46.5" fill="none" stroke="#8c6618" strokeWidth="1.2" />
           <text className="beats-label-ring"><textPath href="#kb-label-ring" textLength="226">LES BEATS DE KILLER BEE ✦ KUMO RECORDS ✦ 33 TOURS ✦</textPath></text>
           <text className="beats-label-kanji" x="50" y="31">鉄</text>
           <text className="beats-label-side" x="50" y="68">FACE B</text>
@@ -200,7 +200,7 @@ export function KillerBeeDeck({ audio }: { audio: RefObject<HTMLAudioElement | n
         <rect x="84" y="2" width="16" height="26" rx="5" fill="#8f8a86" />
         <path d="M92 30 L58 150" stroke="#f4ead8" strokeWidth="6" strokeLinecap="round" />
         <path d="M58 150 L44 172" stroke="#f4ead8" strokeWidth="6" strokeLinecap="round" />
-        <rect x="30" y="160" width="24" height="34" rx="5" fill="#e6202e" stroke="#0c0a0d" strokeWidth="2" transform="rotate(32 42 177)" />
+        <rect x="30" y="160" width="24" height="34" rx="5" fill="#d7ab3f" stroke="#0c0a0d" strokeWidth="2" transform="rotate(32 42 177)" />
         <circle cx="92" cy="30" r="9" fill="#f4ead8" />
         <circle cx="92" cy="30" r="3.5" fill="#0c0a0d" />
       </g>

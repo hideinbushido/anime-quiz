@@ -1,0 +1,150 @@
+/* LES BEATS DE KILLER BEE — habillage or.
+   La mécanique et la mise en page de la platine restent celles de killerbee.css ;
+   ce fichier, chargé après, pose l'identité or et grossit ce qui doit se lire
+   depuis le live : qui a buzzé, le verdict, la réponse. */
+.beats-session {
+  background:
+    radial-gradient(60% 70% at 50% 46%, rgba(215, 171, 63, 0.16), transparent 70%),
+    radial-gradient(50% 60% at 0% 60%, rgba(75, 140, 255, 0.14), transparent 70%),
+    radial-gradient(50% 60% at 100% 60%, rgba(255, 61, 98, 0.12), transparent 70%),
+    linear-gradient(180deg, var(--ink-2), var(--ink));
+}
+.beats-session .player1 { --player-color: var(--sapphire); }
+.beats-session .player2 { --player-color: var(--ruby); }
+.beats-session .beats-backdrop {
+  background: repeating-linear-gradient(115deg, transparent 0 46px, rgba(243, 214, 126, 0.035) 46px 47px);
+}
+.beats-session .beats-backdrop span { -webkit-text-stroke: 2px rgba(243, 214, 126, 0.08); }
+
+/* ── L'en-tête : le logo de l'épreuve et le morceau en cours ── */
+.beats-session .beats-header-logo {
+  width: clamp(96px, 16vh, 170px);
+  aspect-ratio: 1;
+  margin: -6px 0 -44px -6px;
+}
+.beats-session .beats-header-logo .zk-logo { animation: zkLogoStamp 900ms var(--spring) 200ms both; }
+.beats-session .beats-meta {
+  font: 900 clamp(1.8rem, 4vw, 3.8rem) / 0.9 var(--f-title);
+  letter-spacing: 0.02em;
+  transform: none;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.beats-session .beats-meta span {
+  font: 700 clamp(10px, 0.95vw, 13px) / 1 var(--f-accent);
+  letter-spacing: 0.4em;
+  -webkit-text-fill-color: var(--gold-2);
+}
+
+/* ── Les deux coins ── */
+.beats-session .beats-corner-name {
+  padding-top: 0.14em;
+  font: 900 clamp(1.5rem, 3.2vw, 3.2rem) / 0.92 var(--f-title);
+  letter-spacing: 0.01em;
+  color: var(--paper);
+}
+.beats-session .beats-stage-revealed .beats-corner-name { font-size: clamp(1.2rem, 2.2vw, 2.2rem); }
+.beats-session .beats-corner-score b {
+  font: 900 clamp(2rem, 3.6vw, 3.6rem) / 0.9 var(--f-title);
+}
+.beats-session .beats-corner-gain {
+  font: 900 clamp(2.6rem, 6vw, 6rem) / 0.9 var(--f-title);
+  transform: none;
+  color: var(--gold-1);
+  text-shadow: 0 0 34px var(--gold-3);
+  animation: zkStamp 700ms var(--spring) 380ms backwards;
+}
+.beats-session .beats-buzzer {
+  width: clamp(100px, 15vh, 156px);
+  font: 700 clamp(12px, 1.5vh, 15px) / 1 var(--f-label);
+  transition: transform 500ms var(--spring), filter 200ms, box-shadow 200ms;
+}
+.beats-session .beats-buzzer b { font: 900 3em / 0.9 var(--f-title); }
+.beats-session .beats-buzzer:hover:enabled { transform: scale(1.06); }
+
+/* ── Le centre : la platine et l'annonce ── */
+.beats-session .beats-now-playing strong {
+  padding-top: 0.14em;
+  font: 900 clamp(2.2rem, 6vw, 6rem) / 0.86 var(--f-title);
+  letter-spacing: 0.01em;
+  transform: rotate(-2deg);
+  color: var(--paper);
+  text-shadow: 0 4px 0 var(--gold-4), 0 16px 30px rgba(0, 0, 0, 0.8);
+}
+.beats-session .beats-now-playing strong span { animation: zkSlam 700ms var(--spring) backwards; }
+@keyframes zkSlam { from { opacity: 0; transform: scale(2.2) rotate(6deg); } }
+/* Un buzz : l'annonce prend la couleur du joueur */
+.beats-session[data-state="player1Buzzed"] .beats-now-playing strong { color: var(--sapphire); text-shadow: 0 4px 0 var(--sapphire-deep), 0 0 60px rgba(75, 140, 255, 0.6); }
+.beats-session[data-state="player2Buzzed"] .beats-now-playing strong { color: var(--ruby); text-shadow: 0 4px 0 var(--ruby-deep), 0 0 60px rgba(255, 61, 98, 0.6); }
+.beats-session .beats-label circle:first-of-type { fill: #d7ab3f; }
+.beats-session .beats-label circle:nth-of-type(2) { stroke: #8c6618; }
+
+/* ── La régie du bas ── */
+.beats-session .beats-dock {
+  background: linear-gradient(180deg, rgba(18, 14, 9, 0.94), rgba(8, 6, 4, 0.98));
+  border-top-color: var(--gold-3);
+}
+.beats-session .beats-dock::before { background: var(--foil); opacity: 1; }
+.beats-session .beats-hint { color: var(--paper-dim); }
+/* Vrai en or, Faux en blanc barré : le rouge reste la couleur du joueur 2 */
+.beats-session .beats-judge {
+  min-height: clamp(52px, 6.6vh, 66px);
+  padding: 0.12em 34px 0 28px;
+  font: 900 clamp(1.5rem, 2.8vw, 2.6rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  transition: transform 600ms var(--spring), filter 200ms;
+  animation: zkSettle 700ms var(--spring) backwards;
+}
+.beats-session .beats-judge-correct { background: var(--foil); color: var(--ink); }
+.beats-session .beats-judge-incorrect {
+  background: #efe7d2;
+  color: var(--ink);
+  animation-delay: 90ms;
+}
+.beats-session .beats-judge:hover { transform: translateY(-5px) scale(1.04); }
+.beats-session .beats-judge:active { transform: scale(0.95); }
+.beats-session .beats-submit {
+  min-height: clamp(50px, 6.4vh, 64px);
+  padding-top: 0.12em;
+  background: var(--foil);
+  background-size: 220% 100%;
+  color: var(--ink);
+  font: 900 clamp(1.3rem, 2.2vw, 2.1rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  transition: transform 600ms var(--spring), filter 200ms;
+  animation: arenaFoil 3.6s ease-in-out infinite alternate;
+}
+.beats-session .beats-submit:hover:enabled { transform: scale(1.05); }
+.beats-session .beats-round strong { font: 900 1.2rem / 1 var(--f-title); }
+.beats-session .beats-round-current { background: var(--foil); color: var(--ink); }
+.beats-session .beats-player-icon { border-color: var(--hair-strong); }
+.beats-session .beats-player-icon.beats-play-start { background: var(--gold-1); color: var(--ink); }
+.beats-session .beats-progress-track i { background: var(--foil); }
+
+/* ── La révélation ── */
+.beats-session .beats-reveal-scene { animation: zkSettle 800ms var(--spring) both; }
+.beats-session .beats-reveal-info > span {
+  font: 700 clamp(11px, 1vw, 14px) / 1 var(--f-accent);
+  letter-spacing: 0.44em;
+  color: var(--gold-2);
+}
+.beats-session .beats-reveal-info > strong {
+  padding-top: 0.16em;
+  font: 900 clamp(2.8rem, 7.4vw, 7.4rem) / 0.86 var(--f-title);
+  transform: none;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.beats-session .beats-reveal-info > p {
+  padding: 0.5em 0.9em 0.38em;
+  border: 2px solid var(--player-color, var(--hair-strong));
+  font: 900 clamp(1.1rem, 2vw, 1.9rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  color: var(--player-color, var(--paper-dim));
+}
+.beats-session .beats-sleeve-type span,
+.beats-session .beats-sleeve-type b { font-family: var(--f-title); font-weight: 900; }
+.beats-session .beats-sleeve-type span { -webkit-text-stroke: 1.5px rgba(10, 8, 6, 0.3); }

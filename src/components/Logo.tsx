@@ -90,8 +90,8 @@ interface Props {
 /** Home-only evolution of the original joystick and Quiz'Animanga wordmark. */
 export function LogoDuel() {
   return <div className="arena-brand" aria-label="Quiz'Animanga">
-    <span aria-hidden="true"><Joystick scale={0.4} electric /></span>
-    <span className="arena-brand-wordmark" aria-hidden="true"><span>QUIZ'</span><strong>ANIMANGA</strong></span>
+    <span aria-hidden="true"><img className="zk-seal" src="/logo-zenkai.png" alt="" /></span>
+    <span className="arena-brand-wordmark" aria-hidden="true"><strong>Quiz'Animanga</strong><span>Présenté par Zenkai</span></span>
   </div>;
 }
 

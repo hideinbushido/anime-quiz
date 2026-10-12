@@ -137,3 +137,34 @@ mais utilisent le contenu existant commun (`status: "shared"`), clairement indiq
 dans l'interface. Leurs variantes spécifiques restent à écrire. Le blind test
 conserve aussi ses réponses provisoires aux manches 6 et 7 et ses médias de
 révélation incomplets. Tous les assets existants sont conservés.
+
+## Les Liens d'Ayanokoji en temps réel
+
+Le duel se joue sur deux appareils, et le public suit les deux plateaux en direct.
+
+```sh
+npm run server   # serveur WebSocket, port 8787 (ou la variable PORT)
+npm run dev      # le site
+```
+
+Quatre écrans, à ouvrir dans quatre fenêtres avec le même code de room :
+
+| Écran | Adresse |
+| --- | --- |
+| Présentateur | `/host?room=TEST&j1=Kagami&j2=Rico` |
+| Joueur 1 | `/player?room=TEST&player=1` |
+| Joueur 2 | `/player?room=TEST&player=2` |
+| Live (OBS, 16:9) | `/live?room=TEST` |
+
+- `server/rooms.ts` : l'état d'une room et ses règles (chargement, mouvements, validation, révélation), sans réseau.
+- `server/index.ts` : le WebSocket. Chaque client reçoit sa propre vue : un joueur n'a jamais le plateau adverse, et seul le présentateur a la solution avant la révélation.
+- `src/ayanokoji/` : types, manches (`rounds.ts`), validateur (`validator.ts`), couche réseau (`realtime.ts`, `useAyanokojiRoom.ts`).
+- `src/components/ayanokoji/` : le plateau et les trois écrans.
+
+Les rooms vivent en mémoire et sont recopiées dans `server/data/rooms.json` : un rechargement de page ou un redémarrage du serveur ne perd pas la partie. Chaque place (joueur 1, joueur 2, présentateur) est tenue par un jeton gardé dans le navigateur qui l'a prise en premier.
+
+Pour ajouter une manche, compléter `src/ayanokoji/rounds.ts` : six personnages, cinq liens, la solution, et pour chaque lien toutes les paires de la manche qui le vérifient. `npm test` teste les 720 ordres possibles et refuse une manche qui n'a pas exactement une solution.
+
+En production, le site lit l'adresse du serveur dans `VITE_REALTIME_URL` (par exemple `wss://mon-serveur.onrender.com`).
+
+L'épreuve jouée sur un seul écran reste en place dans le duel : la version temps réel n'est pas encore reliée au score global, le barème restant à décider. Elle remonte `perfect`, `correctLinks`, `completionTime`, `moveCount` et `submittedAt`.

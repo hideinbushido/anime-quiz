@@ -1,0 +1,294 @@
+/* IDENTITÉ OR — socle commun de la refonte.
+   Fond noir chaud, feuille d'or, saphir pour Joueur 1, rubis pour Joueur 2.
+   Chargé en dernier : il prend le pas sur l'ancienne direction, écran après écran. */
+:root {
+  --ink: #0a0806;
+  --ink-2: #120e09;
+  --ink-3: #1d1710;
+
+  --gold-1: #fff6d2;
+  --gold-2: #f3d67e;
+  --gold-3: #d7ab3f;
+  --gold-4: #8c6618;
+  --foil: linear-gradient(115deg, var(--gold-4) 0%, var(--gold-2) 34%, var(--gold-1) 50%, var(--gold-3) 70%, var(--gold-4) 100%);
+  --foil-text: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 42%, var(--gold-3) 100%);
+
+  --sapphire: #4b8cff;
+  --sapphire-deep: #0c2a6b;
+  --ruby: #ff3d62;
+  --ruby-deep: #6b0c22;
+
+  --paper: #fbf6e9;
+  --paper-dim: #b8ac92;
+  --hair: rgba(243, 214, 126, 0.24);
+  --hair-strong: rgba(243, 214, 126, 0.55);
+
+  --f-title: "Big Shoulders Display", "Anton", "Arial Narrow", sans-serif;
+  --f-accent: "Cinzel", "Times New Roman", serif;
+
+  /* Un ressort : dépasse la cible, puis revient se poser */
+  --spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
+    1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%,
+    1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%,
+    0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1
+  );
+  /* Le même, plus amorti, pour les grands déplacements */
+  --spring-soft: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+
+  /* La diagonale qui sépare les deux joueurs, partout la même */
+  --cut-top: 57%;
+  --cut-bottom: 43%;
+
+  /* Les écrans pas encore refaits héritent déjà de la palette */
+  --night: var(--ink);
+  --night-2: var(--ink-2);
+  --dusk: var(--ink-3);
+  --panel: rgba(20, 16, 10, 0.84);
+  --panel-solid: #15110b;
+  --violet: var(--gold-4);
+  --magenta: var(--gold-3);
+  --coral: var(--gold-3);
+  --sun: var(--gold-2);
+  --ice: var(--sapphire);
+  --mint: var(--gold-2);
+  --text: var(--paper);
+  --muted: var(--paper-dim);
+  --line: var(--hair);
+  --line-strong: var(--hair-strong);
+  --p1: var(--sapphire);
+  --p2: var(--ruby);
+  --sunset: var(--foil);
+  --sunset-soft: linear-gradient(115deg, rgba(140, 102, 24, 0.35), rgba(243, 214, 126, 0.26) 55%, rgba(255, 246, 210, 0.2));
+}
+
+body {
+  background:
+    radial-gradient(70% 55% at 85% -10%, rgba(215, 171, 63, 0.16), transparent 70%),
+    radial-gradient(60% 50% at 0% 105%, rgba(140, 102, 24, 0.14), transparent 70%),
+    linear-gradient(180deg, var(--ink-2), var(--ink));
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 4px;
+}
+
+/* ── Marque : le sceau Zenkai et le nom de l'émission ── */
+.arena-brand {
+  gap: 14px;
+}
+.arena-brand > span:first-child {
+  filter: none;
+}
+.zk-seal {
+  display: block;
+  width: 46px;
+  height: 46px;
+  filter: drop-shadow(0 0 14px rgba(243, 214, 126, 0.35));
+  transition: transform 1.1s var(--spring);
+}
+.arena-brand:hover .zk-seal,
+.navbar-brand:hover .zk-seal {
+  transform: rotate(90deg);
+}
+.arena-brand-wordmark {
+  gap: 5px;
+  text-align: left;
+}
+.arena-brand-wordmark > span {
+  font: 700 10px / 1 var(--f-accent);
+  letter-spacing: 0.42em;
+  color: var(--paper-dim);
+}
+.arena-brand-wordmark strong {
+  font: 900 30px / 0.9 var(--f-title);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── LA COUPE D'OR : la transition signature ──
+   L'écran se referme en deux moitiés, une par joueur, le long de la diagonale ;
+   le sceau frappe au centre, puis les moitiés s'écartent sur l'écran suivant. */
+.zk-cut {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: all;
+}
+.zk-cut-half {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.zk-cut-half::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--foil);
+}
+.zk-cut-a {
+  clip-path: polygon(0 0, var(--cut-top) 0, var(--cut-bottom) 100%, 0 100%);
+  background: radial-gradient(90% 90% at 20% 50%, var(--sapphire-deep), var(--ink) 75%);
+}
+.zk-cut-a::after {
+  clip-path: polygon(calc(var(--cut-top) - 7px) 0, var(--cut-top) 0, var(--cut-bottom) 100%, calc(var(--cut-bottom) - 7px) 100%);
+}
+.zk-cut-b {
+  clip-path: polygon(var(--cut-top) 0, 100% 0, 100% 100%, var(--cut-bottom) 100%);
+  background: radial-gradient(90% 90% at 80% 50%, var(--ruby-deep), var(--ink) 75%);
+}
+.zk-cut-b::after {
+  clip-path: polygon(var(--cut-top) 0, calc(var(--cut-top) + 7px) 0, calc(var(--cut-bottom) + 7px) 100%, var(--cut-bottom) 100%);
+}
+.zk-cut-seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(120px, 20vmin, 240px);
+  height: auto;
+  margin: 0;
+  translate: -50% -50%;
+  filter: drop-shadow(0 0 40px rgba(243, 214, 126, 0.6));
+}
+
+/* Fermeture : les deux moitiés claquent, le sceau frappe */
+.zk-cut-close { animation: zkClock 620ms linear; }
+.zk-cut-close .zk-cut-a { animation: zkCloseA 460ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+.zk-cut-close .zk-cut-b { animation: zkCloseB 460ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+.zk-cut-close .zk-cut-seal { animation: zkSealIn 560ms var(--spring) 120ms both; }
+
+/* Ouverture : le sceau tourne et s'efface, les moitiés s'écartent */
+.zk-cut-open { animation: zkClock 760ms linear; pointer-events: none; }
+.zk-cut-open .zk-cut-a { animation: zkOpenA 620ms cubic-bezier(0.7, 0, 0.2, 1) 140ms both; }
+.zk-cut-open .zk-cut-b { animation: zkOpenB 620ms cubic-bezier(0.7, 0, 0.2, 1) 140ms both; }
+.zk-cut-open .zk-cut-seal { animation: zkSealOut 420ms cubic-bezier(0.5, 0, 0.8, 0.4) both; }
+
+@keyframes zkClock { to { opacity: 1; } }
+@keyframes zkCloseA { from { transform: translateX(-62%); } to { transform: none; } }
+@keyframes zkCloseB { from { transform: translateX(62%); } to { transform: none; } }
+@keyframes zkOpenA { from { transform: none; } to { transform: translateX(-62%); } }
+@keyframes zkOpenB { from { transform: none; } to { transform: translateX(62%); } }
+@keyframes zkSealIn {
+  from { opacity: 0; scale: 0.2; rotate: -180deg; }
+  to { opacity: 1; scale: 1; rotate: 0deg; }
+}
+@keyframes zkSealOut {
+  from { opacity: 1; scale: 1; rotate: 0deg; }
+  to { opacity: 0; scale: 1.7; rotate: 120deg; }
+}
+
+/* ── LES LOGOS ANIMÉS DES ÉPREUVES ── */
+.zk-emblem { display: block; overflow: visible; }
+.zk-emblem * { transform-box: fill-box; }
+.zk-emblem-ring { transform-box: view-box; transform-origin: 100px 100px; animation: zkRing 40s linear infinite; }
+@keyframes zkRing { to { transform: rotate(360deg); } }
+
+/* Killer Bee : les huit barres battent la mesure, un reflet passe sur les lunettes */
+.zk-beat {
+  transform-origin: 50% 100%;
+  animation: zkBeat 0.92s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -0.17s);
+}
+@keyframes zkBeat { from { transform: scaleY(0.42); } to { transform: scaleY(1); } }
+.zk-glint { animation: zkGlint 3.4s ease-in-out infinite; }
+@keyframes zkGlint {
+  0%, 62% { opacity: 0; transform: translateX(-9px); }
+  72% { opacity: 1; }
+  88%, 100% { opacity: 0; transform: translateX(9px); }
+}
+
+/* Ayanokoji : le regard glisse et cligne, les pièces pendent au bout de leurs fils */
+.zk-eyes { transform-origin: 50% 50%; animation: zkBlink 5.2s ease-in-out infinite; }
+.zk-iris { animation: zkGaze 5.2s ease-in-out infinite; }
+@keyframes zkBlink { 0%, 44%, 50%, 100% { transform: scaleY(1); } 47% { transform: scaleY(0.1); } }
+@keyframes zkGaze { 0%, 18% { transform: translateX(-2.6px); } 32%, 68% { transform: translateX(2.6px); } 82%, 100% { transform: translateX(-2.6px); } }
+.zk-piece { animation: zkBob 2.8s ease-in-out infinite alternate; }
+.zk-piece-b { animation-delay: -1.4s; }
+@keyframes zkBob { from { translate: 0 -5px; } to { translate: 0 5px; } }
+.zk-strings { animation: zkStrings 1.4s linear infinite; }
+@keyframes zkStrings { to { stroke-dashoffset: -16; } }
+
+/* Répliques : la bulle respire, l'éclat tourne, la réplique s'écrit ligne après ligne */
+.zk-burst { transform-box: view-box; transform-origin: 100px 100px; animation: zkRing 26s linear infinite reverse; }
+.zk-bubble { transform-origin: 50% 60%; animation: zkBubble 2.6s var(--spring) infinite; }
+@keyframes zkBubble { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.07) rotate(-2deg); } 30% { transform: scale(1); } }
+.zk-lines path { stroke-dasharray: 1; animation: zkWrite 2.6s ease-out infinite; }
+.zk-lines path:nth-child(2) { animation-delay: 0.3s; }
+.zk-lines path:nth-child(3) { animation-delay: 0.6s; }
+@keyframes zkWrite { 0% { stroke-dashoffset: 1; } 30%, 100% { stroke-dashoffset: 0; } }
+
+/* ── LES LOGOS D'ÉPREUVE (badges) ── */
+.zk-logo {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.zk-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.55));
+}
+/* Le reflet d'or : une bande claire qui traverse le logo, découpée à sa silhouette */
+.zk-logo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.85) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: zkShine 1100ms ease-out both;
+  animation-delay: inherit;
+}
+@keyframes zkShine { from { background-position: 130% 0; } to { background-position: -40% 0; } }
+
+/* Sur les cartes de la sélection : le logo frappe la carte, puis flotte doucement */
+.menu-logo-tile.has-logo { align-items: center; text-align: center; }
+.menu-logo-tile.has-logo .menu-logo-mark {
+  width: min(100%, 30vh, 320px);
+  margin: 0 auto auto;
+}
+.duel-tile-wrap .zk-logo {
+  animation: zkLogoStamp 900ms var(--spring) both;
+  animation-delay: calc(420ms + var(--i) * 140ms);
+}
+.duel-tile-wrap .zk-logo::after { animation-delay: calc(1100ms + var(--i) * 140ms); }
+.duel-tile-wrap .zk-logo img { animation: zkLogoFloat 5.5s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -1.3s); }
+@keyframes zkLogoStamp { from { opacity: 0; scale: 1.7; rotate: 14deg; } }
+@keyframes zkLogoFloat { from { translate: 0 -5px; } to { translate: 0 5px; } }
+.menu-logo-tile:hover:enabled .zk-logo::after { animation: zkShine 900ms ease-out; }
+/* Le logo porte déjà le nom de l'épreuve : on ne le répète pas dessous (il reste lu par les lecteurs d'écran) */
+.menu-logo-tile.has-logo .menu-logo-name,
+.menu-logo-tile.has-logo .zk-tile-theme {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.menu-logo-tile.has-logo .menu-logo-status { margin-top: 2px; }
+.zk-picker-emblem:has(.zk-logo) { width: clamp(120px, 14vw, 200px); }
+.episode-emblem:has(.zk-logo) { width: clamp(180px, 38vmin, 400px); filter: none; }
+
+/* Barre du haut sur téléphone : trois liens doivent tenir à côté du nom */
+@media (max-width: 520px) {
+  .navbar .navbar-links { gap: 2px; }
+  .navbar .navbar-link { padding-inline: 6px; font-size: 10px; letter-spacing: 0.06em; }
+  .navbar .navbar-player { display: none; }
+  .navbar .arena-brand-wordmark > span { display: none; }
+  .navbar .arena-brand-wordmark strong { font-size: 20px; }
+  .navbar .zk-seal { width: 30px; height: 30px; }
+}

@@ -24,7 +24,7 @@ export function DuelStage({ session, epreuve, onRespondent, ...controls }: Props
   const active = resolveEpreuve(epreuve, current.difficulty);
   const chooser = current.selectedBy === "host" ? "Présentateur" : session.players[current.selectedBy].name;
   return <div className="duel-stage">
-    <EpisodeCard key={`${session.id}-${current.epreuveId}`} label="ÉPISODE" step={`${session.currentIndex + 1}/5`} name={epreuve.nom} difficulty={current.difficulty} chooser={`Choix de ${chooser}`} color={epreuve.couleur} />
+    <EpisodeCard key={`${session.id}-${current.epreuveId}`} label="Épreuve" step={`${session.currentIndex + 1}/5`} name={epreuve.nom} difficulty={current.difficulty} chooser={`Choix de ${chooser}`} epreuveId={epreuve.id} selector={current.selectedBy} />
     <DuelHeader players={session.players} current={current} epreuveName={epreuve.nom} index={session.currentIndex} />
     {epreuve.id !== "blind-test-openings" && <RespondentPicker players={session.players} progress={controls.progress} onRespondent={onRespondent} />}
     {epreuve.difficulties[current.difficulty].status === "shared" && <p className="duel-notice">Classe {current.difficulty} · {epreuve.difficulties[current.difficulty].description}</p>}

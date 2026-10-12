@@ -1,11 +1,8 @@
-import { TitleReadyScene } from "../TitleReadyScene";
-
-export function DuelVsStage() {
-  return <div className="arena-vs-stage" aria-label="Versus">
-    <div className="arena-vs-orbit" aria-hidden="true" />
-    <div className="arena-vs-scene" aria-hidden="true"><TitleReadyScene electric /></div>
-    <div className="arena-vs-word" aria-hidden="true">VS</div>
-    <span className="arena-vs-caption" aria-hidden="true">FACE À FACE</span>
-    <div className="arena-energy-line" aria-hidden="true" />
+/** Le sceau Zenkai posé sur le trait d'or : il tourne et s'allume quand les deux joueurs sont prêts. */
+export function DuelVsStage({ armed }: { armed: boolean }) {
+  return <div className={"arena-vs-stage" + (armed ? " is-armed" : "")} aria-label="Versus">
+    <span className="arena-vs-halo" aria-hidden="true" />
+    <img className="arena-vs-seal" src="/logo-zenkai.png" alt="" />
+    <span className="arena-vs-word" aria-hidden="true">VS</span>
   </div>;
 }

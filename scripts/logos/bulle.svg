@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720" width="800" height="720">
+  <!-- Répliques Cultes n'a pas de personnage : une bulle de manga tient sa place dans le médaillon -->
+  <defs>
+    <linearGradient id="or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff6d2"/><stop offset="0.45" stop-color="#f3d67e"/><stop offset="1" stop-color="#a87d22"/>
+    </linearGradient>
+    <linearGradient id="papier" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1e6c8"/>
+    </linearGradient>
+  </defs>
+  <!-- l'éclat derrière la bulle -->
+  <polygon fill="url(#or)" opacity="0.9" points="400,10 452,118 548,46 558,166 676,134 640,250 762,268 682,360 786,430 676,476 730,588 610,576 612,700 508,632 452,716 400,640 320,712 296,632 180,690 196,570 70,582 128,474 18,424 124,356 44,262 168,250 132,132 250,166 258,44 350,118"/>
+  <!-- la bulle -->
+  <path d="M150 190h500q54 0 54 54v196q0 54-54 54H452l-128 138 24-138H150q-54 0-54-54V244q0-54 54-54Z" fill="url(#papier)" stroke="#0a0806" stroke-width="16" stroke-linejoin="round"/>
+  <!-- les guillemets -->
+  <g fill="#0a0806">
+    <path d="M170 410q0-112 88-146l20 38q-40 18-40 56h46v90H170Z"/>
+    <path d="M318 410q0-112 88-146l20 38q-40 18-40 56h46v90H318Z"/>
+  </g>
+  <!-- la réplique -->
+  <g stroke="#0a0806" stroke-width="26" stroke-linecap="round">
+    <path d="M486 286h150"/><path d="M486 348h150"/><path d="M486 410h88"/>
+  </g>
+</svg>

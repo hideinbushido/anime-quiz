@@ -1,0 +1,511 @@
+/* LES LIENS D'AYANOKOJI — le duel en temps réel.
+   Trois écrans (joueur, live, présentateur) et un même plateau.
+   L'identité reste celle du site : noir chaud et or, saphir pour le joueur 1,
+   rubis pour le joueur 2. L'épreuve est sobre : un jeu d'esprit, pas un flipper. */
+.ay-screen {
+  --c: var(--gold-2);
+  --c-deep: var(--gold-4);
+  position: relative;
+  min-height: 100svh;
+  padding: clamp(10px, 1.6vh, 22px) clamp(12px, 2.4vw, 44px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 18px);
+  color: var(--paper);
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(215, 171, 63, 0.14), transparent 70%),
+    linear-gradient(180deg, var(--ink-2), var(--ink));
+}
+.ay-screen .player1, .ay-screen.player1 { --c: var(--sapphire); --c-deep: var(--sapphire-deep); }
+.ay-screen .player2, .ay-screen.player2 { --c: var(--ruby); --c-deep: var(--ruby-deep); }
+
+.ay-kicker {
+  font: 700 clamp(9px, 0.85vw, 13px) / 1.2 var(--f-accent);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+.ay-screen h1, .ay-screen h2 { transform: none; text-transform: uppercase; }
+.ay-badge {
+  flex: none;
+  padding: 0.16em 0.42em 0.04em;
+  background: var(--foil);
+  color: var(--ink);
+  font: 900 clamp(1.6rem, 3.4vw, 3.6rem) / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+.ay-timer {
+  flex: none;
+  font: 900 clamp(1.8rem, 3.8vw, 4rem) / 1 var(--f-title);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--gold-1);
+}
+.ay-timer.is-stopped { color: var(--paper-dim); }
+.ay-notice {
+  padding: 8px 14px;
+  border-left: 3px solid var(--gold-2);
+  background: rgba(243, 214, 126, 0.08);
+  font-size: 14px;
+  color: var(--gold-1);
+}
+.ay-notice.is-error { border-left-color: var(--paper); color: var(--paper); background: rgba(251, 246, 233, 0.08); }
+.ay-notice code { font-size: 0.95em; color: var(--gold-1); }
+.ay-wait {
+  margin: auto;
+  max-width: 26em;
+  text-align: center;
+  font: 800 clamp(1.3rem, 2.6vw, 2.6rem) / 1.1 var(--f-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.ay-lock { width: 1em; height: 1em; fill: currentColor; vertical-align: -0.12em; }
+
+.ay-button {
+  min-height: 48px;
+  padding: 0.12em 20px 0;
+  border: 1px solid var(--hair-strong);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--paper);
+  font: 800 clamp(1rem, 1.3vw, 1.3rem) / 1 var(--f-title);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: transform 500ms var(--spring), background 160ms, border-color 160ms, opacity 200ms;
+}
+.ay-button:hover:enabled { border-color: var(--gold-1); transform: translateY(-2px); }
+.ay-button:active:enabled { transform: scale(0.95); }
+.ay-button:disabled { opacity: 0.32; }
+.ay-button.is-primary { border-color: transparent; background: var(--foil); color: var(--ink); }
+.ay-button.is-current { border-color: var(--gold-1); background: rgba(243, 214, 126, 0.16); }
+.ay-button b { color: var(--gold-1); margin-right: 6px; }
+
+/* ══ LE PLATEAU ══ */
+.ay-board { container-type: inline-size; width: 100%; }
+.ay-chain {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(6px, 1.4cqw, 16px) 0;
+}
+/* Rangée du haut : les six cartes. Rangée du bas : chaque lien, à cheval sur les deux cartes qu'il relie. */
+.ay-card {
+  grid-row: 1;
+  grid-column: calc(var(--n) * 2 + 1) / span 2;
+  position: relative;
+  aspect-ratio: 5 / 6;
+  margin: 0 clamp(2px, 0.7cqw, 8px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--c) 55%, var(--gold-4));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c-deep) 70%, #17120b), #0d0a07 70%);
+  color: var(--paper);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: border-color 160ms, box-shadow 200ms, filter 200ms;
+}
+.ay-card:disabled { color: var(--paper); cursor: default; }
+.ay-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ay-card-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 900 clamp(2rem, 13cqw, 7rem) / 1 var(--f-title);
+  color: color-mix(in srgb, var(--c) 34%, transparent);
+  pointer-events: none;
+}
+.ay-card-rank {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  min-width: 1.5em;
+  padding: 0.2em 0.3em 0.06em;
+  background: var(--foil);
+  color: var(--ink);
+  font: 900 clamp(0.7rem, 1.9cqw, 1.2rem) / 1 var(--f-title);
+  text-align: center;
+}
+.ay-card-name {
+  position: relative;
+  padding: 1.4em 0.3em 0.36em;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.88) 46%);
+  font: 800 clamp(0.62rem, 2.05cqw, 1.5rem) / 0.98 var(--f-title);
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.ay-board.is-interactive .ay-card { cursor: grab; }
+.ay-board.is-interactive .ay-card:hover { border-color: var(--gold-1); }
+.ay-card.is-selected {
+  border-color: var(--gold-1);
+  box-shadow: 0 0 0 3px var(--gold-2), 0 0 34px rgba(243, 214, 126, 0.55);
+  filter: brightness(1.25);
+}
+/* Une carte sélectionnée : les autres deviennent des cibles */
+.ay-board.has-selection .ay-card:not(.is-selected) { border-style: dashed; border-color: var(--gold-2); }
+.ay-card.is-dragging {
+  z-index: 5;
+  cursor: grabbing;
+  border-color: var(--gold-1);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.7), 0 0 40px color-mix(in srgb, var(--c) 70%, transparent);
+  transition: none;
+}
+/* Le petit éclair qui suit un déplacement : c'est lui qu'on voit sur le live */
+.ay-card.is-moved { animation: ayMoved 620ms ease-out; }
+@keyframes ayMoved {
+  0% { box-shadow: 0 0 0 3px var(--c), 0 0 44px var(--c); filter: brightness(1.5); }
+  100% { box-shadow: 0 0 0 0 transparent; filter: none; }
+}
+.ay-board.is-locked .ay-card { filter: saturate(0.7); }
+.ay-board.is-hidden .ay-card { border-style: dashed; }
+.ay-board.is-hidden .ay-card-initial { color: var(--hair-strong); }
+
+.ay-link {
+  grid-row: 2;
+  grid-column: calc(var(--n) * 2 + 2) / span 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--gold-1);
+  min-width: 0;
+}
+/* L'accolade qui relie les deux cartes au-dessus */
+.ay-link-line {
+  width: calc(100% - clamp(8px, 2cqw, 20px));
+  height: clamp(6px, 1.2cqw, 12px);
+  border: 2px solid var(--gold-3);
+  border-top: 0;
+}
+.ay-link-label {
+  padding: 0.24em 0.5em 0.1em;
+  border: 1px solid var(--hair-strong);
+  background: var(--ink);
+  font: 800 clamp(0.6rem, 1.75cqw, 1.25rem) / 1 var(--f-title);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition: background 200ms, color 200ms, transform 500ms var(--spring);
+}
+.ay-link:hover .ay-link-label, .ay-link.is-open .ay-link-label { background: var(--gold-2); color: var(--ink); }
+.ay-link-verdict { font: 900 clamp(0.9rem, 2.4cqw, 1.8rem) / 1 var(--f-title); }
+.ay-link.is-correct .ay-link-line { border-color: var(--gold-1); box-shadow: 0 6px 18px -4px var(--gold-2); }
+.ay-link.is-correct .ay-link-label { background: var(--foil); color: var(--ink); border-color: transparent; animation: zkStamp 600ms var(--spring); }
+.ay-link.is-wrong { color: var(--paper-dim); }
+.ay-link.is-wrong .ay-link-line { border-color: rgba(251, 246, 233, 0.35); border-style: dashed; border-top: 0; }
+.ay-link.is-wrong .ay-link-label { text-decoration: line-through; border-color: rgba(251, 246, 233, 0.35); color: var(--paper-dim); animation: ayShake 420ms ease-out; }
+@keyframes ayShake { 20% { transform: translateX(-5px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } }
+.ay-link-help {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--gold-2);
+  background: rgba(243, 214, 126, 0.07);
+  font-size: 14px;
+  color: var(--paper);
+}
+.ay-link-help b { color: var(--gold-1); margin-right: 6px; }
+
+/* Plateau étroit (téléphone) : la chaîne se lit de haut en bas, une carte par ligne */
+@container (max-width: 430px) {
+  .ay-chain { display: flex; flex-direction: column; gap: 0; }
+  .ay-card {
+    aspect-ratio: auto;
+    min-height: clamp(46px, 7.6svh, 68px);
+    margin: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .ay-card-rank { position: static; align-self: stretch; display: grid; place-items: center; min-width: 2.2em; font-size: 1.15rem; }
+  .ay-card-initial { inset: 0 8px 0 auto; font-size: 2.6rem; }
+  .ay-card-name { padding: 0.14em 0 0; background: none; font-size: clamp(1.15rem, 6cqw, 1.7rem); text-align: left; }
+  .ay-link { flex-direction: row; justify-content: center; gap: 8px; padding: 3px 0; }
+  .ay-link-line { width: 2px; height: 18px; border: 0; background: var(--gold-3); }
+  .ay-link.is-wrong .ay-link-line { background: rgba(251, 246, 233, 0.35); }
+  .ay-link-label { font-size: 0.9rem; }
+  .ay-link-verdict { font-size: 1.2rem; }
+}
+
+.ay-solution {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 0;
+  font: 900 clamp(1rem, 2.1vw, 2.2rem) / 1 var(--f-title);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.ay-solution span { animation: zkSettle 600ms var(--spring) both; animation-delay: calc(var(--i) * 110ms); }
+.ay-solution b { background: var(--foil-text); -webkit-background-clip: text; background-clip: text; color: transparent; padding-top: 0.14em; display: inline-block; }
+.ay-solution i { margin: 0 0.4em; font-style: normal; color: var(--paper-dim); }
+
+.ay-countdown {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 3, 2, 0.72);
+  backdrop-filter: blur(5px);
+}
+.ay-countdown b {
+  font: 900 clamp(10rem, 44vh, 30rem) / 0.8 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 60px rgba(243, 214, 126, 0.5));
+  animation: zkSlam 800ms var(--spring) both;
+}
+
+/* ══ L'ÉCRAN DU LIVE (OBS, 16:9, sans défilement) ══ */
+.ay-live { height: 100svh; overflow: hidden; }
+.ay-live-head {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 30px);
+}
+.ay-live-logo { flex: none; width: clamp(60px, 7vw, 132px); margin: -6px 0 -14px; }
+.ay-live-title { flex: 1; min-width: 0; }
+.ay-live-title h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(1.8rem, 4.4vw, 5rem) / 0.9 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ay-duel {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 60px);
+  align-items: center;
+}
+.ay-duel-blade {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  translate: -50% 0;
+  background: linear-gradient(180deg, transparent, var(--gold-2) 20%, var(--gold-1) 50%, var(--gold-2) 80%, transparent);
+  display: grid;
+  place-items: center;
+}
+.ay-duel-blade img { width: clamp(30px, 3.2vw, 56px); max-width: none; animation: arenaSealTurn 30s linear infinite; filter: drop-shadow(0 0 14px rgba(243, 214, 126, 0.6)); }
+
+.ay-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 20px);
+  padding: clamp(10px, 1.6vh, 22px) clamp(10px, 1.2vw, 22px);
+  border-top: 4px solid var(--c);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c-deep) 46%, transparent), transparent 70%);
+  transition: box-shadow 400ms, background 400ms;
+}
+.ay-side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ay-side-head h2 {
+  min-width: 0;
+  padding-top: 0.14em;
+  font: 900 clamp(1.5rem, 3.4vw, 3.8rem) / 0.9 var(--f-title);
+  color: var(--c);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ay-moves {
+  flex: none;
+  font: 700 clamp(10px, 0.95vw, 14px) / 1 var(--f-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.ay-moves b {
+  display: inline-block;
+  margin-right: 6px;
+  font: 900 clamp(1.6rem, 3vw, 3.2rem) / 0.9 var(--f-title);
+  letter-spacing: 0;
+  color: var(--paper);
+  animation: zkScorePop 500ms var(--spring);
+}
+.ay-status {
+  font: 800 clamp(1rem, 1.9vw, 2rem) / 1 var(--f-title);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.ay-side.is-submitted { box-shadow: inset 0 0 0 2px var(--c); }
+.ay-side.is-submitted .ay-status { color: var(--c); }
+.ay-live .phase-playing .ay-status, .ay-live.phase-playing .ay-side:not(.is-submitted) .ay-status { animation: ayThink 1.8s ease-in-out infinite; }
+@keyframes ayThink { 50% { opacity: 0.45; } }
+/* Chaîne parfaite : le côté du joueur passe à l'or, ses cartes ondulent une fois */
+.ay-side.is-perfect { box-shadow: inset 0 0 0 3px var(--gold-1), 0 0 70px rgba(243, 214, 126, 0.3); background: linear-gradient(180deg, rgba(243, 214, 126, 0.2), transparent 80%); }
+.ay-side.is-perfect .ay-status {
+  align-self: flex-start;
+  padding: 0.4em 0.9em 0.26em;
+  background: var(--foil);
+  color: var(--ink);
+  animation: zkStamp 800ms var(--spring) both;
+}
+.ay-side.is-perfect .ay-card { animation: ayWave 900ms var(--spring) both; animation-delay: calc(var(--n) * 90ms); border-color: var(--gold-1); }
+@keyframes ayWave { 0% { translate: 0 0; } 35% { translate: 0 -16%; } 100% { translate: 0 0; } }
+.ay-live-solution { text-align: center; display: grid; gap: 6px; padding-bottom: 4px; animation: zkSettle 800ms var(--spring) both; }
+
+/* ══ L'ÉCRAN DU JOUEUR ══ */
+.ay-player { max-width: 1100px; margin: 0 auto; width: 100%; }
+.ay-player-head { display: flex; align-items: center; gap: 12px; }
+.ay-player-head > div { flex: 1; min-width: 0; }
+.ay-player-head h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(1.6rem, 6vw, 3.6rem) / 0.9 var(--f-title);
+  color: var(--c);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ay-opponent {
+  padding: 8px 12px 6px;
+  border: 1px solid var(--hair);
+  font: 800 clamp(0.9rem, 3.4vw, 1.3rem) / 1 var(--f-title);
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+/* « L'adversaire a validé » : la seule chose qu'on sait de lui */
+.ay-opponent.is-alert { border-color: var(--gold-1); background: var(--foil); color: var(--ink); animation: zkStamp 700ms var(--spring); }
+.ay-player-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 8px;
+  padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent, var(--ink) 34%);
+}
+.ay-player-actions > p { grid-column: 1 / -1; text-align: center; font-weight: 600; color: var(--gold-1); }
+.ay-player-actions .ay-button { min-height: 58px; font-size: clamp(1.1rem, 4.6vw, 1.7rem); }
+.ay-locked, .ay-verdict {
+  margin-top: auto;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  border: 2px solid var(--c);
+  background: color-mix(in srgb, var(--c-deep) 50%, transparent);
+  text-align: center;
+  animation: zkSettle 700ms var(--spring) both;
+}
+.ay-locked .ay-lock { width: 30px; height: 30px; color: var(--c); }
+.ay-locked strong, .ay-verdict strong {
+  padding-top: 0.14em;
+  font: 900 clamp(1.5rem, 6.4vw, 2.8rem) / 0.94 var(--f-title);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ay-locked span { color: var(--paper-dim); }
+.ay-verdict.is-perfect { border-color: var(--gold-1); background: rgba(243, 214, 126, 0.14); }
+.ay-verdict.is-perfect strong { background: var(--foil-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ay-verdict .ay-solution { font-size: clamp(0.85rem, 3.4vw, 1.4rem); }
+
+/* ══ LA RÉGIE DU PRÉSENTATEUR ══ */
+.ay-host { max-width: 1700px; margin: 0 auto; width: 100%; }
+.ay-host-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+.ay-host-head > div { flex: 1; min-width: 200px; }
+.ay-host-head h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(1.6rem, 3.4vw, 3.4rem) / 0.9 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ay-phase {
+  padding: 0.5em 0.9em 0.36em;
+  border: 2px solid var(--gold-2);
+  font: 800 clamp(0.95rem, 1.4vw, 1.4rem) / 1 var(--f-title);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-1);
+}
+.ay-host-controls, .ay-host-rounds > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.ay-host-rounds { display: grid; gap: 8px; }
+.ay-host-boards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: clamp(12px, 1.6vw, 26px); }
+.ay-host .ay-side-head h2 { font-size: clamp(1.3rem, 2.2vw, 2.2rem); display: flex; align-items: center; gap: 10px; }
+.ay-host .ay-status { font-size: clamp(0.85rem, 1.1vw, 1.1rem); letter-spacing: 0.08em; }
+.ay-dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: rgba(251, 246, 233, 0.3); }
+.ay-dot.is-on { background: var(--gold-1); box-shadow: 0 0 12px var(--gold-2); }
+.ay-host-solution { padding: 12px 14px; border: 1px dashed var(--hair-strong); display: grid; gap: 8px; }
+.ay-host-solution .ay-solution { justify-content: flex-start; font-size: clamp(1rem, 1.6vw, 1.6rem); }
+.ay-host-links { display: grid; gap: 8px; }
+.ay-host-links ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ay-host-links li { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+.ay-host-links span { min-width: 7em; color: var(--paper-dim); }
+.ay-host-links code { color: var(--gold-1); user-select: all; overflow-wrap: anywhere; }
+
+/* Sur le live, la hauteur ne manque pas : les cartes s'allongent et les noms grossissent */
+.ay-live .ay-card { aspect-ratio: 9 / 15; }
+.ay-live .ay-card-name { font-size: clamp(0.7rem, 2.5cqw, 1.9rem); padding-bottom: 0.5em; }
+.ay-live .ay-card-initial { font-size: clamp(2.4rem, 15cqw, 9rem); padding-bottom: 18%; }
+.ay-live .ay-link-label { font-size: clamp(0.66rem, 2.05cqw, 1.5rem); }
+
+/* ── Le score de l'épreuve ── */
+.ay-score {
+  flex: none;
+  margin-left: auto;
+  font: 700 clamp(10px, 0.95vw, 14px) / 1 var(--f-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.ay-score b {
+  display: inline-block;
+  margin-right: 6px;
+  font: 900 clamp(2rem, 4.4vw, 5rem) / 0.86 var(--f-title);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--c);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--c) 55%, transparent);
+  animation: zkScorePop 900ms var(--spring);
+}
+.ay-side-head { gap: clamp(10px, 1.4vw, 26px); }
+.ay-gain {
+  margin-left: 0.5em;
+  font-style: normal;
+  color: var(--gold-1);
+  text-shadow: 0 0 20px var(--gold-3);
+}
+.ay-side.is-perfect .ay-gain { color: var(--ink); text-shadow: none; }
+.ay-round-count {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  font: 800 clamp(1rem, 1.9vw, 2rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.ay-round-count span {
+  font: 700 clamp(9px, 0.85vw, 12px) / 1 var(--f-label);
+  letter-spacing: 0.16em;
+  color: var(--gold-2);
+}
+.ay-points { font: 800 clamp(1rem, 4vw, 1.5rem) / 1 var(--f-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-1); }
+.ay-host .ay-score b { font-size: clamp(1.4rem, 2.4vw, 2.4rem); }

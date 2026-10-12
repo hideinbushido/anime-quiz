@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type { Epreuve, GameControls, LogicCharacter } from "../types";
 import { currentFeedback } from "../duel/engine";
 import { placeCard, validateChain } from "../duel/logicSolver";
-import { EpreuveLogoDisplay } from "./EpreuveLogoDisplay";
+import { EpreuveLogo } from "./EpreuveLogo";
 
 interface Props extends GameControls { epreuve: Epreuve }
 
@@ -33,7 +33,7 @@ export function LogicLinksPlayer({ epreuve, progress, onEdit, onValidate, onNext
   return <div className="screen links-session">
     <div className="links-bg" aria-hidden />
     <header className="links-header">
-      <div className="links-title-lockup"><div className="links-title-logo"><EpreuveLogoDisplay epreuveId={epreuve.id} /></div>
+      <div className="links-title-lockup"><div className="links-title-logo"><EpreuveLogo epreuveId={epreuve.id} /></div>
         <div><p className="links-kicker">Déduction · Manche {progress.roundIndex + 1}/{epreuve.logicPuzzles?.length}</p><h1>{puzzle.title}</h1><p>{puzzle.intro}</p></div>
       </div>
       <div className="links-meter" role="img" aria-label={`${placed} cartes placées sur ${placements.length}`}>
