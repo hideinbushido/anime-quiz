@@ -30,7 +30,8 @@ function validProgress(value: unknown, epreuve?: Epreuve): value is GameProgress
     if (!epreuve.killerBeeTracks || !isRecord(state) || !isRecord(state.attempts)
         || !["listening", "player1Buzzed", "player2Buzzed", "player1Locked", "player2Locked", "reveal", "roundComplete"].includes(String(state.phase))
         || ![state.attempts.player1, state.attempts.player2].every(n => Number.isInteger(n) && Number(n) >= 0 && Number(n) <= 2)
-        || !Number.isFinite(state.audioTime) || Number(state.audioTime) < 0) return false;
+        || !Number.isFinite(state.audioTime) || Number(state.audioTime) < 0
+        || state.cooldown !== undefined && (!isRecord(state.cooldown) || ![state.cooldown.player1, state.cooldown.player2].every(n => Number.isFinite(n) && Number(n) >= 0))) return false;
     const a = Number(state.attempts.player1), b = Number(state.attempts.player2);
     const revealed = value.rounds.length === index + 1;
     if ((state.phase === "reveal") !== revealed

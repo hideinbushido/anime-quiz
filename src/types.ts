@@ -27,6 +27,8 @@ export interface KillerBeeState {
   phase: "listening" | "player1Buzzed" | "player2Buzzed" | "player1Locked" | "player2Locked" | "reveal" | "roundComplete";
   attempts: Record<PlayerId, number>;
   audioTime: number;
+  /** Secondes de musique pendant lesquelles un joueur ne peut plus buzzer, après une erreur. */
+  cooldown?: Record<PlayerId, number>;
 }
 
 export interface Question {

@@ -17,10 +17,10 @@ export const REGLES: Record<string, RegleEpreuve> = {
   "blind-test-openings": {
     principe: "Un extrait musical démarre. Le premier qui reconnaît l'anime buzze et donne son nom.",
     etapes: [
-      "Le présentateur lance le morceau. Il y en a cinq, du plus évident au plus retors.",
+      "Le présentateur lance le morceau. Il y en a sept, du plus évident au plus retors.",
       "Le premier buzz coupe la musique et donne la main. La réponse se donne à voix haute.",
       "Le présentateur tranche : vrai ou faux. Lui seul décide.",
-      "Chaque joueur a deux tentatives par morceau. Après une erreur, il attend que l'adversaire ait tenté sa chance.",
+      "Chaque joueur a deux tentatives par morceau. Après une erreur, son buzzer est bloqué pendant sept secondes de musique.",
       "Deux erreurs chacun : personne ne marque, et la réponse est révélée.",
     ],
     bareme: "Plus le morceau est tardif et la classe élevée, plus il rapporte. Une erreur ne retire jamais de points.",

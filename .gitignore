@@ -26,3 +26,8 @@ test-output/
 
 # rooms du serveur temps réel (état des parties en cours)
 server/data/
+
+# vidéos des règles : les rendus et les captures de contrôle restent en local
+videos/*/renders/
+videos/*/snapshots/
+videos/*/node_modules/

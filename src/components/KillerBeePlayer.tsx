@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Epreuve, GameControls, PlayerId } from "../types";
-import { buzzedPlayer, canPlayerBuzz, newKillerBeeState, type DuelBuzzSource } from "../duel/killerBee";
+import { buzzCooldown, buzzedPlayer, canPlayerBuzz, newKillerBeeState, type DuelBuzzSource } from "../duel/killerBee";
 import { currentFeedback } from "../duel/engine";
 import { EpreuveLogo } from "./EpreuveLogo";
 import { KillerBeeDeck } from "./killerBee/KillerBeeDeck";
@@ -53,6 +53,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
     onKillerBee?.({ type: "buzz", playerId: id, audioTime: audio.current?.currentTime });
   }, [onKillerBee]);
   useEffect(() => buzzSource?.subscribe(onPlayerBuzz), [buzzSource, onPlayerBuzz]);
+  const blocked1 = buzzCooldown(state, "player1") > 0, blocked2 = buzzCooldown(state, "player2") > 0;
   useEffect(() => {
     firstBuzz.current = Boolean(player || result || state.phase === "roundComplete");
     if (player || result || state.phase === "roundComplete") audio.current?.pause();
@@ -62,7 +63,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
     for (const id of PLAYER_IDS) {
       if (!canPlayerBuzz(snapshot.current.state, id)) buzzSource?.lockPlayer?.(id);
     }
-  }, [state.phase, state.attempts.player1, state.attempts.player2, track?.id, player, result, buzzSource]);
+  }, [state.phase, state.attempts.player1, state.attempts.player2, blocked1, blocked2, track?.id, player, result, buzzSource]);
   useEffect(() => {
     const element = audio.current;
     if (element) { element.pause(); element.currentTime = state.audioTime; }
@@ -102,6 +103,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
 
   const corner = (id: PlayerId) => {
     const attempts = state.attempts[id];
+    const wait = attempts > 0 && !player ? Math.ceil(buzzCooldown(state, id)) : 0;
     const won = Boolean(result?.correct && result.playerId === id);
     return <section key={id} className={`beats-corner ${id}` + (player === id ? " beats-buzz-active" : "") + (player && player !== id ? " beats-corner-dim" : "") + (won ? " beats-corner-won" : "")}>
       <strong className="beats-corner-name">{names[id]}</strong>
@@ -110,7 +112,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
         <span className="beats-lives" role="img" aria-label={`${attempts} tentative${attempts > 1 ? "s" : ""} restante${attempts > 1 ? "s" : ""}`}>{[1, 2].map(life => <svg key={life} viewBox="0 0 64 16" className={"beats-blade" + (life > attempts ? " beats-blade-spent" : "")}>
           <rect x="1" y="5" width="15" height="6" rx="2" /><rect x="16" y="1" width="3.5" height="14" rx="1.5" /><path d="M20 4.6 H52 L63 8 L52 11.4 H20 Z" />
         </svg>)}</span>
-        {showLocalBuzzers && <button className={"beats-buzzer" + (player === id ? " beats-buzzer-hit" : "")} aria-label={`Buzz de ${names[id]}`} data-key={BUZZ_KEYS[id].code} data-keyhint={BUZZ_KEYS[id].hint} disabled={!canPlayerBuzz(state, id)} onClick={() => onPlayerBuzz(id)}>Buzz <b>J{id === "player1" ? 1 : 2}</b></button>}
+        {showLocalBuzzers && <button className={"beats-buzzer" + (player === id ? " beats-buzzer-hit" : "")} aria-label={`Buzz de ${names[id]}`} data-key={BUZZ_KEYS[id].code} data-keyhint={BUZZ_KEYS[id].hint} disabled={!canPlayerBuzz(state, id)} onClick={() => onPlayerBuzz(id)}>{wait > 0 ? <>Bloqué <b>{wait}</b></> : <>Buzz <b>J{id === "player1" ? 1 : 2}</b></>}</button>}
       </>}
       {won && result && <span className="beats-corner-gain" aria-hidden="true">+{result.points}</span>}
     </section>;
@@ -123,7 +125,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
     {player && <div key={player + state.attempts[player]} className={`beats-impact ${player}`} aria-hidden="true" />}
     <header className="beats-header">
       <div className="beats-header-logo"><EpreuveLogo epreuveId={epreuve.id} /></div>
-      <p className="beats-meta"><span>Classe {track.difficulty}</span>Morceau {progress.roundIndex + 1}/5</p>
+      <p className="beats-meta"><span>Classe {track.difficulty}</span>Morceau {progress.roundIndex + 1}/{tracks.length}</p>
     </header>
     <main className={"beats-stage" + (result ? " beats-stage-revealed" : "")}>
       {corner("player1")}
@@ -165,7 +167,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
       <div className="beats-answer-row">
         {result ? <>
           {track.revealAudioSrc && <RevealJingle src={track.revealAudioSrc} />}
-          <button className="beats-submit" data-key="Enter" data-keyhint="Entrée" onClick={onNext}>{progress.roundIndex === 4 ? "Terminer l'épreuve" : "Morceau suivant"}</button>
+          <button className="beats-submit" data-key="Enter" data-keyhint="Entrée" onClick={onNext}>{progress.roundIndex === tracks.length - 1 ? "Terminer l'épreuve" : "Morceau suivant"}</button>
         </> : player ? <>
           <p className="beats-hint">Réponse orale de {names[player]} : le présentateur tranche.</p>
           <button className="beats-judge beats-judge-correct" aria-label="Bonne réponse" data-key="KeyV" data-keyhint="V" onClick={() => onKillerBee?.({ type: "judge", correct: true })}>

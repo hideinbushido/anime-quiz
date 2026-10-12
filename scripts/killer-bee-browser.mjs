@@ -20,7 +20,7 @@ try {
     if (i === 99) throw new Error('Vite did not start');
     await delay(100);
   }
-  browser = spawn(chromePath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--window-size=1440,1000', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  browser = spawn(chromePath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--window-size=1440,1000', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   const wsUrl = await new Promise((resolve, reject) => {
     let logs = '';
     const timeout = setTimeout(() => reject(new Error(`Chrome startup timed out: ${logs.slice(-500)}`)), 15000);
@@ -62,12 +62,12 @@ try {
     return result.result.value;
   };
   const waitFor = async expression => {
-    for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await delay(100); }
+    for (let i = 0; i < 400; i++) { if (await evaluate(expression)) return; await delay(100); }
     throw new Error(`Condition not met: ${expression}; ${JSON.stringify(exceptions)}; ${await evaluate("document.body.innerText")}`);
   };
   const click = async selector => { await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`); await delay(80); };
   const clickText = async text => {
-    await evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(text)}); if (!button || button.disabled) throw new Error('Button unavailable: ' + ${JSON.stringify(text)}); button.click(); })()`);
+    await evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(text)} || b.getAttribute('aria-label') === ${JSON.stringify(text)}); if (!button || button.disabled) throw new Error('Button unavailable: ' + ${JSON.stringify(text)}); button.click(); })()`);
     await delay(80);
   };
   const screenshot = async name => {
@@ -99,14 +99,21 @@ try {
   await click('.duel-class-options button:first-child');
   await clickText('Essayer la classe D');
   await waitFor(`!!document.querySelector('.beats-session')`);
+  // La vidéo des règles s'ouvre au lancement de l'épreuve ; le présentateur peut la passer
+  await waitFor(`!!document.querySelector('.rules-video video')`);
+  await delay(3200);
+  assert.equal(await evaluate(`(() => { const v = document.querySelector('.rules-video video'); return !v.paused || !!document.querySelector('.rules-video-play'); })()`), true, 'rules video plays or offers a play button');
+  await screenshot('regles-video');
+  await click('.rules-video-skip');
+  assert.equal(await evaluate(`document.querySelector('.rules-video') === null`), true, 'skipping closes the rules video');
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').paused`), true, 'track waits for host');
-  await clickText('Lancer / Reprendre');
+  await clickText('Lecture');
   await waitFor(`!document.querySelector('.beats-session audio').paused`);
   await clickText('Pause');
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').paused`), true);
   await clickText('Revenir au début');
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').currentTime`), 0);
-  await clickText('Lancer / Reprendre');
+  await clickText('Lecture');
   await waitFor(`!document.querySelector('.beats-session audio').paused`);
   await clickText('Buzz J1');
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').paused`), true);
@@ -114,8 +121,14 @@ try {
   await click('[aria-label="Mauvaise réponse"]');
   assert.equal(await evaluate(`document.querySelector('.beats-reveal-scene') === null`), true);
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').paused`), true, 'no automatic resume');
+  // Après une erreur, le buzzer reste bloqué pendant sept secondes de musique
+  const buzzer = id => `[...document.querySelectorAll('.beats-buzzer')].find(b => b.getAttribute('aria-label') === 'Buzz de Joueur ${id}')`;
+  assert.equal(await evaluate(`${buzzer(1)}.disabled && ${buzzer(1)}.textContent.includes('Bloqué')`), true, 'the buzzer must lock after a wrong answer');
   await clickText('Buzz J2');
   await click('[aria-label="Mauvaise réponse"]');
+  assert.equal(await evaluate(`${buzzer(1)}.disabled`), true, 'the lock must not lift because the opponent tried');
+  await clickText('Lecture');
+  await waitFor(`!${buzzer(1)}.disabled && !${buzzer(2)}.disabled`);
   await clickText('Buzz J1');
   await click('[aria-label="Mauvaise réponse"]');
   assert.equal(await evaluate(`document.querySelector('.beats-session audio').paused`), true, 'no automatic resume');

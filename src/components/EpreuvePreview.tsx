@@ -5,15 +5,20 @@ import { EpreuvePlayer } from "./EpreuvePlayer";
 import { RespondentPicker } from "./DuelStage";
 import { DuelHeader } from "./DuelHeader";
 import { EpisodeCard } from "./EpisodeCard";
+import { RulesVideo } from "./RulesVideo";
+import { REGLE_VIDEOS } from "../data/regleVideos";
 
 export function EpreuvePreview({ epreuve, difficulty, onBack }: { epreuve: Epreuve; difficulty: DifficultyClass; onBack: () => void }) {
   const [progress, setProgress] = useState(newProgress);
   const [finished, setFinished] = useState(false);
+  // En répétition aussi, les règles passent en vidéo à l'ouverture de l'épreuve
+  const [rules, setRules] = useState(() => Boolean(REGLE_VIDEOS[epreuve.id]));
   const active = resolveEpreuve(epreuve, difficulty);
   const players = createDuel("Joueur 1", "Joueur 2", "preview").players;
   players.player1.score = scoreRounds(progress.rounds, "player1");
   players.player2.score = scoreRounds(progress.rounds, "player2");
   return <div className="duel-stage">
+    {rules && <RulesVideo src={REGLE_VIDEOS[epreuve.id]} delayMs={2600} onDone={() => setRules(false)} />}
     <EpisodeCard label="Répétition" name={epreuve.nom} difficulty={difficulty} chooser="Aucun résultat enregistré" epreuveId={epreuve.id} />
     <div className="duel-preview-bar"><p>ESSAI · {epreuve.nom} · Classe {difficulty} · Aucun résultat enregistré</p><button className="links-secondary" onClick={onBack}>Retour à la sélection</button></div>
     <DuelHeader players={players} label={finished ? "ESSAI TERMINÉ" : "RÉPÉTITION"} />

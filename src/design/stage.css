@@ -384,3 +384,52 @@
   .duel-header .player2 { align-items: flex-end; }
   .duel-respondent small { margin-left: 0; width: 100%; }
 }
+
+/* La vidéo des règles : plein écran sous la carte d'annonce, qui s'ouvre dessus */
+.rules-video {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+}
+.rules-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.rules-video-skip,
+.rules-video-play {
+  position: absolute;
+  font: 700 14px / 1 var(--f-accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+  background: rgba(10, 8, 6, 0.78);
+  border: 1px solid var(--hair-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 500ms var(--spring), background 200ms;
+}
+.rules-video-skip {
+  right: clamp(16px, 3vw, 40px);
+  bottom: clamp(16px, 3vw, 40px);
+  padding: 12px 20px;
+  opacity: 0.75;
+}
+.rules-video-skip kbd {
+  margin-left: 8px;
+  font: inherit;
+  color: var(--paper-dim);
+}
+.rules-video-play {
+  padding: 22px 38px;
+  font-size: 18px;
+}
+.rules-video-skip:hover,
+.rules-video-play:hover {
+  transform: scale(1.05);
+  background: var(--ink-3);
+  opacity: 1;
+}

@@ -1,19 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { epreuves } from '../src/data/epreuves.ts';
-import { getKillerBeePoints, canPlayerBuzz, newKillerBeeState } from '../src/duel/killerBee.ts';
+import { getKillerBeePoints, canPlayerBuzz, newKillerBeeState, BUZZ_COOLDOWN_SECONDS } from '../src/duel/killerBee.ts';
 import { createDuel, newProgress, progressReducer, resolveEpreuve, duelReducer } from '../src/duel/engine.ts';
 import { parseDuel } from '../src/duel/storage.ts';
 const bee = epreuves[0];
 const active = resolveEpreuve(bee, 'B');
 const send = (p, event) => progressReducer(p, { type: 'killerBee', event }, active);
-test('exact score tables and five independent slots per class', () => {
-  const expected = { D: [3,5,8,10,12], C: [3,5,8,11,13], B: [4,6,9,12,14], A: [4,6,10,13,15] };
+test('exact score tables and seven independent slots per class', () => {
+  const expected = { D: [3,5,8,10,12,15,18], C: [3,5,8,11,13,16,19], B: [4,6,9,12,14,17,20], A: [4,6,10,13,15,18,22] };
   for (const level of Object.keys(expected)) {
-    assert.deepEqual(Array.from({length:5}, (_, i) => getKillerBeePoints(level,i)), expected[level]);
-    assert.equal(resolveEpreuve(bee,level).killerBeeTracks.length,5);
+    assert.deepEqual(Array.from({length:7}, (_, i) => getKillerBeePoints(level,i)), expected[level]);
+    assert.equal(resolveEpreuve(bee,level).killerBeeTracks.length,7);
   }
-  assert.throws(() => getKillerBeePoints('A',5),RangeError);
+  assert.throws(() => getKillerBeePoints('A',7),RangeError);
 });
 test('first buzz wins; manual validation only; no duplicate scoring', () => {
   let p = send(newProgress(),{ type:'buzz', playerId:'player2', audioTime:12 });
@@ -26,6 +26,24 @@ test('first buzz wins; manual validation only; no duplicate scoring', () => {
   assert.equal(p.killerBee.phase,'reveal');
   assert.equal(send(p,{type:'judge',correct:true}),p);
 });
+test('a wrong answer blocks the buzzer for seven seconds of music, not until the opponent tries', () => {
+  assert.equal(BUZZ_COOLDOWN_SECONDS, 7);
+  let p = newProgress();
+  p = send(p,{type:'buzz',playerId:'player1',audioTime:3});
+  p = send(p,{type:'judge',correct:false});
+  assert.equal(canPlayerBuzz(p.killerBee,'player1'),false);
+  assert.equal(canPlayerBuzz(p.killerBee,'player2'),true);
+  // La musique avance par petits pas : le délai suit
+  for (let time = 3.25; time <= 9.75; time += 0.25) p = send(p,{type:'audioTime',audioTime:time});
+  assert.equal(canPlayerBuzz(p.killerBee,'player1'),false);
+  // Un retour au début ne fait pas gagner de temps
+  p = send(p,{type:'audioTime',audioTime:0});
+  assert.equal(canPlayerBuzz(p.killerBee,'player1'),false);
+  for (let time = 0.25; time <= 0.5; time += 0.25) p = send(p,{type:'audioTime',audioTime:time});
+  assert.equal(canPlayerBuzz(p.killerBee,'player1'),true);
+  p = send(p,{type:'buzz',playerId:'player1'});
+  assert.equal(p.killerBee.phase,'player1Buzzed');
+});
 test('two attempts each, alternating first failures, explicit reveal only', () => {
   let p = newProgress();
   assert.equal(send(p,{type:'judge',correct:true}),p);
@@ -33,9 +51,11 @@ test('two attempts each, alternating first failures, explicit reveal only', () =
   for (const id of ['player1','player2','player1','player2']) {
     p = send(p,{type:'buzz',playerId:id});
     p = send(p,{type:'judge',correct:false});
+    const from = p.killerBee.audioTime;
     assert.equal(p.rounds.length,0);
     assert.notEqual(p.killerBee.phase,'reveal');
-    if (id === 'player1') assert.equal(canPlayerBuzz(p.killerBee,id),false);
+    assert.equal(canPlayerBuzz(p.killerBee,id),false);
+    for (let step = 1; step <= 8; step++) p = send(p,{type:'audioTime',audioTime:from + step});
   }
   assert.equal(p.killerBee.phase,'roundComplete');
   assert.equal(canPlayerBuzz(p.killerBee,'player2'),false);

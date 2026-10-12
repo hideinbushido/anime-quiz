@@ -60,7 +60,7 @@ try {
     return result.result.value;
   };
   const waitFor = async expression => {
-    for (let i = 0; i < 300; i++) { if (await evaluate(expression)) return; await delay(100); }
+    for (let i = 0; i < 700; i++) { if (await evaluate(expression)) return; await delay(100); }
     throw new Error(`Condition not met: ${expression}`);
   };
   const click = async selector => { await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`); await delay(80); };
@@ -150,6 +150,10 @@ try {
     await clickText('Essayer la classe D');
     if (name.startsWith('Les Beats')) {
       await waitFor(`!!document.querySelector('.beats-session audio')`);
+      // La vidéo des règles couvre l'épreuve à son lancement ; le présentateur la passe
+      await waitFor(`!!document.querySelector('.rules-video video')`);
+      await click('.rules-video-skip');
+      assert.equal(await evaluate(`document.querySelector('.rules-video') === null`), true);
       assert.ok(await evaluate(`document.querySelector('.beats-session audio').getAttribute('src').endsWith('.MP3')`));
       // Le blind test se joue au buzzer : un joueur buzze, puis le présentateur valide
       await click('[aria-label^="Buzz de"]');
