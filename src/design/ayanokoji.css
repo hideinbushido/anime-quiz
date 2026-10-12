@@ -509,3 +509,16 @@
 }
 .ay-points { font: 800 clamp(1rem, 4vw, 1.5rem) / 1 var(--f-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-1); }
 .ay-host .ay-score b { font-size: clamp(1.4rem, 2.4vw, 2.4rem); }
+
+/* ── Les portraits sur les cartes ── */
+.ay-card img { object-position: 50% 18%; pointer-events: none; }
+.ay-card.has-image .ay-card-initial { display: none; }
+.ay-card.has-image .ay-card-name { padding-top: 2.2em; background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.92) 58%); }
+@container (max-width: 430px) {
+  /* Sur téléphone, le portrait devient une vignette à gauche du nom */
+  /* hauteur fixe : sans elle, la carte prendrait la taille réelle de l'image */
+  .ay-card { height: clamp(46px, 7.6svh, 68px); min-height: 0; }
+  .ay-card img { position: static; flex: none; width: auto; height: 100%; aspect-ratio: 1; object-fit: cover; }
+  .ay-card.has-image .ay-card-rank { order: -1; }
+  .ay-card.has-image .ay-card-name { padding-top: 0.14em; background: none; }
+}

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import type { PublicRound } from "../../ayanokoji/types";
+import { characterImage } from "../../ayanokoji/characterImages";
 
 interface Props {
   round: PublicRound;
@@ -115,18 +116,19 @@ export function AyanokojiBoard({ round, order, onReorder, locked = false, correc
     <div className="ay-chain">
       {order.map((id, index) => {
         const character = byId.get(id);
+        const image = hidden ? undefined : character?.image ?? characterImage(id);
         const link = round.links[index];
         const shown = correctLinks !== undefined && index < revealed;
         return [
           <button key={id} type="button" data-card={id} disabled={!interactive} style={{ ["--n" as string]: index }}
             ref={element => { if (element) cards.current.set(id, element); else cards.current.delete(id); }}
-            className={"ay-card" + (selected === id ? " is-selected" : "")}
+            className={"ay-card" + (selected === id ? " is-selected" : "") + (image ? " has-image" : "")}
             aria-pressed={interactive ? selected === id : undefined}
             aria-label={hidden ? `Carte ${index + 1}, face cachée` : `${character?.name}, place ${index + 1}`}
             onPointerDown={event => onPointerDown(event, id)} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
             onPointerCancel={event => { drag.current = null; event.currentTarget.classList.remove("is-dragging"); event.currentTarget.style.transform = ""; }}>
             <span className="ay-card-rank" aria-hidden="true">{index + 1}</span>
-            {character?.image && !hidden && <img src={character.image} alt="" draggable={false} />}
+            {image && <img src={image} alt="" draggable={false} />}
             <span className="ay-card-initial" aria-hidden="true">{hidden ? "?" : [...(character?.name ?? "?")][0]}</span>
             <span className="ay-card-name">{hidden ? "" : character?.name}</span>
           </button>,
