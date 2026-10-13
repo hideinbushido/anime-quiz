@@ -13,8 +13,8 @@ const PLAYERS: PlayerId[] = ["player1", "player2"];
  * contrôle. Les deux plateaux côte à côte, chaque mouvement animé au moment où
  * le joueur le fait. Il ne reçoit la solution qu'à la révélation.
  */
-export function AyanokojiLive({ room }: { room: string }) {
-  const { view, status, error, clockOffset } = useAyanokojiRoom<LiveView>(room, "live");
+export function AyanokojiLive() {
+  const { view, status, error, clockOffset } = useAyanokojiRoom<LiveView>("live");
   const revealing = view?.phase === "revealing" || view?.phase === "complete";
   const now = useServerNow(clockOffset, Boolean(revealing && view?.revealAt));
   const revealed = revealing && view?.revealAt ? Math.floor((now - view.revealAt) / REVEAL_STEP_MS) : 0;

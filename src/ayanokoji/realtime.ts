@@ -1,14 +1,15 @@
 import type { ClientMessage, Role, RoomView, ServerMessage } from "./types";
+import type { FeudClientMessage, FeudServerMessage, FeudView } from "../feud/types";
 
 /**
- * La couche réseau des Liens d'Ayanokoji. Les composants ne parlent jamais au
+ * La couche réseau des épreuves en temps réel. Les composants ne parlent jamais au
  * WebSocket directement : ils passent par cette connexion, qui se charge de
  * rejoindre la room, de garder le jeton de la place et de se reconnecter.
  */
 export type ConnectionStatus = "connecting" | "online" | "offline";
 
 export interface RoomConnection {
-  send: (message: ClientMessage) => void;
+  send: (message: ClientMessage | FeudClientMessage) => void;
   close: () => void;
 }
 
@@ -19,6 +20,8 @@ interface Options {
   name?: string;
   names?: Partial<Record<"player1" | "player2", string>>;
   onView: (view: RoomView, receivedAt: number) => void;
+  /** L'état des Pensées d'Anya, quand c'est l'épreuve ouverte dans la room. */
+  onFeud?: (view: FeudView, receivedAt: number) => void;
   onStatus: (status: ConnectionStatus) => void;
   onError: (message: string) => void;
 }
@@ -32,7 +35,7 @@ export function realtimeUrl(): string {
 
 const tokenKey = (room: string, role: Role) => `ayanokoji-token-${room}-${role}`;
 
-export function connectRoom({ room, role, name, names, onView, onStatus, onError }: Options): RoomConnection {
+export function connectRoom({ room, role, name, names, onView, onFeud, onStatus, onError }: Options): RoomConnection {
   let socket: WebSocket | null = null;
   let closed = false;
   let retry = 0;
@@ -49,12 +52,13 @@ export function connectRoom({ room, role, name, names, onView, onStatus, onError
       socket?.send(JSON.stringify({ type: "room:join", room, role, token, name, names } satisfies ClientMessage));
     };
     socket.onmessage = event => {
-      let message: ServerMessage;
-      try { message = JSON.parse(String(event.data)) as ServerMessage; } catch { return; }
+      let message: ServerMessage | FeudServerMessage;
+      try { message = JSON.parse(String(event.data)) as ServerMessage | FeudServerMessage; } catch { return; }
       if (message.type === "room:joined") {
         onStatus("online");
         if (message.token) try { localStorage.setItem(tokenKey(room, role), message.token); } catch { /* voir plus haut */ }
       } else if (message.type === "room:state") onView(message.view, Date.now());
+      else if (message.type === "feud:state") onFeud?.(message.view, Date.now());
       else if (message.type === "room:error") onError(message.message);
     };
     socket.onclose = () => {

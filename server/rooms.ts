@@ -9,6 +9,8 @@ import type { AyanokojiRound, HostView, LiveView, PlayerResult, PlayerView, Publ
 import { AYANOKOJI_ROUNDS, findRound, nextRound } from "../src/ayanokoji/rounds.ts";
 import { isPermutation, validateOrder } from "../src/ayanokoji/validator.ts";
 import { maxRoundPoints, roundPoints } from "../src/ayanokoji/scoring.ts";
+import type { FeudState, RoomGame } from "../src/feud/types.ts";
+import { createFeud } from "../src/feud/reducer.ts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 const COUNTDOWN_MS = 3000;
@@ -22,6 +24,10 @@ interface Seat {
 
 export interface Room {
   id: string;
+  /** L'épreuve que la room joue en ce moment : c'est le présentateur qui en change. */
+  game: RoomGame;
+  /** La partie des Pensées d'Anya, créée à sa première ouverture et gardée ensuite. */
+  feud: FeudState | null;
   phase: RoundPhase;
   roundId: string | null;
   initialOrder: string[];
@@ -40,7 +46,7 @@ const emptySeat = (order: string[] = []): Seat => ({ order: [...order], moveCoun
 
 export function createRoom(id: string): Room {
   return {
-    id, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
+    id, game: "ayanokoji", feud: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
     timer: { elapsedMs: 0, runningSince: null },
     seats: { player1: emptySeat(), player2: emptySeat() },
     names: { player1: "Joueur 1", player2: "Joueur 2" },
@@ -90,6 +96,14 @@ export function rename(room: Room, player: PlayerId, name: unknown): void {
   if (typeof name !== "string") return;
   const clean = name.replace(/\s+/g, " ").trim().slice(0, 24);
   if (clean) room.names[player] = clean;
+}
+
+/** Le présentateur fait passer la room d'une épreuve à l'autre ; chaque partie reste en l'état. */
+export function switchGame(room: Room, game: unknown): string | null {
+  if (game !== "ayanokoji" && game !== "feud") return "Épreuve inconnue.";
+  room.game = game;
+  if (game === "feud") room.feud ??= createFeud();
+  return null;
 }
 
 export type HostAction = "start" | "pause" | "resume" | "force-end" | "reveal" | "next";

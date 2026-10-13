@@ -11,8 +11,8 @@ import { AyanokojiTimer, ConnectionNotice, Countdown, LockIcon, RoundBadge } fro
  * le joueur n'attend jamais le réseau pour voir sa carte bouger. Il ne reçoit
  * ni le plateau adverse ni la solution : seulement « l'adversaire a validé ».
  */
-export function AyanokojiPlayer({ room, player, name }: { room: string; player: PlayerId; name?: string }) {
-  const { view, status, error, clockOffset, send } = useAyanokojiRoom<PlayerView>(room, player, { name });
+export function AyanokojiPlayer({ player }: { player: PlayerId }) {
+  const { view, status, error, clockOffset, send } = useAyanokojiRoom<PlayerView>(player);
   // L'ordre posé sur place, en attendant que le serveur le confirme
   const [optimistic, setOptimistic] = useState<string[] | null>(null);
   const [confirming, setConfirming] = useState(false);

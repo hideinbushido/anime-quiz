@@ -1,0 +1,65 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { connectRoom, type ConnectionStatus, type RoomConnection } from "../ayanokoji/realtime";
+import type { ClientMessage, Role, RoomView } from "../ayanokoji/types";
+import type { FeudClientMessage, FeudView } from "../feud/types";
+import { RoomContext, type RoomState } from "./roomContext";
+
+interface Props {
+  room: string;
+  role: Role;
+  /** Pseudo du joueur, ou pseudos des deux joueurs quand c'est le présentateur. */
+  name?: string;
+  j1?: string;
+  j2?: string;
+  children: ReactNode;
+}
+
+/**
+ * Ouvre la connexion de l'écran à sa room et la partage. Le serveur n'envoie
+ * que l'état de l'épreuve en cours : recevoir l'un efface l'autre, et les
+ * écrans basculent d'eux-mêmes quand le présentateur change d'épreuve.
+ */
+export function RoomProvider({ room, role, name, j1, j2, children }: Props) {
+  const [view, setView] = useState<RoomView | null>(null);
+  const [feud, setFeud] = useState<FeudView | null>(null);
+  const [status, setStatus] = useState<ConnectionStatus>("connecting");
+  const [error, setError] = useState("");
+  const [clockOffset, setClockOffset] = useState(0);
+  const connection = useRef<RoomConnection | null>(null);
+
+  useEffect(() => {
+    const link = connectRoom({
+      room, role, name, names: { player1: j1, player2: j2 },
+      onView: (next, receivedAt) => {
+        if (next.role !== role) return;
+        setView(next);
+        setFeud(null);
+        setClockOffset(next.serverNow - receivedAt);
+      },
+      onFeud: (next, receivedAt) => {
+        if (next.role !== role) return;
+        setFeud(next);
+        setView(null);
+        setClockOffset(next.serverNow - receivedAt);
+      },
+      onStatus: setStatus,
+      onError: setError,
+    });
+    connection.current = link;
+    return () => { link.close(); connection.current = null; };
+  }, [room, role, name, j1, j2]);
+
+  // Un refus du serveur s'affiche quelques secondes, puis s'efface de lui-même
+  // (un refus à l'entrée, lui, reste affiché : sans vue, il n'y a rien d'autre à montrer)
+  const joined = view !== null || feud !== null;
+  useEffect(() => {
+    if (!error || !joined) return;
+    const timer = window.setTimeout(() => setError(""), 4000);
+    return () => window.clearTimeout(timer);
+  }, [error, joined]);
+
+  const send = useCallback((message: ClientMessage | FeudClientMessage) => connection.current?.send(message), []);
+  const state = useMemo<RoomState>(() => ({ game: feud ? "feud" : view ? "ayanokoji" : null, view, feud, status, error, clockOffset, send }),
+    [view, feud, status, error, clockOffset, send]);
+  return <RoomContext.Provider value={state}>{children}</RoomContext.Provider>;
+}

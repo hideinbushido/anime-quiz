@@ -168,3 +168,20 @@ Pour ajouter une manche, compléter `src/ayanokoji/rounds.ts` : six personnages,
 En production, le site lit l'adresse du serveur dans `VITE_REALTIME_URL` (par exemple `wss://mon-serveur.onrender.com`).
 
 L'épreuve jouée sur un seul écran reste en place dans le duel : la version temps réel n'est pas encore reliée au score global, le barème restant à décider. Elle remonte `perfect`, `correctLinks`, `completionTime`, `moveCount` et `submittedAt`.
+
+## Les Pensées d'Anya en temps réel
+
+Un sondage en duel, façon « Une famille en or », adapté au 1v1 : trois manches, huit réponses cachées par manche, pas de classe. Il se joue sur les mêmes adresses que les Liens d'Ayanokoji (`/host`, `/live`, `/player`) : dans la régie, le bouton « Passer aux Pensées d'Anya » bascule la room, et les autres écrans suivent.
+
+- **Les manches** sont dans `src/feud/data.ts` : une question, huit réponses de la plus citée à la moins citée, leurs valeurs, et d'autres façons de les dire pour aider le présentateur. C'est le seul fichier à modifier pour changer le contenu.
+- **Les règles** sont dans `src/feud/reducer.ts`, sans réseau ni écran : `MAX_STRIKES` (trois erreurs et le joueur sort de la manche), `ALREADY_GIVEN_IS_STRIKE` (une réponse déjà donnée coûte une erreur), `REVEAL_STEP_MS` (le rythme de la révélation).
+- **Le buzzer** est tranché par le serveur : il ne retient que le premier buzz, refuse un joueur hors manche, et rouvre le buzzer après chaque verdict.
+- **Le secret** tient à la vue envoyée à chaque écran (`feudView`) : le téléphone ne reçoit ni réponse ni valeur, le live reçoit les réponses trouvées et leur propriétaire, et les valeurs ne quittent le serveur qu'au clic sur « Révéler les points ».
+- **Le résultat** de l'épreuve est exposé dans la vue (`result` : vainqueur et scores des deux joueurs) ; les points du sondage ne sont pas ajoutés au score global du duel.
+- **Les sons** sont facultatifs : déposer `buzz.mp3`, `correct.mp3`, `wrong.mp3`, `strike3.mp3`, `answerReveal.mp3`, `pointsReveal.mp3`, `roundWin.mp3`, `finalWin.mp3` dans `public/sons/anya/`.
+
+Tests : `tests/feud.test.mjs` (règles, puis une partie en temps réel avec quatre clients).
+
+## Héberger le serveur temps réel
+
+`render.yaml` décrit le service pour Render (`npm install`, `npm run server`, sonde `/health`, Node 24). Une fois le service en ligne, renseigner `VITE_REALTIME_URL=wss://<service>.onrender.com` dans les variables d'environnement du site sur Vercel, puis redéployer le site.

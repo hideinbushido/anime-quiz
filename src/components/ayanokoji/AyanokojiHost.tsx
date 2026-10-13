@@ -11,8 +11,8 @@ const PLAYERS: PlayerId[] = ["player1", "player2"];
  * manche. Rien de ce qu'il voit ici n'est envoyé aux joueurs ni au live avant
  * qu'il clique sur Révéler.
  */
-export function AyanokojiHost({ room, j1, j2 }: { room: string; j1?: string; j2?: string }) {
-  const { view, status, error, clockOffset, send } = useAyanokojiRoom<HostView>(room, "host", { j1, j2 });
+export function AyanokojiHost() {
+  const { view, status, error, clockOffset, send } = useAyanokojiRoom<HostView>("host");
   if (!view) return <main className="ay-screen ay-host"><ConnectionNotice status={status} error={error} /></main>;
   const { round, phase } = view;
   const can = {
@@ -35,6 +35,7 @@ export function AyanokojiHost({ room, j1, j2 }: { room: string; j1?: string; j2?
       {round && <RoundBadge round={round} />}
       <AyanokojiTimer timer={view.timer} clockOffset={clockOffset} />
       <p className="ay-phase">{PHASE_LABEL[phase]}</p>
+      <button className="ay-button ay-switch" onClick={() => send({ type: "room:game", game: "feud" })}>Passer aux Pensées d'Anya</button>
     </header>
     <ConnectionNotice status={status} error={error} />
 

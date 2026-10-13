@@ -1,0 +1,13 @@
+# Le serveur temps réel du Quiz'Animanga (buzzer, rooms, Liens d'Ayanokoji, Pensées d'Anya).
+# Sur Render : New > Blueprint, puis choisir ce dépôt. Le site, lui, reste sur Vercel.
+services:
+  - type: web
+    name: quiz-animanga-temps-reel
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"

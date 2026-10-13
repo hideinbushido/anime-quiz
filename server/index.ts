@@ -1,5 +1,5 @@
 /**
- * Serveur temps réel des Liens d'Ayanokoji.
+ * Serveur temps réel du Quiz'Animanga : les Liens d'Ayanokoji et les Pensées d'Anya.
  *
  *   npm run server            (port 8787, ou la variable PORT)
  *
@@ -16,7 +16,9 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer, type WebSocket } from "ws";
 import type { PlayerId } from "../src/types.ts";
 import type { ClientMessage, Role, ServerMessage } from "../src/ayanokoji/types.ts";
-import { claim, createRoom, hostAction, loadRound, move, rename, submit, tick, viewFor, type Room } from "./rooms.ts";
+import type { FeudClientMessage, FeudHostAction, FeudServerMessage } from "../src/feud/types.ts";
+import { feudView, hostFeud, pressBuzzer, tickFeud } from "../src/feud/reducer.ts";
+import { claim, createRoom, hostAction, loadRound, move, rename, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
 
 const ROLES: Role[] = ["player1", "player2", "host", "live"];
 const ROOM_ID = /^[A-Za-z0-9_-]{1,24}$/;
@@ -42,7 +44,7 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
     }, 150);
   };
 
-  const send = (socket: WebSocket, message: ServerMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
+  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
   const connected = (roomId: string): Record<PlayerId, boolean> => {
     const here = (role: Role) => [...clients].some(client => client.room === roomId && client.role === role);
     return { player1: here("player1"), player2: here("player2") };
@@ -51,7 +53,12 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
   const broadcast = (room: Room) => {
     const now = Date.now();
     const present = connected(room.id);
-    for (const client of clients) if (client.room === room.id) send(client.socket, { type: "room:state", view: viewFor(room, client.role, present, now) });
+    for (const client of clients) {
+      if (client.room !== room.id) continue;
+      // Un seul état part vers chaque écran : celui de l'épreuve en cours, taillé pour son rôle
+      if (room.game === "feud" && room.feud) send(client.socket, { type: "feud:state", view: feudView(room.feud, client.role, { room: room.id, names: room.names, connected: present, now }) });
+      else send(client.socket, { type: "room:state", view: viewFor(room, client.role, present, now) });
+    }
     save();
   };
 
@@ -64,8 +71,8 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
   wss.on("connection", socket => {
     let client: Client | null = null;
     socket.on("message", raw => {
-      let message: ClientMessage;
-      try { message = JSON.parse(String(raw)) as ClientMessage; } catch { return; }
+      let message: ClientMessage | FeudClientMessage;
+      try { message = JSON.parse(String(raw)) as ClientMessage | FeudClientMessage; } catch { return; }
       if (!message || typeof message.type !== "string") return;
 
       if (message.type === "room:join") {
@@ -93,7 +100,14 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
       const now = Date.now();
       const isPlayer = client.role === "player1" || client.role === "player2";
       let error: string | null = "Action non autorisée.";
-      if (message.type === "ayanokoji:move" && isPlayer) error = move(room, client.role as PlayerId, message.order);
+      if (message.type === "room:game") error = client.role === "host" ? switchGame(room, message.game) : error;
+      else if (message.type === "buzzer:press" || message.type.startsWith("feud:")) {
+        // Le buzzer et la régie des Pensées d'Anya : le rôle vient de la connexion, jamais du message
+        if (room.game !== "feud" || !room.feud) error = "Cette épreuve n'est pas ouverte.";
+        else if (message.type === "buzzer:press") error = isPlayer ? pressBuzzer(room.feud, client.role as PlayerId) : error;
+        else if (client.role === "host") error = hostFeud(room.feud, message as FeudHostAction, now) ?? null;
+      }
+      else if (message.type === "ayanokoji:move" && isPlayer) error = move(room, client.role as PlayerId, message.order);
       else if (message.type === "ayanokoji:submit" && isPlayer) error = submit(room, client.role as PlayerId, now);
       else if (client.role === "host") {
         if (message.type === "ayanokoji:load") error = loadRound(room, message.roundId);
@@ -116,7 +130,10 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
   // Le compte à rebours 3-2-1 se termine ici, pas chez les clients
   const clock = setInterval(() => {
     const now = Date.now();
-    for (const room of rooms.values()) if (tick(room, now)) broadcast(room);
+    for (const room of rooms.values()) {
+      const moved = tick(room, now);
+      if ((room.feud && tickFeud(room.feud, now)) || moved) broadcast(room);
+    }
   }, 100);
 
   http.listen(port);
@@ -136,5 +153,5 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
 // (sous Windows, la casse de la lettre de lecteur peut différer entre les deux chemins)
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)).toLowerCase() === resolve(process.argv[1]).toLowerCase()) {
   const { port } = startServer();
-  console.log(`Liens d'Ayanokoji — serveur temps réel sur ws://localhost:${port}`);
+  console.log(`Quiz'Animanga — serveur temps réel sur ws://localhost:${port}`);
 }

@@ -1,45 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { connectRoom, type ConnectionStatus, type RoomConnection } from "./realtime";
-import type { ClientMessage, Role, RoomView, RoundPhase, TimerState } from "./types";
+import { useEffect, useState } from "react";
+import { useRoom } from "../realtime/roomContext";
+import type { RoomView, RoundPhase, TimerState } from "./types";
 
 /**
- * L'état d'une room vu depuis un écran. `clockOffset` recale l'horloge locale
- * sur celle du serveur : chrono et compte à rebours se calculent ensuite sur
- * place, sans qu'aucune seconde ne transite par le réseau.
+ * L'état des Liens d'Ayanokoji vu depuis un écran. La connexion est ouverte
+ * une fois pour toutes par le `RoomProvider` : ce hook n'en lit que la part
+ * qui concerne cette épreuve. `clockOffset` recale l'horloge locale sur celle
+ * du serveur : chrono et compte à rebours se calculent ensuite sur place.
  */
-export function useAyanokojiRoom<V extends RoomView>(room: string, role: V["role"], labels: { name?: string; j1?: string; j2?: string } = {}) {
-  const [view, setView] = useState<V | null>(null);
-  const [status, setStatus] = useState<ConnectionStatus>("connecting");
-  const [error, setError] = useState("");
-  const [clockOffset, setClockOffset] = useState(0);
-  const connection = useRef<RoomConnection | null>(null);
-
-  useEffect(() => {
-    const link = connectRoom({
-      room, role: role as Role, name: labels.name, names: { player1: labels.j1, player2: labels.j2 },
-      onView: (next, receivedAt) => {
-        if (next.role !== role) return;
-        setView(next as V);
-        setClockOffset(next.serverNow - receivedAt);
-      },
-      onStatus: setStatus,
-      onError: setError,
-    });
-    connection.current = link;
-    return () => { link.close(); connection.current = null; };
-  }, [room, role, labels.name, labels.j1, labels.j2]);
-
-  // Un refus du serveur s'affiche quelques secondes, puis s'efface de lui-même
-  // (un refus à l'entrée, lui, reste affiché : sans vue, il n'y a rien d'autre à montrer)
-  const joined = view !== null;
-  useEffect(() => {
-    if (!error || !joined) return;
-    const timer = window.setTimeout(() => setError(""), 4000);
-    return () => window.clearTimeout(timer);
-  }, [error, joined]);
-
-  const send = useCallback((message: ClientMessage) => connection.current?.send(message), []);
-  return { view, status, error, clockOffset, send };
+export function useAyanokojiRoom<V extends RoomView>(role: V["role"]) {
+  const { view, status, error, clockOffset, send } = useRoom();
+  return { view: view && view.role === role ? (view as V) : null, status, error, clockOffset, send };
 }
 
 /** L'heure du serveur, rafraîchie quelques fois par seconde tant que `active` est vrai. */
