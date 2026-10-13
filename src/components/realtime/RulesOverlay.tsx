@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRoom } from "../../realtime/roomContext";
 
 /**
- * La vidéo des règles sur le live : plein écran, par-dessus l'épreuve, lancée
- * et coupée par le présentateur. Elle part avec le son ; si le navigateur le
+ * La vidéo des règles : plein écran, par-dessus l'épreuve, lancée et coupée par
+ * le présentateur. Sur le live, elle part avec le son ; si le navigateur le
  * refuse (un onglet où personne n'a encore cliqué), elle part muette et le dit.
+ * Sur le téléphone d'un joueur (`quiet`), elle part muette : il entend déjà le
+ * live, et deux sons décalés se gêneraient. Un bouton lui laisse activer le sien.
  */
-export function RulesOverlay() {
+export function RulesOverlay({ quiet = false }: { quiet?: boolean }) {
   const { info } = useRoom();
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
@@ -19,8 +21,8 @@ export function RulesOverlay() {
     const element = video.current;
     if (!element || !key) return;
     if (offset > 1.5) element.currentTime = offset;
-    element.muted = false;
-    element.play().then(() => setMuted(false), () => {
+    element.muted = quiet;
+    element.play().then(() => setMuted(quiet), () => {
       element.muted = true;
       setMuted(true);
       void element.play().catch(() => { /* lecture impossible : la vidéo reste sur sa première image */ });

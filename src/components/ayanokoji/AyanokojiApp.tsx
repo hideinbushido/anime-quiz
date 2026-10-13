@@ -65,5 +65,5 @@ export default function AyanokojiApp() {
     return <main className="ay-screen"><p className="ay-notice is-error" role="alert">Il manque ta place dans l'adresse : <code>&player=1</code> ou <code>&player=2</code>.</p></main>;
   }
   const role = player === "1" ? "player1" : "player2";
-  return <RoomProvider room={room} role={role} name={params.get("name") ?? undefined}><RoomScreen role={role} /></RoomProvider>;
+  return <RoomProvider room={room} role={role} name={params.get("name") ?? undefined}><RoomScreen role={role} /><RulesOverlay quiet /></RoomProvider>;
 }
