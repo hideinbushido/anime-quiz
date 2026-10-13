@@ -196,6 +196,16 @@ Un duel de déduction : cinq rounds (Naruto, Naruto, One Piece, One Piece, Drago
 
 Tests : `tests/dossier.test.mjs`, avec deux univers d'essai dans `tests/fixtures/dossierFixtures.mjs` (jamais utilisés par le jeu).
 
+## Le duel, de bout en bout
+
+Tout se pilote depuis le site : les deux pseudos, le choix des épreuves (deux par joueur, une pour le présentateur), puis « Lancer le duel ». Le site ouvre sa room tout seul et affiche un QR code par joueur et l'adresse de l'écran live.
+
+- **Cinq épreuves, toutes en temps réel** : Les Beats de Killer Bee et Répliques Cultes (au buzzer, `src/quiz/`), Les Liens d'Ayanokoji, Les Pensées d'Anya, Le Dossier de L. Le catalogue (`src/data/epreuves.ts`) dit pour chacune quel jeu la room doit ouvrir (`realtime`) et si elle a des classes (`classless`).
+- **Une épreuve** : le présentateur clique « Lancer l'épreuve » ; elle repart de zéro sur le serveur, la régie de cette épreuve s'affiche dans le site, le live et les téléphones basculent. À la fin, « Terminer l'épreuve » fait entrer ses points dans le duel (`RealtimeStage`).
+- **Le score du duel** : un point par épreuve gagnée, aucun à égalité. Les points de chaque épreuve restent dans son résultat, pour le récapitulatif et l'historique.
+- **Entre deux épreuves**, le live et les téléphones montrent l'écran d'émission : programme, résultats, score, prochaine épreuve, puis le vainqueur (`ShowSync` envoie cet état, le serveur le relaie).
+- **Répétitions** : « Essayer » joue encore Killer Bee, Ayanokoji et Répliques Cultes sur un seul écran, sans serveur.
+
 ## Héberger le serveur temps réel
 
 `render.yaml` décrit le service pour Render (`npm install`, `npm run server`, sonde `/health`, Node 24). Une fois le service en ligne, renseigner `VITE_REALTIME_URL=wss://<service>.onrender.com` dans les variables d'environnement du site sur Vercel, puis redéployer le site.

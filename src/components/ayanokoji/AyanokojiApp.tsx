@@ -1,9 +1,7 @@
-import "../../design/ayanokoji.css";
-import "../../design/feud.css";
-import "../../design/dossier.css";
-import { useState, type FormEvent, type ReactNode } from "react";
+import "../../realtime/styles";
 import type { Role } from "../../ayanokoji/types";
 import { RoomProvider } from "../../realtime/RoomProvider";
+import { HostRoom } from "../../realtime/HostRoom";
 import { useRoom } from "../../realtime/roomContext";
 import { FeudHost } from "../feud/FeudHost";
 import { FeudLive } from "../feud/FeudLive";
@@ -11,6 +9,10 @@ import { FeudPlayer } from "../feud/FeudPlayer";
 import { DossierHost } from "../dossier/DossierHost";
 import { DossierLive } from "../dossier/DossierLive";
 import { DossierPlayer } from "../dossier/DossierPlayer";
+import { QuizHost } from "../quiz/QuizHost";
+import { QuizLive } from "../quiz/QuizLive";
+import { QuizPlayer } from "../quiz/QuizPlayer";
+import { ShowLive, ShowPlayer } from "../realtime/ShowScreens";
 import { AyanokojiHost } from "./AyanokojiHost";
 import { AyanokojiLive } from "./AyanokojiLive";
 import { AyanokojiPlayer } from "./AyanokojiPlayer";
@@ -23,6 +25,13 @@ function RoomScreen({ role }: { role: Role }) {
     if (role === "host") return <FeudHost />;
     return <FeudPlayer player={role} />;
   }
+  // Entre deux épreuves, tous les écrans montrent l'émission : le programme et le score du duel
+  if (game === "lobby" && role !== "host") return role === "live" ? <ShowLive /> : <ShowPlayer player={role} />;
+  if (game === "beats" || game === "citations") {
+    if (role === "live") return <QuizLive />;
+    if (role === "host") return <QuizHost />;
+    return <QuizPlayer player={role} />;
+  }
   if (game === "dossier") {
     if (role === "live") return <DossierLive />;
     if (role === "host") return <DossierHost />;
@@ -31,33 +40,6 @@ function RoomScreen({ role }: { role: Role }) {
   if (role === "live") return <AyanokojiLive />;
   if (role === "host") return <AyanokojiHost />;
   return <AyanokojiPlayer player={role} />;
-}
-
-const PASSWORD_KEY = "regie-mot-de-passe";
-
-/** Tant que le serveur refuse le mot de passe de la régie, on le demande à la place de l'écran. */
-function HostGate({ onPassword, children }: { onPassword: (password: string) => void; children: ReactNode }) {
-  const { game, error } = useRoom();
-  const [draft, setDraft] = useState("");
-  if (game || !error.startsWith("Mot de passe")) return children;
-  const submit = (event: FormEvent) => { event.preventDefault(); if (draft) onPassword(draft); };
-  return <main className="ay-screen ay-gate">
-    <form onSubmit={submit}>
-      <p className="ay-kicker">Régie</p>
-      <label htmlFor="regie-password">Mot de passe de la régie</label>
-      <input id="regie-password" type="password" autoFocus autoComplete="current-password" value={draft} onChange={event => setDraft(event.target.value)} />
-      <button className="ay-button is-primary" disabled={!draft}>Entrer</button>
-    </form>
-  </main>;
-}
-
-function HostRoom({ room, j1, j2 }: { room: string; j1?: string; j2?: string }) {
-  // Le mot de passe reste sur cet appareil : la régie ne le redemande pas à chaque rechargement
-  const [password, setPassword] = useState(() => { try { return localStorage.getItem(PASSWORD_KEY) ?? ""; } catch { return ""; } });
-  const remember = (next: string) => { try { localStorage.setItem(PASSWORD_KEY, next); } catch { /* stockage indisponible */ } setPassword(next); };
-  return <RoomProvider key={password} room={room} role="host" j1={j1} j2={j2} password={password || undefined}>
-    <HostGate onPassword={remember}><RoomScreen role="host" /></HostGate>
-  </RoomProvider>;
 }
 
 /**
@@ -76,7 +58,7 @@ export default function AyanokojiApp() {
     return <main className="ay-screen"><p className="ay-notice is-error" role="alert">Il manque le code de la room dans l'adresse : ajoute <code>?room=TEST</code> (lettres, chiffres, tirets).</p></main>;
   }
   if (path === "/live") return <RoomProvider room={room} role="live"><RoomScreen role="live" /></RoomProvider>;
-  if (path === "/host") return <HostRoom room={room} j1={params.get("j1") ?? undefined} j2={params.get("j2") ?? undefined} />;
+  if (path === "/host") return <HostRoom room={room} j1={params.get("j1") ?? undefined} j2={params.get("j2") ?? undefined}><RoomScreen role="host" /></HostRoom>;
   const player = params.get("player");
   if (player !== "1" && player !== "2") {
     return <main className="ay-screen"><p className="ay-notice is-error" role="alert">Il manque ta place dans l'adresse : <code>&player=1</code> ou <code>&player=2</code>.</p></main>;

@@ -4,8 +4,9 @@ import { epreuves } from '../src/data/epreuves.ts';
 import { createDuel, duelReducer, newProgress, progressReducer, resolveEpreuve, SELECTION_ORDER } from '../src/duel/engine.ts';
 import { parseDuel, readDuel, readHistory, saveDuel, DUEL_KEY, HISTORY_KEY } from '../src/duel/storage.ts';
 
-// Only test fixtures expand the catalog. Production keeps its three real games.
-const question = epreuves.find(epreuve => epreuve.type === 'citation');
+// Ces épreuves d'essai se jouent sur un seul écran, comme les répétitions : elles exercent le moteur local du duel.
+// (Dans le vrai catalogue, les cinq épreuves se jouent en temps réel : voir le dernier test.)
+const question = { ...epreuves.find(epreuve => epreuve.type === 'citation'), realtime: undefined };
 const catalog = Array.from({ length: 6 }, (_, index) => ({ ...question, id: `fixture-${index}`, questions: [question.questions[0]] }));
 const fresh = () => createDuel('Alice', 'Bob', 'match-test');
 function selectedMatch() {
@@ -16,7 +17,7 @@ function selectedMatch() {
 
 test('selection enforces 2 + 2 + 1, distinct games, five choices and classes', () => {
   let session = fresh();
-  for (const epreuve of epreuves) session = duelReducer(session, { type: 'select', epreuveId: epreuve.id, difficulty: 'B' }, epreuves);
+  for (const epreuve of epreuves.slice(0, 3)) session = duelReducer(session, { type: 'select', epreuveId: epreuve.id, difficulty: 'B' }, epreuves);
   assert.equal(session.selected.length, 3);
   assert.equal(duelReducer(session, { type: 'start' }, epreuves).phase, 'selection');
   assert.equal(duelReducer(session, { type: 'select', epreuveId: epreuves[0].id, difficulty: 'A' }, epreuves), session);
@@ -68,7 +69,7 @@ test('saved games reject corrupt, solo, stale, missing or invalid state', () => 
 });
 
 test('round state resumes without changing attribution or replaying a validation', () => {
-  const active = resolveEpreuve(epreuves[1], 'A');
+  const active = resolveEpreuve(epreuves.find(epreuve => epreuve.type === 'logic-links'), 'A');
   let progress = progressReducer(newProgress(), { type: 'respondent', playerId: 'player2' }, active);
   progress = progressReducer(progress, { type: 'edit', patch: { placements: active.logicPuzzles[0].solutionIds } }, active);
   assert.equal(progress.respondent, 'player2');
@@ -96,4 +97,29 @@ test('local storage preserves legacy data and archives a finished duel once', ()
   memory.set(HISTORY_KEY, '{}');
   assert.deepEqual(readHistory(catalog), []);
   delete globalThis.localStorage;
+});
+
+test('le vrai catalogue : cinq épreuves en temps réel, closes par leurs points, un point de duel par épreuve gagnée', () => {
+  assert.equal(epreuves.length, 5);
+  assert.deepEqual(epreuves.map(epreuve => epreuve.realtime), ['beats', 'ayanokoji', 'citations', 'feud', 'dossier']);
+  assert.deepEqual(epreuves.filter(epreuve => epreuve.classless).map(epreuve => epreuve.id), ['citations-cultes', 'pensees-anya', 'dossier-l']);
+  let session = createDuel('Kagami', 'Rico', 'live-1');
+  for (const epreuve of epreuves) session = duelReducer(session, { type: 'select', epreuveId: epreuve.id, difficulty: 'D' }, epreuves);
+  assert.equal(session.phase, 'ready');
+  session = duelReducer(session, { type: 'start' }, epreuves);
+  assert.deepEqual(parseDuel(JSON.parse(JSON.stringify(session)), epreuves), session);
+  // Une épreuve en temps réel ne se joue pas dans le site : seules sa clôture et ses points y entrent
+  assert.equal(duelReducer(session, { type: 'next' }, epreuves), session);
+  assert.equal(duelReducer(session, { type: 'validate', result: { roundId: 'x', points: 10, correct: true, answer: [] } }, epreuves), session);
+  const scores = [[12, 30], [250, 100], [300, 300], [44, 81], [3, 1]];
+  for (const [index, [player1, player2]] of scores.entries()) {
+    assert.equal(session.currentIndex, index);
+    session = duelReducer(session, { type: 'complete', scores: { player1, player2 } }, epreuves);
+    assert.deepEqual(parseDuel(JSON.parse(JSON.stringify(session)), epreuves), session, `sauvegarde après l'épreuve ${index + 1}`);
+  }
+  assert.equal(session.phase, 'recap');
+  // Joueur 2 gagne les épreuves 1 et 4, joueur 1 les 2 et 5 ; l'égalité de la 3 ne rapporte rien à personne
+  assert.deepEqual([session.players.player1.score, session.players.player2.score], [2, 2]);
+  assert.deepEqual(session.results.map(result => [result.scorePlayer1, result.scorePlayer2]), scores);
+  assert.equal(duelReducer(session, { type: 'complete', scores: { player1: 9, player2: 9 } }, epreuves), session);
 });

@@ -82,6 +82,7 @@
 /* Une case en icônes (le Haki) : une petite image par valeur */
 .ds-icons { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.35em; }
 .ds-icons img { width: 2.1em; height: 2.1em; }
+.ds-icons b { font: 800 0.9em / 1 var(--f-title); text-transform: uppercase; }
 .ds-icons.is-empty { font: 800 1.4em / 1 var(--f-title); opacity: 0.7; }
 .ds-cell.is-correct { background: var(--ok-deep); border-color: var(--ok); }
 .ds-cell.is-partial { background: var(--part-deep); border-color: var(--part); }

@@ -7,6 +7,8 @@ export const EPREUVE_LOGOS: Record<string, string> = {
   "blind-test-openings": "les-beats-de-killer-bee",
   "liens-ayanokoji": "les-liens-d-ayanokoji",
   "citations-cultes": "repliques-cultes",
+  "pensees-anya": "les-pensees-d-anya",
+  "dossier-l": "le-dossier-de-l",
 };
 
 /** Vrai si le logo de l'épreuve porte déjà son nom : inutile de le répéter à côté. */

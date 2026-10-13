@@ -6,11 +6,14 @@ import { EpreuvePlayer } from "./EpreuvePlayer";
 import { EpisodeCard } from "./EpisodeCard";
 import { RulesVideo } from "./RulesVideo";
 import { REGLE_VIDEOS } from "../data/regleVideos";
+import { RealtimeStage } from "./realtime/RealtimeStage";
 
 interface Props extends GameControls {
   session: DuelSession;
   epreuve: Epreuve;
   onRespondent: (id: PlayerId) => void;
+  /** Clôt une épreuve en temps réel avec les points de chacun. */
+  onComplete?: (scores: Record<PlayerId, number>) => void;
 }
 
 export function RespondentPicker({ progress, players, onRespondent }: Pick<Props, "progress" | "onRespondent"> & { players: DuelSession["players"] }) {
@@ -22,7 +25,7 @@ export function RespondentPicker({ progress, players, onRespondent }: Pick<Props
   </div>;
 }
 
-export function DuelStage({ session, epreuve, onRespondent, ...controls }: Props) {
+export function DuelStage({ session, epreuve, onRespondent, onComplete, ...controls }: Props) {
   const current = session.selected[session.currentIndex];
   const active = resolveEpreuve(epreuve, current.difficulty);
   const chooser = current.selectedBy === "host" ? "Présentateur" : session.players[current.selectedBy].name;
@@ -32,6 +35,11 @@ export function DuelStage({ session, epreuve, onRespondent, ...controls }: Props
   const [rulesFor, setRulesFor] = useState(() => (untouched && REGLE_VIDEOS[epreuve.id] ? stageKey : null));
   const [seen, setSeen] = useState(stageKey);
   if (seen !== stageKey) { setSeen(stageKey); setRulesFor(untouched && REGLE_VIDEOS[epreuve.id] ? stageKey : null); }
+  // Une épreuve en temps réel a sa propre régie : le bandeau du duel reste, le reste lui appartient
+  if (epreuve.realtime && onComplete) return <div className="duel-stage">
+    <DuelHeader players={session.players} current={current} epreuveName={epreuve.nom} index={session.currentIndex} />
+    <RealtimeStage key={stageKey} session={session} epreuve={epreuve} current={current} onComplete={onComplete} />
+  </div>;
   return <div className="duel-stage">
     {rulesFor === stageKey && <RulesVideo key={stageKey} src={REGLE_VIDEOS[epreuve.id]} delayMs={2600} onDone={() => setRulesFor(null)} />}
     <EpisodeCard key={`${session.id}-${current.epreuveId}`} label="Épreuve" step={`${session.currentIndex + 1}/5`} name={epreuve.nom} difficulty={current.difficulty} chooser={`Choix de ${chooser}`} epreuveId={epreuve.id} selector={current.selectedBy} />

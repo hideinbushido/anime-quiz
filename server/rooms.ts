@@ -13,6 +13,8 @@ import type { FeudState, RoomGame } from "../src/feud/types.ts";
 import { createFeud } from "../src/feud/reducer.ts";
 import type { DossierState } from "../src/dossier/types.ts";
 import { createDossier } from "../src/dossier/reducer.ts";
+import type { QuizState, ShowState } from "../src/quiz/types.ts";
+import { createQuiz } from "../src/quiz/reducer.ts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 const COUNTDOWN_MS = 3000;
@@ -32,6 +34,10 @@ export interface Room {
   feud: FeudState | null;
   /** La partie du Dossier de L, créée à sa première ouverture et gardée ensuite. */
   dossier: DossierState | null;
+  /** L'épreuve au buzzer en cours (Killer Bee ou Répliques Cultes). */
+  quiz: QuizState | null;
+  /** L'état de l'émission entre les épreuves, tenu par le site du présentateur. */
+  show: ShowState | null;
   phase: RoundPhase;
   roundId: string | null;
   initialOrder: string[];
@@ -52,7 +58,7 @@ const emptySeat = (order: string[] = []): Seat => ({ order: [...order], moveCoun
 
 export function createRoom(id: string): Room {
   return {
-    id, game: "ayanokoji", feud: null, dossier: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
+    id, game: "ayanokoji", feud: null, dossier: null, quiz: null, show: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
     timer: { elapsedMs: 0, runningSince: null },
     seats: { player1: emptySeat(), player2: emptySeat() },
     names: { player1: "Joueur 1", player2: "Joueur 2" },
@@ -107,8 +113,9 @@ export function rename(room: Room, player: PlayerId, name: unknown): void {
 
 /** Le présentateur fait passer la room d'une épreuve à l'autre ; chaque partie reste en l'état. */
 export function switchGame(room: Room, game: unknown): string | null {
-  if (game !== "ayanokoji" && game !== "feud" && game !== "dossier") return "Épreuve inconnue.";
+  if (game !== "ayanokoji" && game !== "feud" && game !== "dossier" && game !== "beats" && game !== "citations" && game !== "lobby") return "Épreuve inconnue.";
   room.game = game;
+  if ((game === "beats" || game === "citations") && room.quiz?.kind !== game) room.quiz = createQuiz(game, game === "beats" ? "D" : null);
   if (game === "feud") room.feud ??= createFeud();
   if (game === "dossier") room.dossier ??= createDossier();
   return null;
@@ -123,6 +130,17 @@ export function setAvatar(room: Room, player: PlayerId, image: unknown): string 
   if (image === null) { room.avatars[player] = null; return null; }
   if (typeof image !== "string" || image.length > AVATAR_MAX_LENGTH || !AVATAR.test(image)) return "Cette image ne peut pas servir de photo de profil.";
   room.avatars[player] = image;
+  return null;
+}
+
+/** L'état de l'émission vient du site du présentateur : il est borné, puis relayé tel quel. */
+export function setShow(room: Room, show: unknown): string | null {
+  if (show === null) { room.show = null; return null; }
+  if (typeof show !== "object" || JSON.stringify(show).length > 6000) return "État de l'émission invalide.";
+  const value = show as ShowState;
+  if (!["lobby", "between", "final"].includes(value.phase) || !Array.isArray(value.program) || value.program.length > 12
+      || !Number.isInteger(value.index) || typeof value.wins !== "object" || value.wins === null) return "État de l'émission invalide.";
+  room.show = value;
   return null;
 }
 

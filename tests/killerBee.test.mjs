@@ -4,7 +4,8 @@ import { epreuves } from '../src/data/epreuves.ts';
 import { getKillerBeePoints, canPlayerBuzz, newKillerBeeState, BUZZ_COOLDOWN_SECONDS } from '../src/duel/killerBee.ts';
 import { createDuel, newProgress, progressReducer, resolveEpreuve, duelReducer } from '../src/duel/engine.ts';
 import { parseDuel } from '../src/duel/storage.ts';
-const bee = epreuves[0];
+// La version à un écran de l'épreuve (celle des répétitions) : dans le duel, elle se joue en temps réel
+const bee = { ...epreuves[0], realtime: undefined };
 const active = resolveEpreuve(bee, 'B');
 const send = (p, event) => progressReducer(p, { type: 'killerBee', event }, active);
 test('exact score tables and seven independent slots per class', () => {
@@ -67,7 +68,7 @@ test('two attempts each, alternating first failures, explicit reveal only', () =
   assert.deepEqual(p.killerBee ?? newKillerBeeState(),newKillerBeeState());
 });
 test('saved duel resumes buzz, attempts, audio and attributed scores', () => {
-  const citation = epreuves.find(e => e.type === 'citation');
+  const citation = { ...epreuves.find(e => e.type === 'citation'), realtime: undefined };
   const catalog = [bee,...Array.from({length:4},(_,i) => ({...citation,id:`extra-${i}`}))];
   let session = createDuel('Kagami','Bee','test');
   for (const e of catalog) session = duelReducer(session,{type:'select',epreuveId:e.id,difficulty:'B'},catalog);

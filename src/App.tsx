@@ -16,6 +16,11 @@ import { demoCatalog, demoHistory } from "./dev/demo";
 // En développement seulement : /scores?apercu montre l'historique rempli de duels fictifs
 const apercuHistorique = import.meta.env.DEV && new URLSearchParams(window.location.search).has("apercu");
 import { useGoldCut } from "./components/GoldCut";
+import "./realtime/styles";
+import { HostRoom } from "./realtime/HostRoom";
+import { ShowSync } from "./components/realtime/ShowSync";
+import { roomOf } from "./realtime/roomOf";
+import { RoomLinks } from "./components/realtime/RoomLinks";
 
 type View = "home" | "match" | "scores" | "rules";
 const PHASE_PATH = { selection: "/menu", ready: "/programme", playing: "/jeu", recap: "/recap" };
@@ -61,19 +66,26 @@ export default function App() {
           : effectiveView === "scores" ? (apercuHistorique
             ? <Scoreboard epreuves={demoCatalog} demo={demoHistory()} onBack={() => navigate("home")} />
             : <Scoreboard epreuves={epreuves} onBack={() => navigate("home")} />)
-          : session && (preview && previewEpreuve ? <EpreuvePreview key={`${preview.id}-${preview.difficulty}`} epreuve={previewEpreuve} difficulty={preview.difficulty} onBack={() => setPreview(null)} />
-            : session.phase === "selection" || session.phase === "ready" ? <EpreuveGrid epreuves={epreuves} session={session}
-              onSelect={(epreuveId, difficulty) => dispatch({ type: "select", epreuveId, difficulty })}
-              onUndo={() => dispatch({ type: "undo" })} onStart={() => cut(() => dispatch({ type: "start" }))}
-              onPreview={(id, difficulty) => cut(() => setPreview({ id, difficulty }))} />
+          : session && <HostRoom key={session.id} room={roomOf(session)} j1={session.players.player1.name} j2={session.players.player2.name}>
+            <ShowSync session={session} epreuves={epreuves} />
+            {preview && previewEpreuve ? <EpreuvePreview key={`${preview.id}-${preview.difficulty}`} epreuve={previewEpreuve} difficulty={preview.difficulty} onBack={() => setPreview(null)} />
+            : session.phase === "selection" || session.phase === "ready" ? <>
+              <EpreuveGrid epreuves={epreuves} session={session}
+                onSelect={(epreuveId, difficulty) => dispatch({ type: "select", epreuveId, difficulty })}
+                onUndo={() => dispatch({ type: "undo" })} onStart={() => cut(() => dispatch({ type: "start" }))}
+                onPreview={(id, difficulty) => cut(() => setPreview({ id, difficulty }))} />
+              <section className="rt-connect"><RoomLinks room={roomOf(session)} names={{ player1: session.players.player1.name, player2: session.players.player2.name }} /></section>
+            </>
             : session.phase === "recap" ? <Recap epreuves={epreuves} session={session} onRestart={() => navigate("home")} />
             : active ? <DuelStage session={session} epreuve={active} progress={session.progress}
               onKillerBee={event => dispatch({ type: "killerBee", event })}
               onEdit={patch => dispatch({ type: "edit", patch })}
               onRespondent={playerId => dispatch({ type: "respondent", playerId })}
               onValidate={result => dispatch({ type: "validate", result })}
-              onNext={() => dispatch({ type: "next" })} />
-            : <p className="duel-notice">Épreuve indisponible. Retourne à l'accueil pour préparer un nouveau LIVE.</p>)}
+              onNext={() => dispatch({ type: "next" })}
+              onComplete={scores => cut(() => dispatch({ type: "complete", scores }))} />
+            : <p className="duel-notice">Épreuve indisponible. Retourne à l'accueil pour préparer un nouveau LIVE.</p>}
+          </HostRoom>}
       </>}
   </>;
 }

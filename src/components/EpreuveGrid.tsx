@@ -83,10 +83,10 @@ export function EpreuveGrid({ epreuves, session, onSelect, onUndo, onStart, onPr
               <span className="menu-logo-mark"><EpreuveLogo epreuveId={epreuve.id} /></span>
               <span className="menu-logo-name">{epreuve.nom}</span>
               <span className="zk-tile-theme">{epreuve.theme}</span>
-              <span className="menu-logo-status">{selected ? `Classe ${selected.difficulty} · ${selectorName(selected.selectedBy, session)}` : "Classes D · C · B · A"}</span>
+              <span className="menu-logo-status">{selected ? `${epreuve.classless ? "" : `Classe ${selected.difficulty} · `}${selectorName(selected.selectedBy, session)}` : epreuve.classless ? "Sans classe" : "Classes D · C · B · A"}</span>
               {selected && <img className="zk-tile-stamp" src="/logo-zenkai.png" alt="" />}
             </button>
-            <button className="duel-text-button" onClick={() => { setPendingId(epreuve.id); setDifficulty(selected?.difficulty ?? "D"); }}>Essayer / voir les classes</button>
+            {!(epreuve.classless && epreuve.type === "realtime") && <button className="duel-text-button" onClick={() => { setPendingId(epreuve.id); setDifficulty(selected?.difficulty ?? "D"); }}>{epreuve.classless ? "Essayer" : "Essayer / voir les classes"}</button>}
           </article>;
         })}
       </div>
@@ -102,7 +102,7 @@ export function EpreuveGrid({ epreuves, session, onSelect, onUndo, onStart, onPr
           return <li key={index} className={selector + (selection ? " is-filled" : "") + (next ? " is-next" : "")}>
             <small>{index + 1} · {selectorName(selector, session)}</small>
             <strong>{selection ? epreuves.find(epreuve => epreuve.id === selection.epreuveId)?.nom : next ? "À choisir" : "En attente"}</strong>
-            {selection && <span className="duel-class">Classe {selection.difficulty}</span>}
+            {selection && !epreuves.find(epreuve => epreuve.id === selection.epreuveId)?.classless && <span className="duel-class">Classe {selection.difficulty}</span>}
           </li>;
         })}
       </ol>
@@ -117,22 +117,22 @@ export function EpreuveGrid({ epreuves, session, onSelect, onUndo, onStart, onPr
         <div className="zk-picker-head">
           <span className="zk-picker-emblem"><EpreuveLogo epreuveId={pending.id} /></span>
           <div>
-            <p className="duel-eyebrow">Choix de classe{!ready && currentSelector && !pendingLocked ? ` · ${selectorName(currentSelector, session)}` : ""}</p>
+            <p className="duel-eyebrow">{pending.classless ? "Épreuve sans classe" : "Choix de classe"}{!ready && currentSelector && !pendingLocked ? ` · ${selectorName(currentSelector, session)}` : ""}</p>
             <h2 id="class-title">{pending.nom}</h2>
             <p className="zk-picker-theme">{pending.theme}</p>
           </div>
         </div>
-        <div className="duel-class-options" role="group" aria-label="Classe de difficulté">
+        {!pending.classless && <div className="duel-class-options" role="group" aria-label="Classe de difficulté">
           {CLASSES.map(level => <button key={level} aria-pressed={difficulty === level} className={difficulty === level ? "active" : ""} onClick={() => setDifficulty(level)}>
             <b>{level}</b><span>{pending.difficulties[level].label}</span>
           </button>)}
-        </div>
-        <p className="zk-picker-desc" key={difficulty}>{pending.difficulties[difficulty].description}</p>
+        </div>}
+        {!pending.classless && <p className="zk-picker-desc" key={difficulty}>{pending.difficulties[difficulty].description}</p>}
         <div className="duel-actions">
           <button className="links-secondary" onClick={() => setPendingId(null)}>Fermer</button>
-          <button className="links-secondary" onClick={() => onPreview(pending.id, difficulty)}>Essayer la classe {difficulty}</button>
+          {pending.type !== "realtime" && <button className="links-secondary" onClick={() => onPreview(pending.id, difficulty)}>{pending.classless ? "Essayer l'épreuve" : `Essayer la classe ${difficulty}`}</button>}
           <button className="btn-primary" disabled={ready || pendingLocked}
-            onClick={() => { onSelect(pending.id, difficulty); setPendingId(null); }}>Verrouiller la classe {difficulty}</button>
+            onClick={() => { onSelect(pending.id, difficulty); setPendingId(null); }}>{pending.classless ? "Verrouiller l'épreuve" : `Verrouiller la classe ${difficulty}`}</button>
         </div>
       </section>
     </div>}

@@ -1,17 +1,17 @@
 import type { PlayerId } from "../../types";
 import type { AttributeConfig, GuessResult, PublicTurn, TargetCard } from "../../dossier/types";
-
-/** Le nom de fichier d'une icône : « Armement » devient `armement`. */
-const iconSlug = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+import { DOSSIER_ICONS } from "../../dossier/icons";
 
 /**
- * Les valeurs d'une colonne « en icônes » : une image par valeur, prise dans
- * `public/dossier/icones/<colonne>-<valeur>.svg`. Pour changer une icône, il
- * suffit de remplacer ce fichier. Sans aucune valeur, la case montre un tiret.
+ * Les valeurs d'une colonne « en icônes » : une image par valeur (voir
+ * `src/dossier/icons.ts`). Sans aucune valeur, la case montre un tiret.
  */
 function CellIcons({ attribute, values }: { attribute: string; values: string[] }) {
   if (!values.length) return <span className="ds-icons is-empty" aria-hidden="true">—</span>;
-  return <span className="ds-icons">{values.map(value => <img key={value} src={`/dossier/icones/${iconSlug(attribute)}-${iconSlug(value)}.svg`} alt={value} title={value} />)}</span>;
+  return <span className="ds-icons">{values.map(value => {
+    const file = DOSSIER_ICONS[`${attribute}:${value}`];
+    return file ? <img key={value} src={`/dossier/icones/${file}`} alt={value} title={value} /> : <b key={value}>{value}</b>;
+  })}</span>;
 }
 
 const STATE_LABEL = { correct: "correspond", partial: "en partie", wrong: "ne correspond pas" } as const;

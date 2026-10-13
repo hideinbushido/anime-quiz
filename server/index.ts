@@ -21,8 +21,13 @@ import { feudView, hostFeud, pressBuzzer, tickFeud } from "../src/feud/reducer.t
 import type { DossierClientMessage, DossierHostAction, DossierServerMessage } from "../src/dossier/types.ts";
 import { dossierRoster, dossierUniverse, dossierView, guessDossier, hostDossier } from "../src/dossier/reducer.ts";
 import { DOSSIER_CONFIG } from "../src/dossier/data/universes.ts";
+import type { DifficultyClass } from "../src/types.ts";
+import type { QuizClientMessage, QuizHostAction, QuizServerMessage, ShowState } from "../src/quiz/types.ts";
+import type { RoomGame } from "../src/feud/types.ts";
+import { createQuiz, hostQuiz, pressQuizBuzzer, quizView } from "../src/quiz/reducer.ts";
+import { quizItems } from "./quizData.ts";
 import { attachDossierImages } from "./dossierImages.ts";
-import { claim, createRoom, hostAction, loadRound, move, rename, setAvatar, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
+import { claim, createRoom, hostAction, loadRound, move, rename, setAvatar, setShow, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
 
 const ROLES: Role[] = ["player1", "player2", "host", "live"];
 const ROOM_ID = /^[A-Za-z0-9_-]{1,24}$/;
@@ -51,7 +56,9 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
     }, 150);
   };
 
-  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage | DossierServerMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
+  /** Ce que tout écran sait de la room, quelle que soit l'épreuve : laquelle se joue, qui est là, où en est l'émission. */
+  type ShowMessage = { type: "show:state"; game: RoomGame; show: ShowState | null; names: Room["names"]; avatars: Room["avatars"]; connected: Record<PlayerId, boolean> };
+  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | ShowMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
   const connected = (roomId: string): Record<PlayerId, boolean> => {
     const here = (role: Role) => [...clients].some(client => client.room === roomId && client.role === role);
     return { player1: here("player1"), player2: here("player2") };
@@ -64,6 +71,12 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
       if (client.room !== room.id) continue;
       // Un seul état part vers chaque écran : celui de l'épreuve en cours, taillé pour son rôle
       const context = { room: room.id, names: room.names, avatars: room.avatars, connected: present, now };
+      send(client.socket, { type: "show:state", game: room.game, show: room.show, names: room.names, avatars: room.avatars, connected: present });
+      if (room.game === "lobby") continue;
+      if ((room.game === "beats" || room.game === "citations") && room.quiz) {
+        send(client.socket, { type: "quiz:state", view: quizView(room.quiz, client.role, context, quizItems(room.quiz.kind, room.quiz.difficulty)) });
+        continue;
+      }
       if (room.game === "dossier" && room.dossier) {
         // Le catalogue part une fois par écran et par univers, avant l'état qui s'en sert
         const universe = dossierUniverse(room.dossier).id;
@@ -88,8 +101,8 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
   wss.on("connection", socket => {
     let client: Client | null = null;
     socket.on("message", raw => {
-      let message: ClientMessage | FeudClientMessage | DossierClientMessage;
-      try { message = JSON.parse(String(raw)) as ClientMessage | FeudClientMessage | DossierClientMessage; } catch { return; }
+      let message: ClientMessage | FeudClientMessage | DossierClientMessage | QuizClientMessage;
+      try { message = JSON.parse(String(raw)) as ClientMessage | FeudClientMessage | DossierClientMessage | QuizClientMessage; } catch { return; }
       if (!message || typeof message.type !== "string") return;
 
       if (message.type === "room:join") {
@@ -127,6 +140,23 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
         if (target) error = setAvatar(room, target, message.image);
       }
       else if (message.type === "room:game") error = client.role === "host" ? switchGame(room, message.game) : error;
+      else if (message.type === "show:update") error = client.role === "host" ? setShow(room, message.show) : error;
+      else if (message.type === "quiz:start") {
+        // Une épreuve au buzzer repart toujours de sa première question
+        if (client.role === "host" && (message.kind === "beats" || message.kind === "citations")) {
+          const difficulty = (["D", "C", "B", "A"] as const).find(level => level === message.difficulty) ?? (message.kind === "beats" ? "D" : null);
+          room.quiz = createQuiz(message.kind, difficulty as DifficultyClass | null);
+          room.game = message.kind;
+          error = null;
+        }
+      }
+      else if (message.type.startsWith("quiz:")) {
+        if (!room.quiz || (room.game !== "beats" && room.game !== "citations")) error = "Cette épreuve n'est pas ouverte.";
+        else if (client.role === "host") error = hostQuiz(room.quiz, message as Exclude<QuizHostAction, { type: "quiz:start" }>, now, quizItems(room.quiz.kind, room.quiz.difficulty)) ?? null;
+      }
+      else if (message.type === "buzzer:press" && (room.game === "beats" || room.game === "citations")) {
+        error = !room.quiz ? "Cette épreuve n'est pas ouverte." : isPlayer ? pressQuizBuzzer(room.quiz, client.role as PlayerId, now) : error;
+      }
       else if (message.type.startsWith("dossier:")) {
         // Le Dossier de L : un joueur n'envoie que l'identifiant de sa proposition, le serveur corrige
         if (room.game !== "dossier" || !room.dossier) error = "Cette épreuve n'est pas ouverte.";

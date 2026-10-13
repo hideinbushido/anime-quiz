@@ -1,0 +1,178 @@
+/* LES ÉPREUVES AU BUZZER (Les Beats de Killer Bee, Répliques Cultes) et
+   L'ÉCRAN D'ÉMISSION entre deux épreuves. Même identité que le reste : noir
+   chaud et or, saphir pour le joueur 1, rubis pour le joueur 2. Les panneaux
+   des joueurs et le buzzer du téléphone viennent des Pensées d'Anya. */
+.qz-live { height: 100svh; overflow: hidden; }
+.qz-attempts { display: inline-flex; gap: 0.4em; }
+.qz-attempts i { width: 1.1em; height: 1.1em; border-radius: 50%; border: 2px solid var(--hair-strong); }
+.qz-attempts i.is-on { border-color: var(--gold-1); background: var(--gold-2); box-shadow: 0 0 12px var(--gold-3); }
+.qz-live .qz-attempts { font-size: clamp(0.9rem, 1.4vw, 1.7rem); }
+
+.qz-center { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 3vh, 40px); text-align: center; }
+.qz-status { font: 800 clamp(1.1rem, 2.4vw, 2.8rem) / 1.1 var(--f-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper-dim); }
+.phase-open .qz-status, .phase-buzzed .qz-status { color: var(--gold-1); }
+
+/* La platine du blind test : elle tourne tant que la musique joue */
+.qz-deck { display: grid; justify-items: center; gap: clamp(10px, 2.4vh, 30px); }
+.qz-vinyl {
+  position: relative;
+  width: clamp(160px, 34vh, 400px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 5px solid var(--gold-3);
+  background: radial-gradient(circle, var(--gold-2) 0 9%, var(--ink) 9% 10.5%, var(--gold-3) 10.5% 31%, #060504 31% 100%);
+}
+.qz-vinyl i { position: absolute; border-radius: 50%; border: 2px solid rgba(243, 214, 126, 0.22); }
+.qz-vinyl i:nth-child(1) { inset: 10%; border-top-color: rgba(255, 246, 210, 0.75); }
+.qz-vinyl i:nth-child(2) { inset: 18%; }
+.qz-vinyl i:nth-child(3) { inset: 26%; }
+.qz-eq { display: flex; align-items: flex-end; gap: clamp(4px, 0.6vw, 12px); height: clamp(40px, 10vh, 120px); }
+.qz-eq span { width: clamp(8px, 1.2vw, 24px); height: 100%; border-radius: 4px 4px 0 0; background: var(--gold-2); transform-origin: 50% 100%; transform: scaleY(0.08); transition: transform 300ms ease-out; }
+.qz-deck.is-playing .qz-vinyl { animation: qzSpin 2.2s linear infinite; }
+.qz-deck.is-playing .qz-eq span { animation: qzBar 900ms ease-in-out infinite alternate; animation-delay: calc(var(--i) * -137ms); }
+@keyframes qzSpin { to { transform: rotate(360deg); } }
+@keyframes qzBar { from { transform: scaleY(0.14); } to { transform: scaleY(1); } }
+
+/* La réplique */
+.qz-quote {
+  margin: 0;
+  max-width: 22em;
+  padding: 0.5em 0.8em;
+  border-left: 6px solid var(--gold-2);
+  font: 800 clamp(1.4rem, 3.6vw, 4.2rem) / 1.12 var(--f-title);
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  text-wrap: balance;
+  animation: fdSlam 600ms var(--spring) both;
+}
+.qz-quote.is-small { font-size: clamp(1.1rem, 5vw, 1.6rem); text-align: left; animation: none; }
+
+/* La réponse révélée */
+.qz-reveal {
+  --c: var(--gold-2);
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 46px);
+  padding: clamp(12px, 2vh, 30px) clamp(16px, 2.4vw, 46px);
+  border: 3px solid var(--c);
+  background: rgba(10, 8, 6, 0.9);
+  box-shadow: 0 0 90px color-mix(in srgb, var(--c) 40%, transparent);
+  text-align: left;
+  animation: fdSlam 600ms var(--spring) both;
+}
+.qz-reveal.player1 { --c: var(--sapphire); }
+.qz-reveal.player2 { --c: var(--ruby); }
+.qz-reveal img { height: clamp(140px, 44vh, 480px); max-width: 40vw; object-fit: cover; border: 3px solid var(--gold-2); }
+.qz-reveal div { display: grid; gap: 0.3em; min-width: 0; }
+.qz-reveal strong, .qz-done strong { font: 900 clamp(2rem, 5.4vw, 6.4rem) / 0.95 var(--f-title); text-transform: uppercase; color: var(--gold-1); overflow-wrap: anywhere; }
+.qz-reveal em, .qz-done em { font: 800 clamp(1.1rem, 2.2vw, 2.6rem) / 1 var(--f-title); font-style: normal; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c, var(--paper)); }
+.qz-done { display: grid; gap: 0.4em; animation: fdSlam 600ms var(--spring) both; }
+.qz-done em { font-size: clamp(2.4rem, 7vw, 8rem); color: var(--paper); font-variant-numeric: tabular-nums; }
+.qz-wrong strong { background: var(--paper); color: var(--ink); }
+
+/* ── La régie ── */
+.qz-answer { display: grid; gap: 6px; padding: 14px 16px; border: 2px dashed var(--gold-2); background: rgba(243, 214, 126, 0.07); }
+.qz-answer strong { font: 900 clamp(1.8rem, 4vw, 3.8rem) / 1 var(--f-title); text-transform: uppercase; color: var(--gold-1); }
+.qz-answer blockquote { margin: 0; font-size: 1.1rem; color: var(--paper); }
+.qz-audio { width: 100%; }
+.qz-right:enabled { border-color: transparent; background: var(--ok, #2fa866); color: var(--ink); }
+.qz-items { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.qz-items li {
+  --c: var(--hair-strong);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(6em, auto);
+  gap: 14px;
+  padding: 0.3em 0.8em 0.2em;
+  border-left: 4px solid var(--c);
+  font: 800 1.05rem / 1.3 var(--f-title);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.qz-items li.player1 { --c: var(--sapphire); }
+.qz-items li.player2 { --c: var(--ruby); }
+.qz-items li.is-current { background: rgba(243, 214, 126, 0.1); border-left-color: var(--gold-2); }
+.qz-items em { font-style: normal; color: var(--paper-dim); }
+.qz-items b { color: var(--c); text-align: right; }
+
+/* ── L'écran d'émission ── */
+.sh-live { height: 100svh; overflow: hidden; align-items: center; text-align: center; justify-content: space-between; }
+.sh-head { display: grid; justify-items: center; gap: 4px; }
+.sh-head img { width: clamp(46px, 7vh, 96px); }
+.sh-head h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(2rem, 5.4vw, 6rem) / 0.9 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sh-duel { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(60px, 16vw, 320px); width: min(100%, 1500px); }
+.sh-duel article { display: grid; justify-items: center; gap: clamp(4px, 1vh, 14px); transition: transform 600ms var(--spring), opacity 300ms; }
+.sh-duel .fd-avatar { font-size: clamp(2.2rem, 7vh, 6rem); }
+.sh-duel h2 { display: flex; align-items: center; gap: 0.3em; font: 900 clamp(1.4rem, 3.4vw, 4rem) / 1 var(--f-title); color: var(--c); overflow-wrap: anywhere; }
+.sh-duel b { font: 900 clamp(4rem, 16vh, 13rem) / 0.86 var(--f-title); color: var(--paper); font-variant-numeric: tabular-nums; animation: fdSlam 600ms var(--spring) both; }
+.sh-versus { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font: 900 clamp(1.4rem, 3.4vw, 4rem) / 1 var(--f-accent); color: var(--gold-2); }
+/* (à égalité, personne n'est mis en retrait) */
+.sh-live.is-final:is(.player1, .player2) .sh-duel article:not(.is-winner) { opacity: 0.45; transform: scale(0.9); }
+.sh-live.is-final .sh-duel article.is-winner { transform: scale(1.08); }
+.sh-next { display: grid; gap: 4px; }
+.sh-next span { font: 700 clamp(0.7rem, 1.1vw, 1.3rem) / 1 var(--f-accent); letter-spacing: 0.4em; text-transform: uppercase; color: var(--paper-dim); }
+.sh-next strong, .sh-verdict { font: 900 clamp(1.6rem, 4.2vw, 5rem) / 1 var(--f-title); text-transform: uppercase; color: var(--gold-1); }
+.sh-verdict { color: var(--c, var(--gold-1)); animation: fdSlam 700ms var(--spring) both; }
+.sh-program { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: clamp(6px, 1vw, 18px); width: 100%; margin: 0; padding: 0; list-style: none; }
+.sh-program li {
+  --c: var(--hair-strong);
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  padding: clamp(6px, 1vh, 14px) 6px;
+  border: 2px solid var(--c);
+  opacity: 0.55;
+}
+.sh-program li.player1 { --c: var(--sapphire); }
+.sh-program li.player2 { --c: var(--ruby); }
+.sh-program li.is-played, .sh-program li.is-next { opacity: 1; }
+.sh-program li.is-next { border-color: var(--gold-1); box-shadow: 0 0 40px rgba(243, 214, 126, 0.35); }
+.sh-program img { height: clamp(40px, 10vh, 110px); }
+.sh-program i { font: 900 clamp(1.4rem, 3vw, 3rem) / 1 var(--f-title); font-style: normal; color: var(--gold-2); }
+.sh-program strong { font: 800 clamp(0.7rem, 1.1vw, 1.25rem) / 1.1 var(--f-title); letter-spacing: 0.05em; text-transform: uppercase; }
+.sh-program em { font: 900 clamp(0.9rem, 1.6vw, 1.9rem) / 1 var(--f-title); font-style: normal; color: var(--gold-1); font-variant-numeric: tabular-nums; }
+.sh-program b { font: 700 clamp(0.55rem, 0.8vw, 0.95rem) / 1 var(--f-accent); letter-spacing: 0.16em; text-transform: uppercase; color: var(--c); }
+.sh-phone-score { display: flex; align-items: baseline; justify-content: center; gap: 0.3em; margin: auto 0; font: 900 clamp(4rem, 26vw, 9rem) / 1 var(--f-title); color: var(--paper); }
+.sh-phone-score span { font-size: 0.5em; color: var(--paper-dim); }
+
+@media (max-width: 760px) {
+  .qz-reveal { flex-direction: column; text-align: center; }
+  .sh-program { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── La régie dans le site ── */
+.rt-stage .rt-switch { display: none; }
+.rt-stage .ay-screen { min-height: 0; padding-bottom: 110px; }
+.rt-finish {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+  padding: 12px clamp(12px, 2.4vw, 44px);
+  border-top: 2px solid var(--gold-3);
+  background: rgba(10, 8, 6, 0.96);
+}
+.rt-finish p { display: flex; align-items: baseline; gap: 0.5em; font: 800 clamp(1rem, 1.6vw, 1.7rem) / 1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; }
+.rt-finish p span { color: var(--c); }
+.rt-finish p .player1 { --c: var(--sapphire); }
+.rt-finish p .player2 { --c: var(--ruby); }
+.rt-finish p b { font-size: 1.7em; color: var(--paper); font-variant-numeric: tabular-nums; }
+.rt-finish p i { font-style: normal; color: var(--paper-dim); }
+.rt-launch { display: grid; justify-items: center; gap: 14px; padding: clamp(20px, 5vh, 60px) clamp(12px, 2.4vw, 44px); text-align: center; }
+.rt-launch-emblem { width: clamp(140px, 26vh, 300px); }
+.rt-launch h1 { font: 900 clamp(2rem, 6vw, 5.4rem) / 0.95 var(--f-title); text-transform: uppercase; background: var(--foil-text); -webkit-background-clip: text; background-clip: text; color: transparent; padding-top: 0.14em; }
+.rt-launch-theme { max-width: 34em; color: var(--paper-dim); }
+.rt-launch-hint { max-width: 40em; font-size: 14px; color: var(--paper-dim); }
+.rt-launch .rt-links, .rt-connect .rt-links { width: min(100%, 1100px); margin: 10px auto 0; }
+.rt-connect { padding: 0 clamp(12px, 2.4vw, 44px) 180px; }

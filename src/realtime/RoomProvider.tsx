@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { connectRoom, type ConnectionStatus, type RoomConnection } from "../ayanokoji/realtime";
+import { connectRoom, type ConnectionStatus, type RoomConnection, type RoomInfo } from "../ayanokoji/realtime";
+import type { QuizClientMessage, QuizView } from "../quiz/types";
 import type { ClientMessage, Role, RoomView } from "../ayanokoji/types";
 import type { FeudClientMessage, FeudView } from "../feud/types";
 import type { DossierClientMessage, DossierView, RosterEntry } from "../dossier/types";
@@ -27,6 +28,8 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
   const [feud, setFeud] = useState<FeudView | null>(null);
   const [dossier, setDossier] = useState<DossierView | null>(null);
   const [dossierRosters, setDossierRosters] = useState<Record<string, RosterEntry[]>>({});
+  const [quiz, setQuiz] = useState<QuizView | null>(null);
+  const [info, setInfo] = useState<RoomInfo | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [error, setError] = useState("");
   const [clockOffset, setClockOffset] = useState(0);
@@ -56,6 +59,12 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
         setFeud(null);
         setClockOffset(next.serverNow - receivedAt);
       },
+      onQuiz: (next, receivedAt) => {
+        if (next.role !== role) return;
+        setQuiz(next);
+        setClockOffset(next.serverNow - receivedAt);
+      },
+      onInfo: setInfo,
       onDossierRoster: (universe, roster) => setDossierRosters(current => ({ ...current, [universe]: roster })),
       // Après une coupure, le serveur renvoie les catalogues : on repart d'une ardoise vide
       onStatus: next => { setStatus(next); if (next === "connecting") setDossierRosters({}); },
@@ -67,15 +76,16 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
 
   // Un refus du serveur s'affiche quelques secondes, puis s'efface de lui-même
   // (un refus à l'entrée, lui, reste affiché : sans vue, il n'y a rien d'autre à montrer)
-  const joined = view !== null || feud !== null || dossier !== null;
+  const joined = view !== null || feud !== null || dossier !== null || quiz !== null || info !== null;
   useEffect(() => {
     if (!error || !joined) return;
     const timer = window.setTimeout(() => setError(""), 4000);
     return () => window.clearTimeout(timer);
   }, [error, joined]);
 
-  const send = useCallback((message: ClientMessage | FeudClientMessage | DossierClientMessage) => connection.current?.send(message), []);
-  const state = useMemo<RoomState>(() => ({ game: dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null, view, feud, dossier, dossierRosters, status, error, clockOffset, send }),
-    [view, feud, dossier, dossierRosters, status, error, clockOffset, send]);
+  const send = useCallback((message: ClientMessage | FeudClientMessage | DossierClientMessage | QuizClientMessage) => connection.current?.send(message), []);
+  const state = useMemo<RoomState>(() => ({ // Le serveur dit quelle épreuve se joue ; à défaut (ancien serveur), on la déduit de la vue reçue
+    game: info?.game ?? (dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null), view, feud, dossier, dossierRosters, quiz, info, room, status, error, clockOffset, send }),
+    [view, feud, dossier, dossierRosters, quiz, info, room, status, error, clockOffset, send]);
   return <RoomContext.Provider value={state}>{children}</RoomContext.Provider>;
 }

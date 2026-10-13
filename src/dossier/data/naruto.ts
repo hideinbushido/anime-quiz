@@ -21,7 +21,7 @@ export const NARUTO_ATTRIBUTES: AttributeConfig[] = [
   { key: "affiliations", label: "Affiliation", comparisonType: "multi" },
   { key: "clan", label: "Clan", comparisonType: "exact" },
   { key: "typesJutsu", label: "Types de jutsu", comparisonType: "multi" },
-  { key: "naturesChakra", label: "Natures de chakra", comparisonType: "multi" },
+  { key: "naturesChakra", label: "Natures de chakra", comparisonType: "multi", display: "icons" },
   { key: "statutSpecial", label: "Statut spécial", comparisonType: "multi" },
   { key: "premiereApparition", label: "Première apparition", comparisonType: "exact" },
 ];

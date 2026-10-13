@@ -1,5 +1,5 @@
 import type { DuelRoundResult, DuelSession, Epreuve, GameProgress } from "../types";
-import { CLASSES, resolveEpreuve, roundIds, SELECTION_ORDER, withScores } from "./engine";
+import { CLASSES, duelRoundIds, resolveEpreuve, roundIds, SELECTION_ORDER, withScores } from "./engine";
 
 export const DUEL_KEY = "anime-quiz-duel-v2";
 export const HISTORY_KEY = "anime-quiz-duel-history-v2";
@@ -20,6 +20,8 @@ function validProgress(value: unknown, epreuve?: Epreuve): value is GameProgress
   if (!isRecord(value) || !Number.isInteger(value.roundIndex) || Number(value.roundIndex) < 0
       || !isPlayer(value.respondent) || typeof value.input !== "string"
       || !isStrings(value.placements) || !(value.selectedId === null || typeof value.selectedId === "string")) return false;
+  // Une épreuve en temps réel se joue sur le serveur : ici, sa progression reste vierge jusqu'à sa clôture
+  if (epreuve?.realtime) return Number(value.roundIndex) === 0 && Array.isArray(value.rounds) && value.rounds.length === 0;
   const ids = epreuve ? roundIds(epreuve) : [];
   if (!validRounds(value.rounds, ids)) return false;
   const index = Number(value.roundIndex);
@@ -84,8 +86,8 @@ export function parseDuel(value: unknown, catalog: Epreuve[]): DuelSession | nul
     const selected = value.selected[index];
     if (!isRecord(result) || !resolved[index] || result.epreuveId !== selected.epreuveId
         || result.difficulty !== selected.difficulty || result.selectedBy !== selected.selectedBy
-        || !validRounds(result.rounds, roundIds(resolved[index]))
-        || result.rounds.length !== roundIds(resolved[index]).length) return null;
+        || !validRounds(result.rounds, duelRoundIds(resolved[index]))
+        || result.rounds.length !== duelRoundIds(resolved[index]).length) return null;
   }
   if (!validProgress(value.progress, value.phase === "playing" ? resolved[Number(value.currentIndex)] : undefined)) return null;
   return withScores(value as unknown as DuelSession);

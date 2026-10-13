@@ -5,6 +5,8 @@ const GAMES: { id: RoomGame; label: string }[] = [
   { id: "ayanokoji", label: "Les Liens d'Ayanokoji" },
   { id: "feud", label: "Les Pensées d'Anya" },
   { id: "dossier", label: "Le Dossier de L" },
+  { id: "beats", label: "Les Beats de Killer Bee" },
+  { id: "citations", label: "Répliques Cultes" },
 ];
 
 /**

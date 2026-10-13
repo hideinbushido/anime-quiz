@@ -1,16 +1,29 @@
 import type { ClientMessage, Role, RoomView, ServerMessage } from "./types";
 import type { FeudClientMessage, FeudServerMessage, FeudView } from "../feud/types";
 import type { DossierClientMessage, DossierServerMessage, DossierView, RosterEntry } from "../dossier/types";
+import type { QuizClientMessage, QuizServerMessage, QuizView, ShowState } from "../quiz/types";
+import type { RoomGame } from "../feud/types";
+import type { PlayerId } from "../types";
 
 /**
  * La couche réseau des épreuves en temps réel. Les composants ne parlent jamais au
  * WebSocket directement : ils passent par cette connexion, qui se charge de
  * rejoindre la room, de garder le jeton de la place et de se reconnecter.
  */
+/** Ce que tout écran sait de sa room, quelle que soit l'épreuve : laquelle se joue, qui est là, où en est l'émission. */
+export interface RoomInfo {
+  game: RoomGame;
+  show: ShowState | null;
+  names: Record<PlayerId, string>;
+  avatars: Record<PlayerId, string | null>;
+  connected: Record<PlayerId, boolean>;
+}
+type InfoMessage = { type: "show:state" } & RoomInfo;
+
 export type ConnectionStatus = "connecting" | "online" | "offline";
 
 export interface RoomConnection {
-  send: (message: ClientMessage | FeudClientMessage | DossierClientMessage) => void;
+  send: (message: ClientMessage | FeudClientMessage | DossierClientMessage | QuizClientMessage) => void;
   close: () => void;
 }
 
@@ -29,6 +42,9 @@ interface Options {
   onDossier?: (view: DossierView, receivedAt: number) => void;
   /** Le catalogue de personnages d'un univers du Dossier de L. */
   onDossierRoster?: (universe: string, roster: RosterEntry[]) => void;
+  /** L'état d'une épreuve au buzzer (Killer Bee, Répliques Cultes). */
+  onQuiz?: (view: QuizView, receivedAt: number) => void;
+  onInfo?: (info: RoomInfo) => void;
   onStatus: (status: ConnectionStatus) => void;
   onError: (message: string) => void;
 }
@@ -42,7 +58,7 @@ export function realtimeUrl(): string {
 
 const tokenKey = (room: string, role: Role) => `ayanokoji-token-${room}-${role}`;
 
-export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onDossierRoster, onStatus, onError }: Options): RoomConnection {
+export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onDossierRoster, onQuiz, onInfo, onStatus, onError }: Options): RoomConnection {
   let socket: WebSocket | null = null;
   let closed = false;
   let retry = 0;
@@ -59,8 +75,8 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       socket?.send(JSON.stringify({ type: "room:join", room, role, token, name, names, password } satisfies ClientMessage));
     };
     socket.onmessage = event => {
-      let message: ServerMessage | FeudServerMessage | DossierServerMessage;
-      try { message = JSON.parse(String(event.data)) as ServerMessage | FeudServerMessage | DossierServerMessage; } catch { return; }
+      let message: ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | InfoMessage;
+      try { message = JSON.parse(String(event.data)) as ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | InfoMessage; } catch { return; }
       if (message.type === "room:joined") {
         onStatus("online");
         if (message.token) try { localStorage.setItem(tokenKey(room, role), message.token); } catch { /* voir plus haut */ }
@@ -68,6 +84,8 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       else if (message.type === "feud:state") onFeud?.(message.view, Date.now());
       else if (message.type === "dossier:state") onDossier?.(message.view, Date.now());
       else if (message.type === "dossier:roster") onDossierRoster?.(message.universe, message.roster);
+      else if (message.type === "quiz:state") onQuiz?.(message.view, Date.now());
+      else if (message.type === "show:state") onInfo?.({ game: message.game, show: message.show, names: message.names, avatars: message.avatars, connected: message.connected });
       else if (message.type === "room:error") onError(message.message);
     };
     socket.onclose = () => {

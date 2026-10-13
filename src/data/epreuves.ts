@@ -23,6 +23,7 @@ export const epreuves: Epreuve[] = [
     couleur: "#3b82f6",
     theme: "Duel musical au buzzer : trouve le nom de l'anime",
     type: "blind-test",
+    realtime: "beats",
     difficulties: killerBeeDifficulties,
     questions: [
       {
@@ -80,6 +81,7 @@ export const epreuves: Epreuve[] = [
     couleur: "#e11d48",
     theme: "Placement logique de personnages anime",
     type: "logic-links",
+    realtime: "ayanokoji",
     difficulties: logicDifficulties,
     questions: [
       {
@@ -97,6 +99,8 @@ export const epreuves: Epreuve[] = [
     couleur: "#f59e0b",
     theme: "Répliques célèbres de personnages d'anime",
     type: "citation",
+    realtime: "citations",
+    classless: true,
     difficulties: sharedDifficulties(),
     questions: [
       {
@@ -130,5 +134,29 @@ export const epreuves: Epreuve[] = [
         acceptableAnswers: ["Eren"],
       },
     ],
+  },
+  {
+    id: "pensees-anya",
+    nom: "Les Pensées d'Anya",
+    logo: "💭",
+    couleur: "#ec4899",
+    theme: "Le sondage en duel : retrouve les réponses les plus citées",
+    type: "realtime",
+    realtime: "feud",
+    classless: true,
+    difficulties: sharedDifficulties(),
+    questions: [],
+  },
+  {
+    id: "dossier-l",
+    nom: "Le Dossier de L",
+    logo: "🔎",
+    couleur: "#64748b",
+    theme: "Déduction : démasque le personnage mystère, indice après indice",
+    type: "realtime",
+    realtime: "dossier",
+    classless: true,
+    difficulties: sharedDifficulties(),
+    questions: [],
   },
 ];

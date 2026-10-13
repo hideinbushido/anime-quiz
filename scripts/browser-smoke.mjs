@@ -91,10 +91,12 @@ try {
   await screenshot('accueil-desktop');
   await click('.arena-cta');
   await waitFor(`!!document.querySelector('.duel-selection')`);
-  assert.equal(await evaluate(`document.querySelectorAll('.duel-tile-wrap').length`), 3);
+  assert.equal(await evaluate(`document.querySelectorAll('.duel-tile-wrap').length`), 5);
   await screenshot('selection-desktop');
   for (const [name, level] of [["Les Liens d'Ayanokoji", 'B'], ['Les Beats de Killer Bee', 'D'], ['Répliques Cultes', 'A']]) {
     await click(`[aria-label="Choisir ${name}"]`);
+    // Répliques Cultes n'a pas de classe : elle se verrouille sans rien choisir
+    if (name === 'Répliques Cultes') { assert.equal(await evaluate(`document.querySelector('.duel-class-options') === null`), true); await clickText("Verrouiller l'épreuve"); continue; }
     await click(`.duel-class-options button:nth-child(${['D', 'C', 'B', 'A'].indexOf(level) + 1})`);
     await clickText(`Verrouiller la classe ${level}`);
   }
@@ -147,7 +149,7 @@ try {
   // Existing blind test and quotes remain playable through the same duel controls.
   for (const name of ['Les Beats de Killer Bee', 'Répliques Cultes']) {
     await evaluate(`[...document.querySelectorAll('.duel-tile-wrap')].find(tile => tile.textContent.includes(${JSON.stringify(name)})).querySelector('.duel-text-button').click()`);
-    await clickText('Essayer la classe D');
+    await clickText(name.startsWith('Les Beats') ? 'Essayer la classe D' : "Essayer l'épreuve");
     if (name.startsWith('Les Beats')) {
       await waitFor(`!!document.querySelector('.beats-session audio')`);
       // La vidéo des règles couvre l'épreuve à son lancement ; le présentateur la passe

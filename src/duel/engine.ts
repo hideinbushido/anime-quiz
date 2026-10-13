@@ -35,6 +35,14 @@ export function roundIds(epreuve: Epreuve): string[] {
     : epreuve.questions.map(question => question.id);
 }
 
+/**
+ * Les « manches » d'une épreuve dans le duel. Une épreuve en temps réel se joue
+ * sur le serveur : le duel n'en retient que les points de chaque joueur, un par ligne.
+ */
+export function duelRoundIds(epreuve: Epreuve): string[] {
+  return epreuve.realtime ? [`${epreuve.id}:player1`, `${epreuve.id}:player2`] : roundIds(epreuve);
+}
+
 export function currentFeedback(progress: GameProgress): DuelRoundResult | undefined {
   return progress.rounds[progress.roundIndex];
 }
@@ -68,7 +76,9 @@ export type GameAction =
   | { type: "edit"; patch: Partial<Pick<GameProgress, "input" | "placements" | "selectedId">> }
   | { type: "respondent"; playerId: PlayerId }
   | { type: "validate"; result: Omit<DuelRoundResult, "playerId"> }
-  | { type: "next" };
+  | { type: "next" }
+  /** Clôt une épreuve en temps réel avec les points que chacun y a marqués. */
+  | { type: "complete"; scores: Record<PlayerId, number> };
 
 /** Shared by LIVE and the isolated rehearsal screen. Validation is single-use. */
 export function progressReducer(progress: GameProgress, action: GameAction, epreuve: Epreuve): GameProgress {
@@ -77,7 +87,7 @@ export function progressReducer(progress: GameProgress, action: GameAction, epre
     if (!feedback || progress.roundIndex >= roundIds(epreuve).length - 1) return progress;
     return { ...newProgress(progress.respondent), roundIndex: progress.roundIndex + 1, rounds: progress.rounds };
   }
-  if (feedback) return progress;
+  if (feedback || action.type === "complete") return progress;
   if (action.type === "killerBee") return reduceKillerBee(progress, action.event, epreuve);
   if (epreuve.killerBeeTracks) return progress;
   if (action.type === "respondent") return { ...progress, respondent: action.playerId };
@@ -117,17 +127,24 @@ export function duelReducer(session: DuelSession, action: DuelAction, catalog: E
   const source = catalog.find(epreuve => epreuve.id === selected?.epreuveId);
   if (!source) return session;
   const epreuve = resolveEpreuve(source, selected.difficulty);
-  if (action.type === "next" && currentFeedback(session.progress)
-      && session.progress.roundIndex === roundIds(epreuve).length - 1) {
-    const results = [...session.results, {
-      ...selected, rounds: session.progress.rounds,
-      scorePlayer1: scoreRounds(session.progress.rounds, "player1"),
-      scorePlayer2: scoreRounds(session.progress.rounds, "player2"),
-    }];
+  const close = (rounds: DuelRoundResult[]) => {
+    const results = [...session.results, { ...selected, rounds, scorePlayer1: scoreRounds(rounds, "player1"), scorePlayer2: scoreRounds(rounds, "player2") }];
     return withScores({ ...session, results, progress: newProgress(),
       currentIndex: results.length === 5 ? 4 : session.currentIndex + 1,
-      phase: results.length === 5 ? "recap" : "playing",
+      phase: results.length === 5 ? "recap" as const : "playing" as const,
     });
+  };
+  if (source.realtime) {
+    // Une épreuve en temps réel ne se joue pas ici : seule sa clôture, avec ses points, entre dans le duel
+    if (action.type !== "complete") return session;
+    const ids = duelRoundIds(source);
+    const points = (id: PlayerId) => Math.max(0, Math.floor(Number(action.scores[id]) || 0));
+    return close((["player1", "player2"] as const).map((id, index) => ({ roundId: ids[index], playerId: id, points: points(id), correct: true, answer: [] })));
+  }
+  if (action.type === "complete") return session;
+  if (action.type === "next" && currentFeedback(session.progress)
+      && session.progress.roundIndex === roundIds(epreuve).length - 1) {
+    return close(session.progress.rounds);
   }
   return withScores({ ...session, progress: progressReducer(session.progress, action, epreuve) });
 }

@@ -1,4 +1,4 @@
-export type EpreuveType = "blind-test" | "citation" | "logic-links";
+export type EpreuveType = "blind-test" | "citation" | "logic-links" | "realtime";
 
 export type DifficultyClass = "A" | "B" | "C" | "D";
 export type PlayerId = "player1" | "player2";
@@ -53,6 +53,10 @@ export interface Epreuve {
   killerBeeTracks?: KillerBeeTrack[];
   logicPuzzles?: LogicLinksPuzzle[];
   difficulties: Record<DifficultyClass, DifficultyConfig>;
+  /** L'épreuve se joue en temps réel (régie, live, écrans des joueurs) : le jeu que la room doit ouvrir. */
+  realtime?: "ayanokoji" | "feud" | "dossier" | "beats" | "citations";
+  /** L'épreuve n'a pas de classe de difficulté : rien à choisir à la sélection. */
+  classless?: boolean;
 }
 
 export interface LogicCharacter {
