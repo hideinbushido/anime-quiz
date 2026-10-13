@@ -174,6 +174,26 @@ test('annuler la dernière action : strike, réponse attribuée au mauvais joueu
   assert.equal(state.buzzOpen, true);
 });
 
+test('la régie est gardée par un mot de passe quand le serveur en a un', async () => {
+  const server = startServer({ port: 18789, hostPassword: 'secret', storeFile: join(mkdtempSync(join(tmpdir(), 'feud-')), 'rooms.json') });
+  try {
+    const enter = (role, password) => new Promise(resolve => {
+      const socket = new WebSocket(`ws://127.0.0.1:${server.port}`);
+      socket.onopen = () => socket.send(JSON.stringify({ type: 'room:join', room: 'MDP', role, password }));
+      socket.onmessage = event => { const message = JSON.parse(event.data); if (message.type !== 'room:state') { socket.close(); resolve(message); } };
+    });
+    assert.equal((await enter('host')).message, 'Mot de passe de la régie incorrect.');
+    assert.equal((await enter('host', 'faux')).message, 'Mot de passe de la régie incorrect.');
+    // Un refus ne réserve pas la place : le vrai présentateur peut toujours entrer
+    assert.equal((await enter('host', 'secret')).type, 'room:joined');
+    // Les joueurs et le live n'ont pas besoin du mot de passe
+    assert.equal((await enter('player1')).type, 'room:joined');
+    assert.equal((await enter('live')).type, 'room:joined');
+  } finally {
+    await server.close();
+  }
+});
+
 /** Un client de test : il garde la dernière vue de chaque épreuve et sait attendre une condition. */
 function connect(port, room, role, token) {
   const socket = new WebSocket(`ws://127.0.0.1:${port}`);

@@ -11,3 +11,6 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "24"
+      # Le mot de passe de la régie : Render le demande à la création, il n'est jamais écrit dans le dépôt
+      - key: HOST_PASSWORD
+        sync: false

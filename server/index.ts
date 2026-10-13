@@ -22,10 +22,11 @@ import { claim, createRoom, hostAction, loadRound, move, rename, submit, switchG
 
 const ROLES: Role[] = ["player1", "player2", "host", "live"];
 const ROOM_ID = /^[A-Za-z0-9_-]{1,24}$/;
+const HOST_PASSWORD_ERROR = "Mot de passe de la régie incorrect.";
 
 interface Client { socket: WebSocket; room: string; role: Role }
 
-export function startServer({ port = Number(process.env.PORT) || 8787, storeFile = process.env.ROOMS_FILE ?? join(dirname(fileURLToPath(import.meta.url)), "data", "rooms.json") } = {}) {
+export function startServer({ port = Number(process.env.PORT) || 8787, hostPassword = process.env.HOST_PASSWORD ?? "", storeFile = process.env.ROOMS_FILE ?? join(dirname(fileURLToPath(import.meta.url)), "data", "rooms.json") } = {}) {
   const rooms = new Map<string, Room>();
   const clients = new Set<Client>();
 
@@ -78,6 +79,10 @@ export function startServer({ port = Number(process.env.PORT) || 8787, storeFile
       if (message.type === "room:join") {
         if (typeof message.room !== "string" || !ROOM_ID.test(message.room) || !ROLES.includes(message.role)) {
           return send(socket, { type: "room:error", message: "Room ou rôle invalide." });
+        }
+        // La régie est gardée par un mot de passe quand le serveur en a un (variable HOST_PASSWORD)
+        if (message.role === "host" && hostPassword && message.password !== hostPassword) {
+          return send(socket, { type: "room:error", message: HOST_PASSWORD_ERROR });
         }
         const room = rooms.get(message.room) ?? createRoom(message.room);
         rooms.set(room.id, room);

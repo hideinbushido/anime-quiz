@@ -19,6 +19,8 @@ interface Options {
   /** Pseudo du joueur, ou pseudos des deux joueurs quand c'est le présentateur qui rejoint. */
   name?: string;
   names?: Partial<Record<"player1" | "player2", string>>;
+  /** Le mot de passe de la régie, demandé par le serveur quand il en a un. */
+  password?: string;
   onView: (view: RoomView, receivedAt: number) => void;
   /** L'état des Pensées d'Anya, quand c'est l'épreuve ouverte dans la room. */
   onFeud?: (view: FeudView, receivedAt: number) => void;
@@ -35,7 +37,7 @@ export function realtimeUrl(): string {
 
 const tokenKey = (room: string, role: Role) => `ayanokoji-token-${room}-${role}`;
 
-export function connectRoom({ room, role, name, names, onView, onFeud, onStatus, onError }: Options): RoomConnection {
+export function connectRoom({ room, role, name, names, password, onView, onFeud, onStatus, onError }: Options): RoomConnection {
   let socket: WebSocket | null = null;
   let closed = false;
   let retry = 0;
@@ -49,7 +51,7 @@ export function connectRoom({ room, role, name, names, onView, onFeud, onStatus,
       retry = 0;
       let token: string | undefined;
       try { token = localStorage.getItem(tokenKey(room, role)) ?? undefined; } catch { /* stockage indisponible : la place ne survivra pas à un rechargement */ }
-      socket?.send(JSON.stringify({ type: "room:join", room, role, token, name, names } satisfies ClientMessage));
+      socket?.send(JSON.stringify({ type: "room:join", room, role, token, name, names, password } satisfies ClientMessage));
     };
     socket.onmessage = event => {
       let message: ServerMessage | FeudServerMessage;

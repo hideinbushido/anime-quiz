@@ -376,3 +376,17 @@
   .fd-columns { grid-template-columns: minmax(0, 1fr); }
   .fd-host-players { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* La porte de la régie */
+.ay-gate { align-items: center; justify-content: center; }
+.ay-gate form { display: grid; gap: 14px; width: min(100%, 380px); }
+.ay-gate label { font: 900 1.6rem / 1.1 var(--f-title); text-transform: uppercase; color: var(--gold-1); }
+.ay-gate input {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 2px solid var(--hair-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--paper);
+  font-size: 18px;
+}
+.ay-gate input:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 2px; }

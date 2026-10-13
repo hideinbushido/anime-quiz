@@ -144,7 +144,7 @@ export type Role = RoomView["role"];
 
 /** Messages du client vers le serveur. */
 export type ClientMessage =
-  | { type: "room:join"; room: string; role: Role; token?: string; name?: string; names?: Partial<Record<PlayerId, string>> }
+  | { type: "room:join"; room: string; role: Role; token?: string; name?: string; names?: Partial<Record<PlayerId, string>>; password?: string }
   | { type: "ayanokoji:move"; order: string[] }
   | { type: "ayanokoji:submit" }
   | { type: "ayanokoji:load"; roundId: string }

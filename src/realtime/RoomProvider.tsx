@@ -11,6 +11,8 @@ interface Props {
   name?: string;
   j1?: string;
   j2?: string;
+  /** Le mot de passe de la régie. */
+  password?: string;
   children: ReactNode;
 }
 
@@ -19,7 +21,7 @@ interface Props {
  * que l'état de l'épreuve en cours : recevoir l'un efface l'autre, et les
  * écrans basculent d'eux-mêmes quand le présentateur change d'épreuve.
  */
-export function RoomProvider({ room, role, name, j1, j2, children }: Props) {
+export function RoomProvider({ room, role, name, j1, j2, password, children }: Props) {
   const [view, setView] = useState<RoomView | null>(null);
   const [feud, setFeud] = useState<FeudView | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
@@ -29,7 +31,7 @@ export function RoomProvider({ room, role, name, j1, j2, children }: Props) {
 
   useEffect(() => {
     const link = connectRoom({
-      room, role, name, names: { player1: j1, player2: j2 },
+      room, role, name, names: { player1: j1, player2: j2 }, password,
       onView: (next, receivedAt) => {
         if (next.role !== role) return;
         setView(next);
@@ -47,7 +49,7 @@ export function RoomProvider({ room, role, name, j1, j2, children }: Props) {
     });
     connection.current = link;
     return () => { link.close(); connection.current = null; };
-  }, [room, role, name, j1, j2]);
+  }, [room, role, name, j1, j2, password]);
 
   // Un refus du serveur s'affiche quelques secondes, puis s'efface de lui-même
   // (un refus à l'entrée, lui, reste affiché : sans vue, il n'y a rien d'autre à montrer)
