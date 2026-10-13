@@ -392,3 +392,22 @@
 /* Tout ce qui se presse s'enfonce */
 :is(button, .navbar-link, .arena-history):active:not(:disabled) { scale: 0.97; }
 .navbar-link, .arena-history { transition: scale 140ms var(--ease-out), color 160ms, background 160ms, border-color 160ms; }
+
+/* ── La vidéo des règles passe au-dessus de tout, et le décor du dessous se met en veille ── */
+.rt-intro { z-index: 90; background: #000; }
+:root[data-intro] :is(.fx-back, .fx-front) { display: none; }
+:root[data-intro] :is(.ay-screen, .beats-session) *:not(.rt-intro, .rt-intro *) { animation-play-state: paused !important; }
+.rt-intro-skip { right: auto; left: 24px; }
+.rt-intro-stuck {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(10, 8, 6, 0.88);
+  text-align: center;
+}
+.rt-intro-stuck p { max-width: 22em; font: 800 clamp(1.2rem, 5vw, 2rem) / 1.15 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold-1); }
+.rt-intro-stuck .rt-intro-sound { position: static; }

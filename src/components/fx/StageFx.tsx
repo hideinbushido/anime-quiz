@@ -90,6 +90,8 @@ export function StageFx({ density = 1, burst = null, over = false }: { density?:
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      // Sous la vidéo des règles, rien n'est dessiné : toute la machine sert à la lecture
+      if (document.documentElement.dataset.intro) { frame = requestAnimationFrame(tick); return; }
       ember.clearRect(0, 0, width, height);
       ember.globalCompositeOperation = "lighter";
       for (const item of embers) {
