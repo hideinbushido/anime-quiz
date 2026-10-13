@@ -107,6 +107,9 @@ export interface ShowState {
   program: { id: string; name: string; selectedBy: Selector; result?: { player1: number; player2: number } }[];
 }
 
-export type QuizClientMessage = QuizHostAction | { type: "show:update"; show: ShowState | null };
+/** La vidéo des règles qui passe sur le live : son adresse, et l'heure du serveur à laquelle elle a démarré. */
+export interface IntroState { src: string; startedAt: number }
+
+export type QuizClientMessage = QuizHostAction | { type: "show:update"; show: ShowState | null } | { type: "show:intro"; src: string | null };
 
 export type QuizServerMessage = { type: "quiz:state"; view: QuizView };

@@ -13,7 +13,7 @@ import type { FeudState, RoomGame } from "../src/feud/types.ts";
 import { createFeud } from "../src/feud/reducer.ts";
 import type { DossierState } from "../src/dossier/types.ts";
 import { createDossier } from "../src/dossier/reducer.ts";
-import type { QuizState, ShowState } from "../src/quiz/types.ts";
+import type { IntroState, QuizState, ShowState } from "../src/quiz/types.ts";
 import { createQuiz } from "../src/quiz/reducer.ts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
@@ -38,6 +38,8 @@ export interface Room {
   quiz: QuizState | null;
   /** L'état de l'émission entre les épreuves, tenu par le site du présentateur. */
   show: ShowState | null;
+  /** La vidéo des règles en cours sur le live, lancée par le présentateur au début d'une épreuve. */
+  intro: IntroState | null;
   phase: RoundPhase;
   roundId: string | null;
   initialOrder: string[];
@@ -58,7 +60,7 @@ const emptySeat = (order: string[] = []): Seat => ({ order: [...order], moveCoun
 
 export function createRoom(id: string): Room {
   return {
-    id, game: "ayanokoji", feud: null, dossier: null, quiz: null, show: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
+    id, game: "ayanokoji", feud: null, dossier: null, quiz: null, show: null, intro: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
     timer: { elapsedMs: 0, runningSince: null },
     seats: { player1: emptySeat(), player2: emptySeat() },
     names: { player1: "Joueur 1", player2: "Joueur 2" },
@@ -115,6 +117,8 @@ export function rename(room: Room, player: PlayerId, name: unknown): void {
 export function switchGame(room: Room, game: unknown): string | null {
   if (game !== "ayanokoji" && game !== "feud" && game !== "dossier" && game !== "beats" && game !== "citations" && game !== "lobby") return "Épreuve inconnue.";
   room.game = game;
+  // Revenir à l'écran d'émission coupe la vidéo des règles
+  if (game === "lobby") room.intro = null;
   if ((game === "beats" || game === "citations") && room.quiz?.kind !== game) room.quiz = createQuiz(game, game === "beats" ? "D" : null);
   if (game === "feud") room.feud ??= createFeud();
   if (game === "dossier") room.dossier ??= createDossier();
@@ -130,6 +134,17 @@ export function setAvatar(room: Room, player: PlayerId, image: unknown): string 
   if (image === null) { room.avatars[player] = null; return null; }
   if (typeof image !== "string" || image.length > AVATAR_MAX_LENGTH || !AVATAR.test(image)) return "Cette image ne peut pas servir de photo de profil.";
   room.avatars[player] = image;
+  return null;
+}
+
+/** Seules les vidéos de règles du site peuvent passer sur le live. */
+const INTRO_SRC = /^\/regles\/[A-Za-z0-9_-]+\.(?:mp4|webm)$/;
+
+/** Le présentateur lance la vidéo des règles sur le live, ou la coupe. */
+export function setIntro(room: Room, src: unknown, now: number): string | null {
+  if (src === null) { room.intro = null; return null; }
+  if (typeof src !== "string" || !INTRO_SRC.test(src)) return "Vidéo des règles inconnue.";
+  room.intro = { src, startedAt: now };
   return null;
 }
 

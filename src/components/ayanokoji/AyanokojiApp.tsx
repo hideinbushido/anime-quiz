@@ -13,6 +13,7 @@ import { QuizHost } from "../quiz/QuizHost";
 import { QuizLive } from "../quiz/QuizLive";
 import { QuizPlayer } from "../quiz/QuizPlayer";
 import { ShowLive, ShowPlayer } from "../realtime/ShowScreens";
+import { RulesOverlay } from "../realtime/RulesOverlay";
 import { AyanokojiHost } from "./AyanokojiHost";
 import { AyanokojiLive } from "./AyanokojiLive";
 import { AyanokojiPlayer } from "./AyanokojiPlayer";
@@ -57,7 +58,7 @@ export default function AyanokojiApp() {
   if (!/^[A-Za-z0-9_-]{1,24}$/.test(room)) {
     return <main className="ay-screen"><p className="ay-notice is-error" role="alert">Il manque le code de la room dans l'adresse : ajoute <code>?room=TEST</code> (lettres, chiffres, tirets).</p></main>;
   }
-  if (path === "/live") return <RoomProvider room={room} role="live"><RoomScreen role="live" /></RoomProvider>;
+  if (path === "/live") return <RoomProvider room={room} role="live"><RoomScreen role="live" /><RulesOverlay /></RoomProvider>;
   if (path === "/host") return <HostRoom room={room} j1={params.get("j1") ?? undefined} j2={params.get("j2") ?? undefined}><RoomScreen role="host" /></HostRoom>;
   const player = params.get("player");
   if (player !== "1" && player !== "2") {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DuelSession, Epreuve, PlayerId, SelectedEpreuve } from "../../types";
 import { useRoom } from "../../realtime/roomContext";
 import { AyanokojiHost } from "../ayanokoji/AyanokojiHost";
@@ -8,6 +8,7 @@ import { QuizHost } from "../quiz/QuizHost";
 import { EpreuveLogo } from "../EpreuveLogo";
 import { RoomLinks } from "./RoomLinks";
 import { roomOf } from "../../realtime/roomOf";
+import { findRulesVideo } from "../../data/regleVideos";
 
 interface Props {
   session: DuelSession;
@@ -27,7 +28,7 @@ const startedKey = (session: DuelSession) => `anime-quiz-epreuve-lancee-${sessio
  * présentateur la clôt : ses points entrent dans le duel et la suivante attend.
  */
 export function RealtimeStage({ session, epreuve, current, onComplete }: Props) {
-  const { game, view, feud, dossier, quiz, status, send } = useRoom();
+  const { game, view, feud, dossier, quiz, info, status, send } = useRoom();
   const target = epreuve.realtime!;
   const key = startedKey(session);
   const [started, setStarted] = useState(() => { try { return localStorage.getItem(key) === "1"; } catch { return false; } });
@@ -56,7 +57,21 @@ export function RealtimeStage({ session, epreuve, current, onComplete }: Props) 
     }
     try { localStorage.setItem(key, "1"); } catch { /* sans stockage, un rechargement redemandera de lancer l'épreuve */ }
     setStarted(true);
+    // La vidéo des règles, s'il y en a une, passe sur le live par-dessus l'épreuve
+    void findRulesVideo(epreuve.id).then(src => { if (src) send({ type: "show:intro", src }); });
   };
+  // Ici, la même vidéo tourne en petit et sans le son : elle dit quand celle du live est finie
+  const intro = info?.intro ?? null;
+  const preview = useRef<HTMLVideoElement>(null);
+  const introKey = intro ? `${intro.src}@${intro.startedAt}` : null;
+  const introOffset = intro && info ? Math.max(0, (info.serverNow - intro.startedAt) / 1000) : 0;
+  useEffect(() => {
+    const element = preview.current;
+    if (!element || !introKey) return;
+    if (introOffset > 1.5) element.currentTime = introOffset;
+    void element.play().catch(() => { /* l'aperçu ne démarre pas : le bouton « Passer » reste là */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [introKey]);
 
   // Les points de l'épreuve, lus sur la régie en cours
   const scores: Record<PlayerId, number> | null =
@@ -79,6 +94,11 @@ export function RealtimeStage({ session, epreuve, current, onComplete }: Props) 
   </section>;
 
   return <div className="rt-stage">
+    {intro && <aside className="rt-intro-host" role="status">
+      <video ref={preview} key={introKey} src={intro.src} muted playsInline preload="auto" onEnded={() => send({ type: "show:intro", src: null })} onError={() => send({ type: "show:intro", src: null })} />
+      <p><strong>Les règles passent sur le live</strong><span>L'épreuve commence à la fin de la vidéo.</span></p>
+      <button className="links-secondary" onClick={() => send({ type: "show:intro", src: null })}>Passer la vidéo</button>
+    </aside>}
     {target === "ayanokoji" ? <AyanokojiHost /> : target === "feud" ? <FeudHost /> : target === "dossier" ? <DossierHost /> : <QuizHost />}
     <footer className="rt-finish" aria-label="Fin de l'épreuve">
       <p><span className="player1">{names.player1} <b>{scores?.player1 ?? 0}</b></span><i aria-hidden="true">–</i><span className="player2"><b>{scores?.player2 ?? 0}</b> {names.player2}</span></p>

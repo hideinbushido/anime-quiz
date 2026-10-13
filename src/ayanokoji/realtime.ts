@@ -1,7 +1,7 @@
 import type { ClientMessage, Role, RoomView, ServerMessage } from "./types";
 import type { FeudClientMessage, FeudServerMessage, FeudView } from "../feud/types";
 import type { DossierClientMessage, DossierServerMessage, DossierView, RosterEntry } from "../dossier/types";
-import type { QuizClientMessage, QuizServerMessage, QuizView, ShowState } from "../quiz/types";
+import type { IntroState, QuizClientMessage, QuizServerMessage, QuizView, ShowState } from "../quiz/types";
 import type { RoomGame } from "../feud/types";
 import type { PlayerId } from "../types";
 
@@ -14,6 +14,9 @@ import type { PlayerId } from "../types";
 export interface RoomInfo {
   game: RoomGame;
   show: ShowState | null;
+  /** La vidéo des règles en cours sur le live, et l'heure du serveur pour la caler. */
+  intro: IntroState | null;
+  serverNow: number;
   names: Record<PlayerId, string>;
   avatars: Record<PlayerId, string | null>;
   connected: Record<PlayerId, boolean>;
@@ -85,7 +88,7 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       else if (message.type === "dossier:state") onDossier?.(message.view, Date.now());
       else if (message.type === "dossier:roster") onDossierRoster?.(message.universe, message.roster);
       else if (message.type === "quiz:state") onQuiz?.(message.view, Date.now());
-      else if (message.type === "show:state") onInfo?.({ game: message.game, show: message.show, names: message.names, avatars: message.avatars, connected: message.connected });
+      else if (message.type === "show:state") onInfo?.({ game: message.game, show: message.show, intro: message.intro ?? null, serverNow: message.serverNow ?? Date.now(), names: message.names, avatars: message.avatars, connected: message.connected });
       else if (message.type === "room:error") onError(message.message);
     };
     socket.onclose = () => {

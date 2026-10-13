@@ -176,3 +176,24 @@
 .rt-launch-hint { max-width: 40em; font-size: 14px; color: var(--paper-dim); }
 .rt-launch .rt-links, .rt-connect .rt-links { width: min(100%, 1100px); margin: 10px auto 0; }
 .rt-connect { padding: 0 clamp(12px, 2.4vw, 44px) 180px; }
+
+/* ── La vidéo des règles ── */
+.rt-intro { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--ink); animation: fdFade 300ms ease-out both; }
+.rt-intro video { width: 100%; height: 100%; object-fit: contain; }
+.rt-intro-sound { position: absolute; right: 24px; bottom: 24px; padding: 12px 20px; border: 1px solid var(--hair-strong); border-radius: 999px; background: rgba(10, 8, 6, 0.8); color: var(--gold-2); font: 700 14px / 1 var(--f-accent); letter-spacing: 0.18em; text-transform: uppercase; }
+.rt-intro-host {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 10px clamp(12px, 2.4vw, 44px);
+  border-bottom: 2px solid var(--gold-3);
+  background: rgba(10, 8, 6, 0.97);
+}
+.rt-intro-host video { width: 200px; aspect-ratio: 16 / 9; border: 2px solid var(--gold-2); background: #000; }
+.rt-intro-host p { flex: 1; display: grid; gap: 4px; min-width: 200px; }
+.rt-intro-host strong { font: 900 1.4rem / 1 var(--f-title); text-transform: uppercase; color: var(--gold-1); }
+.rt-intro-host span { font-size: 14px; color: var(--paper-dim); }

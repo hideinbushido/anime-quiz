@@ -103,7 +103,7 @@ function connect(port, room, role) {
     const message = JSON.parse(event.data);
     if (message.type === 'room:error') client.errors.push(message.message);
     if (message.type === 'quiz:state') client.quiz = message.view;
-    if (message.type === 'show:state') { client.show = message.show; client.game = message.game; }
+    if (message.type === 'show:state') { client.show = message.show; client.game = message.game; client.intro = message.intro; }
     for (const waiter of [...waiters]) if (waiter.test()) { waiters.splice(waiters.indexOf(waiter), 1); waiter.resolve(); }
   };
   client.send = message => socket.send(JSON.stringify(message));
@@ -143,6 +143,18 @@ test('en temps réel : Killer Bee au buzzer, puis l\'écran d\'émission entre d
     assert.equal(live.quiz.revealed.answer, host.quiz.answer);
     assert.deepEqual(live.quiz.scores, { player1: 0, player2: 4 });
 
+    // La vidéo des règles : lancée par le présentateur, elle arrive sur le live avec son heure de départ, puis se coupe
+    live.send({ type: 'show:intro', src: '/regles/blind-test-openings.mp4' });
+    await live.until(c => c.errors.includes('Action non autorisée.'), 'seul le présentateur lance la vidéo');
+    host.send({ type: 'show:intro', src: 'https://ailleurs.test/video.mp4' });
+    await host.until(c => c.errors.includes('Vidéo des règles inconnue.'), 'une vidéo extérieure est refusée');
+    host.send({ type: 'show:intro', src: '/regles/blind-test-openings.mp4' });
+    await Promise.all([live, p1].map(c => c.until(x => x.intro?.src === '/regles/blind-test-openings.mp4' && x.intro.startedAt > 0, 'vidéo sur le live')));
+    host.send({ type: 'show:intro', src: null });
+    await live.until(c => c.intro === null, 'vidéo coupée');
+    host.send({ type: 'show:intro', src: '/regles/blind-test-openings.mp4' });
+    await live.until(c => c.intro !== null, 'vidéo relancée');
+
     // Entre deux épreuves : le site envoie le programme et le score, tous les écrans passent sur l'émission
     const show = { phase: 'between', index: 1, wins: { player1: 0, player2: 1 }, program: [{ id: 'blind-test-openings', name: 'Les Beats de Killer Bee', selectedBy: 'player1', result: { player1: 0, player2: 4 } }, { id: 'dossier-l', name: 'Le Dossier de L', selectedBy: 'player2' }] };
     live.send({ type: 'show:update', show });
@@ -151,6 +163,7 @@ test('en temps réel : Killer Bee au buzzer, puis l\'écran d\'émission entre d
     host.send({ type: 'room:game', game: 'lobby' });
     await Promise.all([live, p1, p2].map(c => c.until(x => x.game === 'lobby' && x.show?.wins.player2 === 1, 'écran d\'émission')));
     assert.equal(p1.show.program[0].result.player2, 4);
+    assert.equal(live.intro, null, "revenir à l'écran d'émission coupe la vidéo");
     host.send({ type: 'show:update', show: { phase: 'nimporte', program: [] } });
     await host.until(c => c.errors.includes("État de l'émission invalide."), 'état invalide refusé');
 
