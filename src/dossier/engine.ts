@@ -39,7 +39,7 @@ export function compareOrdered(guess: AttributeValue | undefined, target: Attrib
 
 export function compareAttribute(attribute: AttributeConfig, guess: DossierCharacter, target: DossierCharacter): CellResult {
   const mine = guess.attributes[attribute.key], theirs = target.attributes[attribute.key];
-  const base = { key: attribute.key, value: displayValue(mine) };
+  const base = { key: attribute.key, value: displayValue(mine), values: asList(mine) };
   if (attribute.comparisonType === "multi") return { ...base, state: compareMulti(mine, theirs) };
   if (attribute.comparisonType === "ordered") return { ...base, ...compareOrdered(mine, theirs) };
   return { ...base, state: compareExact(mine, theirs) };

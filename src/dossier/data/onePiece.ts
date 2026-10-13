@@ -4,23 +4,22 @@ import { ONE_PIECE_ROSTER } from "./onePiece.roster";
 /**
  * LE DOSSIER DE L — One Piece (rounds 3 et 4).
  *
- * Huit colonnes, proposées pour démarrer et faciles à changer : il suffit de
- * modifier cette liste (et, pour une colonne nouvelle, de la faire remplir par
- * le script). La prime est une colonne « ordonnée » : rouge avec une flèche
- * vers le haut ou vers le bas tant qu'on n'a pas la bonne.
+ * Sept colonnes. Le fruit du démon se dit par son ou ses types ; quand une
+ * révélation a changé ce qu'on savait, les deux restent (Luffy : Paramecia,
+ * puis Zoan mythique). Le Haki tient en une colonne, affichée en petites
+ * icônes : une par type que le personnage maîtrise.
  *
  * Les personnages (`onePiece.roster.ts`) sont construits à partir du wiki
  * onepiece.fandom.com par `scripts/dossier/build-onepiece.mjs`.
  */
 export const ONE_PIECE_ATTRIBUTES: AttributeConfig[] = [
-  { key: "sexe", label: "Sexe", comparisonType: "exact" },
-  { key: "espece", label: "Espèce", comparisonType: "multi" },
-  { key: "affiliations", label: "Affiliations", comparisonType: "multi" },
+  { key: "sexe", label: "Genre", comparisonType: "exact" },
+  { key: "espece", label: "Race / Espèce", comparisonType: "multi" },
   { key: "origine", label: "Origine", comparisonType: "exact" },
-  { key: "fruit", label: "Fruit du démon", comparisonType: "exact" },
-  { key: "haki", label: "Haki", comparisonType: "multi" },
-  { key: "prime", label: "Prime", comparisonType: "ordered" },
-  { key: "premiereApparition", label: "Première apparition", comparisonType: "exact" },
+  { key: "fruit", label: "Fruit du démon", comparisonType: "multi" },
+  { key: "haki", label: "Haki", comparisonType: "multi", display: "icons" },
+  { key: "affiliations", label: "Affiliation / Équipage", comparisonType: "multi" },
+  { key: "premiereApparition", label: "Premier arc", comparisonType: "exact" },
 ];
 
 export const ONE_PIECE: UniverseConfig = {

@@ -12,11 +12,10 @@ import { DossierAvatar, DossierScore, DossierTarget, DossierTurnBlock } from "./
  * ont validé, et la ligne adverse arrive en même temps que la sienne.
  */
 export function DossierPlayer({ player }: { player: PlayerId }) {
-  const { view, status, error, send } = useDossier<DossierPlayerView>(player);
+  const { view, roster, status, error, send } = useDossier<DossierPlayerView>(player);
   const [query, setQuery] = useState("");
   const [choice, setChoice] = useState<RosterEntry | null>(null);
-  const roster = view?.roster;
-  const suggestions = useMemo(() => (roster && !choice ? searchRoster(roster, query) : []), [roster, query, choice]);
+  const suggestions = useMemo(() => (!choice ? searchRoster(roster, query) : []), [roster, query, choice]);
   // Un nouveau tour, ou un nouveau round : le champ repart vide
   const turnKey = `${view?.roundNumber}-${view?.turns.length}-${view?.phase}`;
   useEffect(() => { setQuery(""); setChoice(null); }, [turnKey]);
@@ -24,7 +23,7 @@ export function DossierPlayer({ player }: { player: PlayerId }) {
   if (!view) return <main className={`ay-screen ds-player ${player}`}><ConnectionNotice status={status} error={error} /></main>;
   const { phase, names, universe } = view;
   const opponent: PlayerId = player === "player1" ? "player2" : "player1";
-  const locked = view.roster.find(entry => entry.id === view.myGuess);
+  const locked = view.myGuess ? roster.find(entry => entry.id === view.myGuess) ?? { id: view.myGuess, name: "Proposition" } : undefined;
   const tried = new Set(view.turns.map(turn => turn.guesses[player].characterId));
   const turns = [...view.turns].reverse();
 
@@ -71,6 +70,11 @@ export function DossierPlayer({ player }: { player: PlayerId }) {
     </p>}
     {phase === "intro" && !universe.ready && <p className="ds-none">{universe.name} n'est pas encore disponible.</p>}
 
+    {/* Sur grand écran, les propositions s'alignent comme sur le live, sous les titres de colonnes */}
+    {turns.length > 0 && <div className="ds-row ds-columns" aria-hidden="true">
+      <span>Proposition</span>
+      <ul className="ds-cells">{universe.attributes.map(attribute => <li key={attribute.key}>{attribute.label}</li>)}</ul>
+    </div>}
     {turns.length > 0 && <ol className="ds-history">
       {turns.map(turn => <DossierTurnBlock key={turn.number} turn={turn} attributes={universe.attributes} names={names} first={player} labelled fresh={turn.number === view.turns.length} />)}
     </ol>}

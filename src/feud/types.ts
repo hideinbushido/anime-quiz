@@ -75,6 +75,8 @@ interface FeudBaseView {
   roundNumber: number;
   roundCount: number;
   names: Record<PlayerId, string>;
+  /** La photo de profil de chaque joueur, s'il en a choisi une. */
+  avatars: Record<PlayerId, string | null>;
   connected: Record<PlayerId, boolean>;
   strikes: Record<PlayerId, number>;
   maxStrikes: number;
@@ -144,6 +146,8 @@ export type RoomGame = "ayanokoji" | "feud" | "dossier";
 
 export type FeudClientMessage =
   | { type: "room:game"; game: RoomGame }
+  /** Un joueur change sa propre photo ; le présentateur précise de quel joueur il s'agit. */
+  | { type: "room:avatar"; image: string | null; player?: PlayerId }
   | { type: "buzzer:press" }
   | FeudHostAction;
 

@@ -79,6 +79,10 @@
 .ds-cell span { font: 800 1em / 1.12 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; overflow-wrap: anywhere; }
 .ds-cell i { margin-left: 0.4em; font: 400 0.8em / 1 system-ui, sans-serif; font-style: normal; }
 .ds-cell small { font: 700 0.56em / 1.1 var(--f-accent); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+/* Une case en icônes (le Haki) : une petite image par valeur */
+.ds-icons { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.35em; }
+.ds-icons img { width: 2.1em; height: 2.1em; }
+.ds-icons.is-empty { font: 800 1.4em / 1 var(--f-title); opacity: 0.7; }
 .ds-cell.is-correct { background: var(--ok-deep); border-color: var(--ok); }
 .ds-cell.is-partial { background: var(--part-deep); border-color: var(--part); }
 .ds-cell.is-wrong { background: var(--ko-deep); border-color: var(--ko); }
@@ -259,6 +263,28 @@
 .ds-player .ds-target { flex-direction: column; align-items: flex-start; }
 .ds-player .ds-target dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+.ds-player .ds-columns { display: none; }
+
+/* Sur un écran d'ordinateur, le joueur lit ses propositions en lignes, comme le live :
+   une ligne par proposition, une colonne par attribut, les titres une seule fois en haut */
+@media (min-width: 900px) {
+  .ds-player { max-width: 1760px; font-size: clamp(10px, 0.92vw, 17px); }
+  .ds-player .ds-columns { display: grid; }
+  .ds-player .ds-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 8fr); }
+  .ds-player .ds-cells { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: minmax(0, 1fr); }
+  .ds-player .ds-cell { min-height: clamp(44px, 7vh, 80px); }
+  .ds-player .ds-cell small { display: none; }
+  .ds-player .ds-search { grid-template-columns: minmax(0, 1fr) auto; align-items: start; max-width: 900px; width: 100%; margin: 0 auto; }
+  .ds-player .ds-search label, .ds-player .ds-suggestions, .ds-player .ds-search .ds-none { grid-column: 1 / -1; }
+  .ds-player .ds-search label { order: -2; }
+  .ds-player .ds-search input { order: -1; }
+  .ds-player .ds-search > .ay-button { order: -1; min-height: 52px; }
+  .ds-player .ds-suggestions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ds-player .ds-state, .ds-player .ds-lockbox { max-width: 900px; width: 100%; margin: 0 auto; }
+  .ds-player .ds-target { flex-direction: row; align-items: center; }
+  .ds-player .ds-target dl { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+}
+
 /* ── La régie ── */
 .ds-host { font-size: 14px; }
 .ds-host .ds-cells { grid-template-columns: repeat(8, minmax(0, 1fr)); }
@@ -273,3 +299,13 @@
   .ds-host .ds-cells { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ds-locks { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Rejoindre la room : un QR code par joueur, et l'adresse du live */
+.rt-links { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--hair); }
+.rt-links > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+.rt-links article { --c: var(--gold-2); display: grid; justify-items: center; align-content: start; gap: 8px; padding: 14px; border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); text-align: center; }
+.rt-links h3 { font: 900 1.5rem / 1 var(--f-title); text-transform: uppercase; color: var(--c); }
+.rt-links p { font-size: 13px; color: var(--paper-dim); }
+.rt-links code { font-size: 13px; color: var(--gold-1); user-select: all; overflow-wrap: anywhere; }
+.rt-qr { width: min(100%, 190px); height: auto; border: 6px solid #fff; }
+.rt-copy { min-height: 38px; font-size: 0.9rem; }

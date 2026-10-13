@@ -38,13 +38,15 @@ test('le moteur : exact, multi (vert, orange, rouge) et ordonné', () => {
   assert.equal(result.found, false);
   assert.deepEqual(result.cells.map(cell => cell.state), ['correct', 'partial', 'wrong']);
   assert.deepEqual(result.cells.map(cell => cell.value), ['rouge', 'feu, foudre', '5'], 'la case montre les valeurs du personnage proposé');
+  assert.deepEqual(result.cells[1].values, ['feu', 'foudre']);
   assert.equal(compareCharacterGuess(TEST_A, byId('delta'), byId('alpha')).cells[1].value, 'Aucun');
   assert.equal(compareCharacterGuess(TEST_A, byId('alpha'), byId('alpha')).found, true);
 });
 
 test('la recherche ignore la casse et les accents, et connaît les surnoms', () => {
   assert.equal(normalize('  Hyūga '), 'hyuga');
-  assert.equal(searchRoster(NARUTO.roster, 'hyuga').length, 2);
+  assert.ok(searchRoster(NARUTO.roster, 'hyuga').length >= 2);
+  assert.ok(searchRoster(NARUTO.roster, 'hyuga').every(entry => /hy[uū]ga/i.test(entry.name)));
   assert.equal(searchRoster(NARUTO.roster, 'NARUTO')[0].id, 'naruto-uzumaki');
   assert.equal(searchRoster(NARUTO.roster, 'pain')[0].id, 'nagato');
   assert.equal(searchRoster(NARUTO.roster, 'danzo')[0].id, 'danzo-shimura');
@@ -52,9 +54,9 @@ test('la recherche ignore la casse et les accents, et connaît les surnoms', () 
   assert.deepEqual(searchRoster(NARUTO.roster, '  '), []);
 });
 
-test('Naruto : huit colonnes fixées, trois statuts spéciaux, des fiches complètes', () => {
+test('Naruto : sept colonnes, une seule affiliation (village et Akatsuki), des listes fermées de valeurs', () => {
   assert.deepEqual(NARUTO.attributes.map(attribute => [attribute.key, attribute.comparisonType]), [
-    ['sexe', 'exact'], ['village', 'exact'], ['clan', 'exact'], ['affiliations', 'multi'],
+    ['sexe', 'exact'], ['affiliations', 'multi'], ['clan', 'exact'],
     ['typesJutsu', 'multi'], ['naturesChakra', 'multi'], ['statutSpecial', 'multi'], ['premiereApparition', 'exact'],
   ]);
   assert.ok(universeReady(NARUTO));
@@ -64,9 +66,13 @@ test('Naruto : huit colonnes fixées, trois statuts spéciaux, des fiches compl�
       assert.ok(key in character.attributes, `${character.id} : ${key} manque`);
       if (comparisonType === 'multi') assert.ok(Array.isArray(character.attributes[key]), `${character.id} : ${key} doit être une liste`);
     }
-    for (const statut of character.attributes.statutSpecial) assert.ok(['Jinchūriki', 'Ermite', 'Invocateur'].includes(statut), `${character.id} : ${statut}`);
-    if (character.attributes.village) assert.ok(character.attributes.affiliations.includes(character.attributes.village), `${character.id} : son village fait partie de ses affiliations`);
-    assert.ok(character.attributes.typesJutsu.length > 0, `${character.id} : au moins un type de jutsu`);
+    const { statutSpecial, affiliations, typesJutsu, naturesChakra } = character.attributes;
+    for (const statut of statutSpecial) assert.ok(['Jinchūriki', 'Ermite', 'Invocateur', 'Ninja déserteur', 'Ninja médical'].includes(statut), `${character.id} : ${statut}`);
+    for (const type of typesJutsu) assert.ok(['Ninjutsu', 'Genjutsu', 'Taijutsu'].includes(type), `${character.id} : ${type}`);
+    for (const nature of naturesChakra) assert.ok(['Feu', 'Vent', 'Foudre', 'Terre', 'Eau'].includes(nature), `${character.id} : ${nature}`);
+    // Le village, plus l'Akatsuki : jamais plus de deux affiliations
+    assert.ok(affiliations.length <= 2 && affiliations.filter(item => item !== 'Akatsuki').length <= 1, `${character.id} : ${affiliations}`);
+    assert.ok(!('village' in character.attributes), `${character.id} : le village n'est plus une colonne à part`);
     assert.ok(character.attributes.premiereApparition, `${character.id} : une première apparition`);
   }
   // L'exemple du cahier des charges : Hidan face à Itachi, orange sur l'affiliation
@@ -86,14 +92,36 @@ test('cinq rounds dans l\'ordre : Naruto, Naruto, One Piece, One Piece, Dragon B
       assert.ok(key in character.attributes, `${universe.name} / ${character.id} : ${key} manque`);
       if (comparisonType === 'multi') assert.ok(Array.isArray(value), `${universe.name} / ${character.id} : ${key} doit être une liste`);
       if (comparisonType === 'ordered') assert.ok(Number.isFinite(value), `${universe.name} / ${character.id} : ${key} doit être un nombre`);
+      if (comparisonType === 'exact') assert.ok(!Array.isArray(value), `${universe.name} / ${character.id} : ${key} a une seule valeur`);
     }
   }
-  // La prime de One Piece est ordonnée : une flèche dit dans quel sens chercher
-  const onePiece = DOSSIER_CONFIG.universes['one-piece'];
-  const of = id => onePiece.roster.find(character => character.id === id);
-  const prime = compareCharacterGuess(onePiece, of('nami'), of('monkey-d-luffy')).cells.find(cell => cell.key === 'prime');
-  assert.deepEqual([prime.state, prime.direction, prime.value], ['wrong', 'up', '366 000 000']);
-  assert.equal(compareCharacterGuess(onePiece, of('monkey-d-luffy'), of('roronoa-zoro')).cells.find(cell => cell.key === 'affiliations').state, 'partial');
+  const onePiece = DOSSIER_CONFIG.universes['one-piece'], dragonBall = DOSSIER_CONFIG.universes['dragon-ball'];
+  assert.deepEqual(onePiece.attributes.map(attribute => attribute.label), ['Genre', 'Race / Espèce', 'Origine', 'Fruit du démon', 'Haki', 'Affiliation / Équipage', 'Premier arc']);
+  assert.deepEqual(dragonBall.attributes.map(attribute => attribute.label), ['Genre', 'Race / Espèce', 'Origine', 'Résidence', 'Affiliation', 'Peut se transformer', 'Premier arc']);
+  const of = (universe, id) => universe.roster.find(character => character.id === id);
+
+  // Une révélation ne chasse pas l'ancienne information : Luffy garde ses deux types de fruit
+  const luffy = of(onePiece, 'monkey-d-luffy');
+  assert.deepEqual(luffy.attributes.fruit, ['Paramecia', 'Zoan mythique']);
+  assert.deepEqual(luffy.attributes.haki, ['Observation', 'Armement', 'Rois']);
+  assert.deepEqual(of(onePiece, 'nami').attributes.fruit, []);
+  const cells = compareCharacterGuess(onePiece, of(onePiece, 'nico-robin'), luffy).cells;
+  const cell = key => cells.find(item => item.key === key);
+  assert.equal(cell('fruit').state, 'partial', 'Paramecia en commun');
+  assert.equal(cell('affiliations').state, 'partial');
+  // Le Haki voyage valeur par valeur, pour être montré en icônes ; sans Haki, la liste est vide
+  assert.equal(onePiece.attributes.find(attribute => attribute.key === 'haki').display, 'icons');
+  assert.deepEqual(cell('haki').values, []);
+  assert.deepEqual(compareCharacterGuess(onePiece, of(onePiece, 'roronoa-zoro'), luffy).cells.find(item => item.key === 'haki').values, ['Observation', 'Armement', 'Rois']);
+  for (const character of onePiece.roster) {
+    for (const type of character.attributes.fruit) assert.ok(['Paramecia', 'Zoan', 'Zoan antique', 'Zoan mythique', 'Logia'].includes(type), `${character.id} : ${type}`);
+    assert.ok(!('prime' in character.attributes), 'la prime n\'est pas une colonne');
+  }
+  // Dragon Ball : la transformation se dit par Oui ou Non, jamais par son nom
+  for (const character of dragonBall.roster) assert.ok(['Oui', 'Non'].includes(character.attributes.transformation), `${character.id} : ${character.attributes.transformation}`);
+  assert.equal(of(dragonBall, 'son-goku').attributes.transformation, 'Oui');
+  assert.equal(of(dragonBall, 'krillin').attributes.transformation, 'Non');
+  assert.notEqual(of(dragonBall, 'vegeta').attributes.origine, of(dragonBall, 'vegeta').attributes.residence, "l'origine et la résidence sont deux colonnes");
 });
 
 test('un tour : le premier à valider ne voit rien tant que l\'autre n\'a pas validé', () => {
@@ -232,13 +260,14 @@ test('fin manuelle, round suivant, univers pas encore configuré, puis fin des c
 /** Un client de test : il garde la dernière vue reçue et sait attendre une condition. */
 function connect(port, room, role, token) {
   const socket = new WebSocket(`ws://127.0.0.1:${port}`);
-  const client = { dossier: null, token: null, errors: [], seen: [], socket };
+  const client = { dossier: null, rosters: {}, token: null, errors: [], seen: [], socket };
   const waiters = [];
   socket.onmessage = event => {
     const message = JSON.parse(event.data);
     if (message.type === 'room:joined') client.token = message.token;
     if (message.type === 'room:error') client.errors.push(message.message);
     if (message.type === 'dossier:state') { client.dossier = message.view; client.seen.push(event.data); }
+    if (message.type === 'dossier:roster') { client.rosters[message.universe] = message.roster; client.seen.push(event.data); }
     for (const waiter of [...waiters]) if (waiter.test()) { waiters.splice(waiters.indexOf(waiter), 1); waiter.resolve(); }
   };
   client.send = message => socket.send(JSON.stringify(message));
@@ -264,8 +293,12 @@ test('en temps réel, sur Naruto : révélation simultanée, cible secrète sur 
     host.send({ type: 'room:game', game: 'dossier' });
     await Promise.all([host, live, p1, p2].map(c => c.until(x => x.dossier?.phase === 'intro', 'épreuve ouverte')));
     assert.equal(live.dossier.universe.name, 'Naruto');
-    assert.equal(live.dossier.universe.attributes.length, 8);
-    assert.ok(p1.dossier.roster.length >= 30);
+    assert.equal(live.dossier.universe.attributes.length, 7);
+    // Le catalogue arrive à part, une fois : des noms pour chercher, aucun attribut ; le live n'en a pas besoin
+    assert.ok(p1.rosters.naruto.length >= 50);
+    assert.ok(host.rosters.naruto.some(entry => entry.id === 'itachi-uchiha'));
+    assert.deepEqual(live.rosters, {});
+    assert.ok(!('roster' in p1.dossier));
 
     // Un joueur ne pilote pas la partie
     p1.send({ type: 'dossier:start' });
@@ -295,14 +328,14 @@ test('en temps réel, sur Naruto : révélation simultanée, cible secrète sur 
     await Promise.all([p1, p2, live, host].map(c => c.until(x => x.dossier.turns.length === 1, 'tour révélé')));
     const cell = (client, player, key) => client.dossier.turns[0].guesses[player].cells.find(item => item.key === key);
     assert.equal(cell(p2, 'player1', 'affiliations').state, 'partial', 'Akatsuki en commun');
-    assert.equal(cell(p2, 'player1', 'village').state, 'wrong');
+    assert.equal(cell(p2, 'player1', 'statutSpecial').state, 'partial', 'deux ninjas déserteurs, mais Itachi est aussi invocateur');
     assert.equal(cell(p1, 'player2', 'clan').state, 'correct');
     assert.equal(cell(live, 'player2', 'naturesChakra').state, 'partial');
     assert.equal(p1.dossier.turns[0].guesses.player2.name, 'Sasuke Uchiha', "la proposition adverse devient visible à la révélation");
 
     // Rien de ce qui a transité vers les joueurs ou le live ne désigne la cible
     for (const client of [p1, p2, live]) {
-      assert.ok(client.seen.every(raw => !raw.includes('targetId') && !raw.includes('secretTarget') && JSON.parse(raw).view.target === null), 'cible secrète');
+      assert.ok(client.seen.every(raw => !raw.includes('targetId') && !raw.includes('secretTarget') && (JSON.parse(raw).view?.target ?? null) === null), 'cible secrète');
       assert.ok(client.seen.every(raw => !raw.includes('"attributes":{')), 'le catalogue ne porte aucun attribut');
     }
 

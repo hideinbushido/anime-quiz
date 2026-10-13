@@ -77,7 +77,9 @@ test('saved duel resumes buzz, attempts, audio and attributed scores', () => {
   act({type:'judge',correct:false});
   act({type:'buzz',playerId:'player2'});
   act({type:'judge',correct:true});
-  assert.equal(session.players.player2.score,4);
+  // Les points du morceau vont au joueur 2 ; le score du duel, lui, ne bouge qu'à la fin de l'épreuve
+  assert.deepEqual(session.progress.rounds.map(round => [round.playerId, round.points]), [['player2', 4]]);
+  assert.equal(session.players.player2.score,0);
   assert.equal(session.players.player1.score,0);
   assert.equal(parseDuel({...session,progress:{...session.progress,killerBee:{...session.progress.killerBee,attempts:{player1:-1,player2:2}}}},catalog),null);
 });

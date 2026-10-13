@@ -1,11 +1,15 @@
 import { useRoom } from "../realtime/roomContext";
-import type { DossierPhase, DossierView, RoundOutcome } from "./types";
+import type { DossierPhase, DossierView, RosterEntry, RoundOutcome } from "./types";
 
 /** L'état du Dossier de L vu depuis un écran : la part de la room qui concerne cette épreuve. */
 export function useDossier<V extends DossierView>(role: V["role"]) {
-  const { dossier, status, error, send } = useRoom();
-  return { view: dossier && dossier.role === role ? (dossier as V) : null, status, error, send };
+  const { dossier, dossierRosters, status, error, send } = useRoom();
+  const view = dossier && dossier.role === role ? (dossier as V) : null;
+  // Le catalogue de l'univers en cours, reçu à part ; vide le temps qu'il arrive
+  return { view, roster: (view && dossierRosters[view.universe.id]) || EMPTY, status, error, send };
 }
+
+const EMPTY: RosterEntry[] = [];
 
 export const DOSSIER_PHASE_LABEL: Record<DossierPhase, string> = {
   intro: "Round prêt",

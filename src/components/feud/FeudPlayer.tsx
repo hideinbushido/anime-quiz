@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { PlayerId } from "../../types";
 import type { FeudPlayerView } from "../../feud/types";
 import { useFeud } from "../../feud/useFeud";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
-import { FeudStrikes } from "./FeudParts";
+import { FeudAvatar, FeudStrikes } from "./FeudParts";
+
+import { shrinkPhoto } from "../../realtime/avatar";
 
 /**
  * Le téléphone du joueur : un buzzer, ses erreurs, ses réponses trouvées.
@@ -14,6 +16,13 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
   // Le bouton réagit sous le doigt sans attendre le serveur, qui reste seul juge du premier buzz
   const [pressed, setPressed] = useState(false);
   const canBuzz = view?.canBuzz ?? false;
+  const picker = useRef<HTMLInputElement>(null);
+  const onPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try { send({ type: "room:avatar", image: await shrinkPhoto(file) }); } catch { /* fichier illisible : la photo actuelle reste */ }
+  };
   const buzz = useCallback(() => {
     // Un appui, un envoi : le doigt qui reste posé ou le clic qui suit ne rebuzzent pas
     if (!canBuzz || pressed) return;
@@ -48,6 +57,11 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
 
   return <main className={`ay-screen fd-player ${player} ${tone}`}>
     <header className="fd-player-head">
+      <button type="button" className="fd-photo" onClick={() => picker.current?.click()} aria-label="Changer ma photo de profil">
+        <FeudAvatar player={player} name={view.names[player]} image={view.avatars[player]} />
+        <span>{view.avatars[player] ? "Changer la photo" : "Ajouter ma photo"}</span>
+      </button>
+      <input ref={picker} type="file" accept="image/*" hidden onChange={onPhoto} />
       <h1>{view.names[player]}</h1>
       <p className="ay-kicker">{view.title}</p>
       <p className="fd-round">Manche <b>{view.roundNumber}</b>/{view.roundCount}</p>

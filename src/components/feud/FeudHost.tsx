@@ -3,8 +3,10 @@ import type { PlayerId } from "../../types";
 import type { FeudHostView } from "../../feud/types";
 import { FEUD_PHASE_LABEL, useFeud } from "../../feud/useFeud";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
-import { FeudStrikes } from "./FeudParts";
+import { FeudAvatar, FeudStrikes } from "./FeudParts";
+import { shrinkPhoto } from "../../realtime/avatar";
 import { GameSwitch } from "../realtime/GameSwitch";
+import { RoomLinks } from "../realtime/RoomLinks";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -26,7 +28,6 @@ export function FeudHost() {
   const { phase, buzzWinner, names } = view;
   const judging = phase === "buzzLocked" && buzzWinner !== null;
   const inPlay = phase === "waiting" || phase === "playing" || phase === "buzzLocked";
-  const link = (path: string) => `${window.location.origin}${path}`;
 
   return <main className="ay-screen ay-host fd-host">
     <header className="ay-host-head">
@@ -84,6 +85,16 @@ export function FeudHost() {
       {PLAYERS.map(id => <section key={id} className={`ay-side ${id}` + (buzzWinner === id ? " is-buzzing" : "")}>
         <h2><i className={"ay-dot" + (view.connected[id] ? " is-on" : "")} aria-hidden="true" />{names[id]}</h2>
         <p className="ay-status">{view.connected[id] ? "Connecté" : "Déconnecté"}{view.strikes[id] >= view.maxStrikes ? " · hors manche" : ""}</p>
+        {/* La photo de profil : le joueur peut la choisir sur son écran, le présentateur peut aussi la poser d'ici */}
+        <label className="fd-photo fd-photo-host">
+          <FeudAvatar player={id} name={names[id]} image={view.avatars[id]} />
+          <span>{view.avatars[id] ? "Changer la photo" : "Ajouter une photo"}</span>
+          <input type="file" accept="image/*" hidden onChange={async event => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) try { send({ type: "room:avatar", player: id, image: await shrinkPhoto(file) }); } catch { /* fichier illisible : la photo actuelle reste */ }
+          }} />
+        </label>
         <FeudStrikes count={view.strikes[id]} max={view.maxStrikes} />
         <dl>
           <div><dt>Trouvées</dt><dd>{view.foundCount[id]}</dd></div>
@@ -97,13 +108,6 @@ export function FeudHost() {
       Résultat : {view.result.winner ? `${names[view.result.winner]} gagne` : "égalité"} · {view.result.player1FeudScore} – {view.result.player2FeudScore}
     </p>}
 
-    <section className="ay-host-links">
-      <p className="ay-kicker">Liens à ouvrir</p>
-      <ul>
-        <li><span>Joueur 1</span><code>{link(`/player?room=${view.room}&player=1`)}</code></li>
-        <li><span>Joueur 2</span><code>{link(`/player?room=${view.room}&player=2`)}</code></li>
-        <li><span>Live (OBS)</span><code>{link(`/live?room=${view.room}`)}</code></li>
-      </ul>
-    </section>
+    <RoomLinks room={view.room} names={names} />
   </main>;
 }

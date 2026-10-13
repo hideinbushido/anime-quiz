@@ -168,7 +168,7 @@ export function feudResult(state: FeudGame): FeudResult {
   return { winner: player1 === player2 ? null : player1 > player2 ? "player1" : "player2", player1FeudScore: player1, player2FeudScore: player2 };
 }
 
-interface Context { room: string; names: Record<PlayerId, string>; connected: Record<PlayerId, boolean>; now: number }
+interface Context { room: string; names: Record<PlayerId, string>; avatars?: Record<PlayerId, string | null>; connected: Record<PlayerId, boolean>; now: number }
 
 /**
  * La vue envoyée à un écran. C'est ici que se garde le secret : le téléphone
@@ -183,7 +183,7 @@ export function feudView(state: FeudState, role: FeudRole, context: Context, rou
   const base = {
     game: "feud" as const, room: context.room, title: FEUD_TITLE, phase: state.phase,
     roundNumber: state.roundIndex + 1, roundCount: rounds.length,
-    names: context.names, connected: context.connected,
+    names: context.names, avatars: context.avatars ?? { player1: null, player2: null }, connected: context.connected,
     strikes: state.strikes, maxStrikes: MAX_STRIKES,
     foundCount: { player1: count("player1"), player2: count("player2") },
     buzzOpen: state.buzzOpen, buzzWinner: state.buzzWinner,

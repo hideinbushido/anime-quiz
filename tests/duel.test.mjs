@@ -47,8 +47,11 @@ test('complete five-game LIVE, alternating respondents, no double scoring, exact
   }
   assert.equal(session.phase, 'recap');
   assert.equal(session.results.length, 5);
-  assert.equal(session.players.player1.score, 300);
-  assert.equal(session.players.player2.score, 200);
+  // Un point par épreuve gagnée : joueur 1 a gagné les épreuves 1, 3 et 5, joueur 2 les 2 et 4
+  assert.equal(session.players.player1.score, 3);
+  assert.equal(session.players.player2.score, 2);
+  // Le détail des points de chaque épreuve reste dans son résultat, pour l'historique
+  assert.deepEqual(session.results.map(result => [result.scorePlayer1, result.scorePlayer2]), [[100, 0], [0, 100], [100, 0], [0, 100], [100, 0]]);
   assert.equal(session.progress.rounds.length, 0);
   assert.deepEqual(parseDuel(session, catalog), session);
   assert.equal(duelReducer(session, { type: 'next' }, catalog), session);

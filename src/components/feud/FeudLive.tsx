@@ -4,7 +4,7 @@ import type { FeudLiveView } from "../../feud/types";
 import { playFeudSound, revealProgress, useFeud, useFeudSounds } from "../../feud/useFeud";
 import { useServerNow } from "../../ayanokoji/useAyanokojiRoom";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
-import { FeudAnswerRow, FeudStrikes } from "./FeudParts";
+import { FeudAnswerRow, FeudAvatar, FeudStrikes } from "./FeudParts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -41,6 +41,7 @@ export function FeudLive() {
   const side = (id: PlayerId) => {
     const out = view.strikes[id] >= view.maxStrikes && !reveal.active;
     return <section key={id} className={`fd-side ${id}` + (view.buzzWinner === id ? " is-buzzing" : "") + (out ? " is-out" : "")}>
+      <FeudAvatar player={id} name={names[id]} image={view.avatars[id]} />
       <h2><i className={"ay-dot" + (view.connected[id] ? " is-on" : "")} aria-hidden="true" />{names[id]}</h2>
       {view.buzzWinner === id && <p className="fd-hand">A la main</p>}
       <FeudStrikes count={view.strikes[id]} max={view.maxStrikes} />
@@ -54,6 +55,7 @@ export function FeudLive() {
 
   return <main className={"ay-screen fd-live" + ` phase-${phase}`}>
     <header className="fd-head">
+      <img className="ay-live-logo" src="/logos-epreuves/les-pensees-d-anya.webp" alt="" />
       <h1>{view.title}</h1>
       <p className="fd-round">Manche <b>{view.roundNumber}</b>/{view.roundCount}</p>
     </header>
@@ -69,7 +71,7 @@ export function FeudLive() {
           : <p key="question" className="fd-question">{view.question}</p>}
         <div className="fd-columns">
           {[view.slots.slice(0, half), view.slots.slice(half)].map((column, index) => <ol key={index} className="fd-list">
-            {column.map(slot => <FeudAnswerRow key={slot.rank} slot={slot} names={names}
+            {column.map(slot => <FeudAnswerRow key={slot.rank} slot={slot} names={names} avatars={view.avatars}
               valueShown={reveal.active && reveal.shown(slot.rank)}
               labelShown={slot.foundBy !== null || !reveal.active || reveal.shown(slot.rank)}
               fresh={phase !== "revealingPoints" && view.event.kind === "correct" && view.event.rank === slot.rank} />)}

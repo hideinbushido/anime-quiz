@@ -107,7 +107,7 @@ export function KillerBeePlayer({ epreuve, progress, players, difficulty = "D", 
     const won = Boolean(result?.correct && result.playerId === id);
     return <section key={id} className={`beats-corner ${id}` + (player === id ? " beats-buzz-active" : "") + (player && player !== id ? " beats-corner-dim" : "") + (won ? " beats-corner-won" : "")}>
       <strong className="beats-corner-name">{names[id]}</strong>
-      <span className="beats-corner-score"><b>{players?.[id].score ?? progress.rounds.filter(r => r.playerId === id).reduce((sum, r) => sum + r.points, 0)}</b> pts</span>
+      <span className="beats-corner-score"><b>{progress.rounds.filter(r => r.playerId === id).reduce((sum, r) => sum + r.points, 0)}</b> pts</span>
       {!result && <>
         <span className="beats-lives" role="img" aria-label={`${attempts} tentative${attempts > 1 ? "s" : ""} restante${attempts > 1 ? "s" : ""}`}>{[1, 2].map(life => <svg key={life} viewBox="0 0 64 16" className={"beats-blade" + (life > attempts ? " beats-blade-spent" : "")}>
           <rect x="1" y="5" width="15" height="6" rx="2" /><rect x="16" y="1" width="3.5" height="14" rx="1.5" /><path d="M20 4.6 H52 L63 8 L52 11.4 H20 Z" />

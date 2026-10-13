@@ -4,14 +4,18 @@
 //
 // Sans --write, le script affiche ce qu'il a lu, pour relecture.
 import { writeFileSync } from 'node:fs';
-import { wiki, templateFields, plain } from './wiki.mjs';
+import { join } from 'node:path';
+import { wiki, templateFields, plain, slugger } from './wiki.mjs';
 
 const [cacheDir, flag] = process.argv.slice(2);
 if (!cacheDir) throw new Error('Usage : node scripts/dossier/build-onepiece.mjs <dossier-de-cache> [--write]');
 const onePiece = wiki('onepiece', cacheDir);
 
-/** Le roster : le titre de la page du wiki, puis le nom affiché et les surnoms si besoin. */
-const ROSTER = [
+/**
+ * Le roster est complet : tous les personnages du wiki qui apparaissent dans le manga.
+ * Cette liste ne sert qu'à donner un nom d'affichage ou des surnoms aux plus connus.
+ */
+const KNOWN = [
   ['Monkey D. Luffy', null, ['Luffy', 'Chapeau de Paille']], ['Roronoa Zoro', null, ['Zoro', 'Zorro']], ['Nami', null, []], ['Usopp', null, ['Pipo', 'Sogeking']],
   ['Sanji', null, ['Vinsmoke Sanji', 'Sandy']], ['Tony Tony Chopper', null, ['Chopper']], ['Nico Robin', null, ['Robin']], ['Franky', null, ['Cutty Flam']],
   ['Brook', null, []], ['Jinbe', null, ['Jimbei', 'Jinbei']],
@@ -53,6 +57,8 @@ const ORIGINS = { 'East Blue': 'East Blue', 'West Blue': 'West Blue', 'North Blu
 const SPECIES = { Humans: 'Humain', Modified_Humans: 'Humain', Talking_Animals: 'Animal', Mink_Tribe: 'Mink', 'Fish-Men': 'Homme-Poisson', Merfolk: 'Sirène', Giants: 'Géant', Minks: 'Mink', Cyborgs: 'Cyborg', Lunarians: 'Lunaria',
   Skypieans: 'Céleste', Birkans: 'Céleste', Shandia: 'Céleste', Longarm_Tribe: 'Longs-Bras', Longleg_Tribe: 'Longues-Jambes', Oni: 'Oni', Animals: 'Animal', Buccaneers: 'Boucanier', Zombies: 'Zombie' };
 const HAKI = { Observation_Haki_Users: 'Observation', Armament_Haki_Users: 'Armement', Supreme_King_Haki_Users: 'Rois' };
+/** Les types de fruit, du plus précis au plus général : « Mythical Zoan » ne doit pas être lu comme un simple « Zoan ». */
+const FRUITS = [[/mythical zoan/i, 'Zoan mythique'], [/ancient zoan/i, 'Zoan antique'], [/zoan/i, 'Zoan'], [/logia/i, 'Logia'], [/paramecia/i, 'Paramecia']];
 /** Les arcs du manga, par chapitre de début. */
 const ARCS = [[1, 'Romance Dawn'], [8, 'Orange Town'], [22, 'Village de Sirop'], [42, 'Baratie'], [69, 'Arlong Park'], [96, 'Loguetown'],
   [101, 'Reverse Mountain'], [106, 'Whisky Peak'], [115, 'Little Garden'], [130, 'Île de Drum'], [155, 'Alabasta'], [218, 'Jaya'], [237, 'Skypiea'],
@@ -65,9 +71,6 @@ const ARCS = [[1, 'Romance Dawn'], [8, 'Orange Town'], [22, 'Village de Sirop'],
  * Ivankov ni Bon Clay parmi les hommes ou les femmes.
  */
 const CORRECTIONS = { 'Emporio Ivankov': { sexe: 'Homme' }, Bentham: { sexe: 'Homme' } };
-/** Les « primes » en étoiles ou en couronnes que Cross Guild met sur les Marines ne sont pas des primes de pirate. */
-const CROSS_GUILD_BOUNTY = /\{\{B\|s\}\}/;
-
 const unique = values => [...new Set(values)];
 const unknown = new Map();
 const note = (kind, name) => unknown.set(`${kind} : ${name}`, (unknown.get(`${kind} : ${name}`) ?? 0) + 1);
@@ -84,16 +87,29 @@ function entries(value) {
 }
 
 const roster = [];
-for (const [title, display, aliases] of ROSTER) {
+const known = new Map(KNOWN.map(([title, display, aliases]) => [title, { display, aliases }]));
+const titles = unique([...KNOWN.map(([title]) => title), ...await onePiece.category('Category:Male_Characters'), ...await onePiece.category('Category:Female_Characters')]);
+await onePiece.pages(titles);
+// Les personnages principaux ont leur fiche dans un gabarit d'onglets, les autres dans la page
+const tabbed = [];
+for (const title of titles) {
   const page = await onePiece.page(title);
-  if (!page) { console.log('ABSENT', title); continue; }
-  // Les personnages principaux ont leur fiche dans un gabarit d'onglets, les autres dans la page
+  if (page && !templateFields(page.wikitext, /\{\{Char Box/i)) tabbed.push(`Template:${page.title} Tabs Top`);
+}
+await onePiece.pages(tabbed);
+
+const slug = slugger();
+for (const title of titles) {
+  const { display = null, aliases = [] } = known.get(title) ?? {};
+  const page = await onePiece.page(title);
+  if (!page) continue;
   let fields = templateFields(page.wikitext, /\{\{Char Box/i);
   if (!fields) {
     const tabs = await onePiece.page(`Template:${page.title} Tabs Top`);
     fields = tabs && templateFields(tabs.wikitext, /\{\{Char Box/i);
   }
-  if (!fields) { console.log('SANS FICHE', title); continue; }
+  // Seuls comptent les personnages du manga : il faut une fiche, et un chapitre de première apparition
+  if (!fields || !/Chapter \d+/.test(fields.first ?? '')) continue;
   const cats = page.categories;
 
   // Un passage éclair (cuisinier d'un jour au Baratie) ou une cellule à Impel Down ne font pas une affiliation
@@ -101,42 +117,46 @@ for (const [title, display, aliases] of ROSTER) {
   const affiliations = unique(entries(fields.affiliation).filter(item => !item.noncanon && !passing(item)).flatMap(item => {
     if (AFFILIATIONS[item.name]) return [AFFILIATIONS[item.name]];
     note('affiliation', item.name);
-    return [];
+    // Un groupe que nous n'avons pas traduit garde son nom du wiki, plutôt que de disparaître
+    return /#|Will of D\.|^his |^her /i.test(item.name) || item.name.length > 40 ? [] : [item.name];
   }));
+  // L'origine n'est connue que pour une partie des personnages : les autres sont « Inconnue », jamais vides
   const originName = entries(fields.origin)[0]?.name ?? null;
-  const origin = originName ? ORIGINS[originName] ?? (note('origine', originName), originName) : null;
+  const origin = !originName || /[{}|]/.test(originName) ? 'Inconnue' : ORIGINS[originName] ?? (note('origine', originName), originName);
   const found = unique(Object.keys(SPECIES).filter(key => cats.includes(key)).map(key => SPECIES[key]));
   const species = found.length ? found : ['Humain'];
-  const bountyText = (fields.bounty ?? '').replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, '').replace(/\{\{(?:Qref|Web ref)(?:[^{}]|\{\{[^{}]*\}\})*\}\}/gi, '').replace(/https?:\/\/\S+/g, '');
-  const bounties = CROSS_GUILD_BOUNTY.test(bountyText) ? [] : [...bountyText.matchAll(/(\d{1,3}(?:,\d{3})+)/g)].map(match => Number(match[1].replace(/,/g, '')));
   const chapter = Number(fields.first?.match(/Chapter (\d+)/)?.[1]);
-  // « Paramecia (Mythical Zoan) » pour Luffy : le type réel l'emporte
-  const fruit = /Zoan/i.test(fields.dftype ?? '') ? 'Zoan' : /Logia/i.test(fields.dftype ?? '') ? 'Logia' : /Paramecia/i.test(fields.dftype ?? '') ? 'Paramecia' : fields.dfname ? 'Inconnu' : null;
+  // Tous les types cités comptent, l'ancien comme le nouveau : Luffy est « Paramecia » puis « Zoan mythique »,
+  // et Barbe Noire porte deux fruits. Un type général déjà couvert par sa forme précise (Zoan / Zoan mythique) n'est pas répété.
+  const fruitText = [fields.dftype, fields.dftype2, fields.dftype3].filter(Boolean).map(value => plain(value)).join(' ; ');
+  let fruit = [], rest = fruitText;
+  for (const [pattern, label] of FRUITS) if (pattern.test(rest)) { fruit.push(label); rest = rest.replace(new RegExp(pattern.source, 'gi'), ''); }
+  fruit = ['Paramecia', 'Zoan', 'Zoan antique', 'Zoan mythique', 'Logia'].filter(label => fruit.includes(label));
 
   roster.push({
-    id: (display ?? title).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    id: slug(display ?? title), title: page.title,
     name: display ?? title, aliases,
     attributes: {
-      sexe: cats.includes('Female_Characters') ? 'Femme' : cats.includes('Male_Characters') ? 'Homme' : null,
+      sexe: cats.includes('Female_Characters') ? 'Femme' : cats.includes('Male_Characters') ? 'Homme' : 'Autre',
       espece: species, affiliations, origine: origin, fruit,
       haki: Object.keys(HAKI).filter(key => cats.includes(key)).map(key => HAKI[key]),
-      prime: bounties.length ? Math.max(...bounties) : 0,
       premiereApparition: chapter ? [...ARCS].reverse().find(([from]) => chapter >= from)[1] : null,
     },
-    debug: { chapter, dftype: plain(fields.dftype ?? ''), dfname: plain(fields.dfname ?? '').slice(0, 40), bounty: plain(fields.bounty ?? '').slice(0, 90) },
+    debug: { chapter, dftype: plain(fields.dftype ?? ''), dfname: plain(fields.dfname ?? '').slice(0, 40), },
   });
   Object.assign(roster.at(-1).attributes, CORRECTIONS[title] ?? {});
 }
 
 if (flag !== '--write') {
-  for (const character of roster) {
+  for (const character of flag ? roster.filter(item => item.name.toLowerCase().includes(flag.toLowerCase())) : roster.slice(0, 30)) {
     const a = character.attributes;
-    console.log(`${character.name} | ${a.sexe} | ${a.espece.join(', ')} | ${a.affiliations.join(', ')} | ${a.origine} | ${a.fruit} | ${a.haki.join(', ')} | ${a.prime} | ${a.premiereApparition} (ch.${character.debug.chapter})`);
-    console.log('      df:', character.debug.dftype, '/', character.debug.dfname, '| prime:', character.debug.bounty);
+    console.log(`${character.name} | ${a.sexe} | ${a.espece.join(', ')} | ${a.affiliations.join(', ')} | ${a.origine} | ${a.fruit.join(', ')} | ${a.haki.join(', ')} | ${a.premiereApparition} (ch.${character.debug.chapter})`);
   }
-  console.log('\nNon traduits :');
-  for (const [name, count] of [...unknown].sort((x, y) => y[1] - x[1])) console.log(`  ${count} × ${name}`);
+  console.log(`\n${roster.length} personnages sur ${titles.length} pages du wiki`);
+  console.log('\nNon traduits (les 40 plus fréquents) :');
+  for (const [name, count] of [...unknown].sort((x, y) => y[1] - x[1]).slice(0, 40)) console.log(`  ${count} × ${name}`);
 } else {
+  writeFileSync(join(cacheDir, 'pages-one-piece.json'), JSON.stringify(Object.fromEntries(roster.map(character => [character.id, character.title]))));
   const lines = roster.map(({ id, name, aliases, attributes }) => `  ${JSON.stringify({ id, name, ...(aliases.length ? { aliases } : {}), attributes })},`);
   writeFileSync('src/dossier/data/onePiece.roster.ts', `// GÉNÉRÉ par scripts/dossier/build-onepiece.mjs à partir de onepiece.fandom.com — ne pas modifier à la main.
 // Pour corriger une fiche : ajuster le script (traductions, roster, corrections).

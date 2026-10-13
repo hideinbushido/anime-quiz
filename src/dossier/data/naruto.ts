@@ -4,9 +4,11 @@ import { NARUTO_ROSTER } from "./naruto.roster";
 /**
  * LE DOSSIER DE L — Naruto.
  *
- * Les huit colonnes sont fixées par le cahier des charges. « Groupe » et
- * « Affiliation » ne font qu'une colonne ; le statut spécial ne connaît que
- * Jinchūriki, Ermite et Invocateur.
+ * Sept colonnes. L'affiliation tient en une colonne : le village, et l'Akatsuki
+ * pour ceux qui en ont fait partie. Les types de jutsu se limitent aux trois
+ * grands (ninjutsu, genjutsu, taijutsu), les natures de chakra aux cinq de base.
+ * Le statut spécial connaît Jinchūriki, Ermite, Invocateur, Ninja déserteur et
+ * Ninja médical.
  *
  * Les personnages (`naruto.roster.ts`) sont construits à partir du wiki
  * naruto.fandom.com par `scripts/dossier/build-naruto.mjs` : sexe, clan,
@@ -16,9 +18,8 @@ import { NARUTO_ROSTER } from "./naruto.roster";
  */
 export const NARUTO_ATTRIBUTES: AttributeConfig[] = [
   { key: "sexe", label: "Sexe", comparisonType: "exact" },
-  { key: "village", label: "Village", comparisonType: "exact" },
+  { key: "affiliations", label: "Affiliation", comparisonType: "multi" },
   { key: "clan", label: "Clan", comparisonType: "exact" },
-  { key: "affiliations", label: "Groupe / Affiliation", comparisonType: "multi" },
   { key: "typesJutsu", label: "Types de jutsu", comparisonType: "multi" },
   { key: "naturesChakra", label: "Natures de chakra", comparisonType: "multi" },
   { key: "statutSpecial", label: "Statut spécial", comparisonType: "multi" },

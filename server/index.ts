@@ -19,16 +19,20 @@ import type { ClientMessage, Role, ServerMessage } from "../src/ayanokoji/types.
 import type { FeudClientMessage, FeudHostAction, FeudServerMessage } from "../src/feud/types.ts";
 import { feudView, hostFeud, pressBuzzer, tickFeud } from "../src/feud/reducer.ts";
 import type { DossierClientMessage, DossierHostAction, DossierServerMessage } from "../src/dossier/types.ts";
-import { dossierView, guessDossier, hostDossier } from "../src/dossier/reducer.ts";
-import { claim, createRoom, hostAction, loadRound, move, rename, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
+import { dossierRoster, dossierUniverse, dossierView, guessDossier, hostDossier } from "../src/dossier/reducer.ts";
+import { DOSSIER_CONFIG } from "../src/dossier/data/universes.ts";
+import { attachDossierImages } from "./dossierImages.ts";
+import { claim, createRoom, hostAction, loadRound, move, rename, setAvatar, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
 
 const ROLES: Role[] = ["player1", "player2", "host", "live"];
 const ROOM_ID = /^[A-Za-z0-9_-]{1,24}$/;
 const HOST_PASSWORD_ERROR = "Mot de passe de la régie incorrect.";
 
-interface Client { socket: WebSocket; room: string; role: Role }
+interface Client { socket: WebSocket; room: string; role: Role; /** L'univers dont cet écran a déjà reçu le catalogue. */ roster?: string }
 
 export function startServer({ port = Number(process.env.PORT) || 8787, hostPassword = process.env.HOST_PASSWORD ?? "", storeFile = process.env.ROOMS_FILE ?? join(dirname(fileURLToPath(import.meta.url)), "data", "rooms.json") } = {}) {
+  // Les portraits déposés dans public/dossier/ rejoignent les fiches des personnages
+  attachDossierImages(DOSSIER_CONFIG);
   const rooms = new Map<string, Room>();
   const clients = new Set<Client>();
 
@@ -59,9 +63,17 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
     for (const client of clients) {
       if (client.room !== room.id) continue;
       // Un seul état part vers chaque écran : celui de l'épreuve en cours, taillé pour son rôle
-      const context = { room: room.id, names: room.names, connected: present, now };
-      if (room.game === "dossier" && room.dossier) send(client.socket, { type: "dossier:state", view: dossierView(room.dossier, client.role, context) });
-      else if (room.game === "feud" && room.feud) send(client.socket, { type: "feud:state", view: feudView(room.feud, client.role, { room: room.id, names: room.names, connected: present, now }) });
+      const context = { room: room.id, names: room.names, avatars: room.avatars, connected: present, now };
+      if (room.game === "dossier" && room.dossier) {
+        // Le catalogue part une fois par écran et par univers, avant l'état qui s'en sert
+        const universe = dossierUniverse(room.dossier).id;
+        if (client.role !== "live" && client.roster !== universe) {
+          client.roster = universe;
+          send(client.socket, { type: "dossier:roster", universe, roster: dossierRoster(room.dossier) });
+        }
+        send(client.socket, { type: "dossier:state", view: dossierView(room.dossier, client.role, context) });
+      }
+      else if (room.game === "feud" && room.feud) send(client.socket, { type: "feud:state", view: feudView(room.feud, client.role, context) });
       else send(client.socket, { type: "room:state", view: viewFor(room, client.role, present, now) });
     }
     save();
@@ -109,7 +121,12 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
       const now = Date.now();
       const isPlayer = client.role === "player1" || client.role === "player2";
       let error: string | null = "Action non autorisée.";
-      if (message.type === "room:game") error = client.role === "host" ? switchGame(room, message.game) : error;
+      if (message.type === "room:avatar") {
+        // Un joueur ne change que sa photo ; le présentateur peut poser celle de l'un ou de l'autre
+        const target = isPlayer ? client.role as PlayerId : client.role === "host" && (message.player === "player1" || message.player === "player2") ? message.player : null;
+        if (target) error = setAvatar(room, target, message.image);
+      }
+      else if (message.type === "room:game") error = client.role === "host" ? switchGame(room, message.game) : error;
       else if (message.type.startsWith("dossier:")) {
         // Le Dossier de L : un joueur n'envoie que l'identifiant de sa proposition, le serveur corrige
         if (room.game !== "dossier" || !room.dossier) error = "Cette épreuve n'est pas ouverte.";

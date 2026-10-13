@@ -43,13 +43,23 @@ export function scoreRounds(rounds: DuelRoundResult[], playerId: PlayerId): numb
   return rounds.reduce((total, round) => total + (round.playerId === playerId ? round.points : 0), 0);
 }
 
+/** Le vainqueur d'une épreuve terminée : celui qui y a marqué le plus de points. À égalité, personne. */
+export function epreuveWinner(result: { scorePlayer1: number; scorePlayer2: number }): PlayerId | null {
+  return result.scorePlayer1 === result.scorePlayer2 ? null : result.scorePlayer1 > result.scorePlayer2 ? "player1" : "player2";
+}
+
+/**
+ * Le score du duel : un point par épreuve gagnée. Les points marqués dans
+ * chaque épreuve restent dans son résultat, pour l'historique.
+ */
 export function withScores(session: DuelSession): DuelSession {
-  const rounds = [...session.results.flatMap(result => result.rounds), ...session.progress.rounds];
-  return { ...session, results: session.results.map(result => ({ ...result,
+  const results = session.results.map(result => ({ ...result,
     scorePlayer1: scoreRounds(result.rounds, "player1"), scorePlayer2: scoreRounds(result.rounds, "player2"),
-  })), players: {
-    player1: { ...session.players.player1, score: scoreRounds(rounds, "player1") },
-    player2: { ...session.players.player2, score: scoreRounds(rounds, "player2") },
+  }));
+  const wins = (id: PlayerId) => results.filter(result => epreuveWinner(result) === id).length;
+  return { ...session, results, players: {
+    player1: { ...session.players.player1, score: wins("player1") },
+    player2: { ...session.players.player2, score: wins("player2") },
   } };
 }
 

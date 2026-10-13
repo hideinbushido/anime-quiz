@@ -20,6 +20,7 @@ export function DossierLive() {
 
   return <main className={`ay-screen ds-live phase-${phase}`}>
     <header className="ds-head">
+      <img className="ay-live-logo" src="/logos-epreuves/le-dossier-de-l.webp" alt="" />
       <div>
         <p className="ay-kicker">{view.title}</p>
         <h1>{universe.name}</h1>

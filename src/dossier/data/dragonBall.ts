@@ -4,22 +4,22 @@ import { DRAGON_BALL_ROSTER } from "./dragonBall.roster";
 /**
  * LE DOSSIER DE L — Dragon Ball (round 5).
  *
- * Six colonnes, proposées pour démarrer et faciles à changer : il suffit de
- * modifier cette liste (et, pour une colonne nouvelle, de la faire remplir par
- * le script).
+ * Sept colonnes. « Peut se transformer » ne dit que Oui ou Non, jamais le nom
+ * de la transformation : la colonne ne doit pas désigner un Saiyan à elle seule.
  *
- * Les personnages (`dragonBall.roster.ts`) sont construits à partir du wiki
- * dragonball.fandom.com par `scripts/dossier/build-dragonball.mjs`. Ce wiki
- * mêle le manga, les films et les jeux vidéo : le script ne garde qu'une liste
- * fermée de groupes, et l'univers d'origine y est tenu à la main.
+ * Les personnages (`dragonBall.roster.ts`) sont construits par
+ * `scripts/dossier/build-dragonball.mjs`. Genre, race et affiliations viennent
+ * du wiki dragonball.fandom.com ; l'origine, la résidence, la transformation et
+ * le premier arc n'y existent pas proprement et sont tenus à la main dans ce script.
  */
 export const DRAGON_BALL_ATTRIBUTES: AttributeConfig[] = [
-  { key: "sexe", label: "Sexe", comparisonType: "exact" },
-  { key: "race", label: "Race", comparisonType: "multi" },
-  { key: "affiliations", label: "Affiliations", comparisonType: "multi" },
-  { key: "univers", label: "Univers", comparisonType: "exact" },
-  { key: "series", label: "Séries", comparisonType: "multi" },
-  { key: "premiereSerie", label: "Première série", comparisonType: "exact" },
+  { key: "sexe", label: "Genre", comparisonType: "exact" },
+  { key: "race", label: "Race / Espèce", comparisonType: "multi" },
+  { key: "origine", label: "Origine", comparisonType: "exact" },
+  { key: "residence", label: "Résidence", comparisonType: "exact" },
+  { key: "affiliations", label: "Affiliation", comparisonType: "multi" },
+  { key: "transformation", label: "Peut se transformer", comparisonType: "exact" },
+  { key: "premiereApparition", label: "Premier arc", comparisonType: "exact" },
 ];
 
 export const DRAGON_BALL: UniverseConfig = {

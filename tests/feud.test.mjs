@@ -59,6 +59,7 @@ test('une bonne réponse est attribuée, sa valeur reste cachée au live et inco
   assert.deepEqual(live.slots[0], { rank: 1, label: null, foundBy: null, points: null });
   assert.equal(live.roundScore, null);
   assert.deepEqual(live.foundCount, { player1: 0, player2: 1 });
+  assert.deepEqual(live.avatars, { player1: null, player2: null });
   assert.ok(!JSON.stringify(live).includes(first.label), 'une réponse cachée ne part pas vers le live');
 
   const player = JSON.stringify(feudView(state, 'player2', context));
@@ -263,6 +264,21 @@ test('en temps réel : le serveur tranche le buzz, garde les valeurs secrètes e
     assert.equal(live.feud.slots[2].label, host.feud.answers[2].label);
     assert.equal(live.feud.slots[2].points, null);
     await p2.until(c => c.feud.foundCount.player2 === 1, 'compteur du joueur 2');
+
+    // Joueur 2 choisit sa photo de profil : tous les écrans la reçoivent ; une image trop lourde ou un lien sont refusés
+    const photo = 'data:image/jpeg;base64,' + 'A'.repeat(400);
+    p2.send({ type: 'room:avatar', image: photo });
+    await live.until(c => c.feud.avatars.player2 === photo, 'photo visible sur le live');
+    p2.send({ type: 'room:avatar', image: 'https://exemple.test/photo.jpg' });
+    p2.send({ type: 'room:avatar', image: 'data:image/jpeg;base64,' + 'A'.repeat(50000) });
+    await p2.until(c => c.errors.filter(e => e === 'Cette image ne peut pas servir de photo de profil.').length === 2, 'images refusées');
+    live.send({ type: 'room:avatar', image: photo });
+    await live.until(c => c.errors.includes('Action non autorisée.'), 'seul un joueur change sa photo');
+    assert.equal(live.feud.avatars.player2, photo);
+    assert.equal(live.feud.avatars.player1, null);
+    // Le présentateur peut poser la photo d'un joueur depuis la régie
+    host.send({ type: 'room:avatar', player: 'player1', image: photo });
+    await live.until(c => c.feud.avatars.player1 === photo, 'photo posée par la régie');
 
     // Joueur 1 recharge sa page : il retrouve sa place, son strike et son buzzer
     const token = p1.token;

@@ -134,6 +134,9 @@ const targetCard = (universe: UniverseConfig, character: DossierCharacter): Targ
   cells: universe.attributes.map(attribute => ({ key: attribute.key, label: attribute.label, value: displayValue(character.attributes[attribute.key]) })),
 });
 
+/** Le catalogue de l'univers en cours, pour la recherche : des noms et des images, jamais d'attributs. */
+export const dossierRoster = (state: DossierGame, config: DossierConfig = DOSSIER_CONFIG): RosterEntry[] => dossierUniverse(state, config).roster.map(entry);
+
 interface Context { room: string; names: Record<PlayerId, string>; connected: Record<PlayerId, boolean>; now: number }
 
 /**
@@ -168,9 +171,8 @@ export function dossierView(state: DossierState, role: PlayerId | "host" | "live
       player1Wins: state.wins.player1, player2Wins: state.wins.player2, draws: state.draws,
     } : null,
   };
-  const roster = universe.roster.map(entry);
   if (role === "player1" || role === "player2") {
-    const view: DossierPlayerView = { ...base, role, roster, myGuess: state.pending[role] ?? null, canGuess: state.phase === "guessing" && !state.pending[role] };
+    const view: DossierPlayerView = { ...base, role, myGuess: state.pending[role] ?? null, canGuess: state.phase === "guessing" && !state.pending[role] };
     return view;
   }
   if (role === "live") {
@@ -182,6 +184,6 @@ export function dossierView(state: DossierState, role: PlayerId | "host" | "live
     const character = findCharacter(universe, state.pending[id]);
     if (character) pending[id] = entry(character);
   }
-  const view: DossierHostView = { ...base, role, roster, secretTarget: target ? targetCard(universe, target) : null, pending, canUndo: state.history.length > 0 };
+  const view: DossierHostView = { ...base, role, secretTarget: target ? targetCard(universe, target) : null, pending, canUndo: state.history.length > 0 };
   return view;
 }

@@ -4,6 +4,7 @@ import type { DossierHostView } from "../../dossier/types";
 import { DOSSIER_PHASE_LABEL, outcomeLabel, useDossier } from "../../dossier/useDossier";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { GameSwitch } from "../realtime/GameSwitch";
+import { RoomLinks } from "../realtime/RoomLinks";
 import { DossierScore, DossierTarget, DossierTurnBlock } from "./DossierParts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
@@ -13,7 +14,7 @@ const PLAYERS: PlayerId[] = ["player1", "player2"];
  * round, et voit les propositions verrouillées avant qu'elles soient révélées.
  */
 export function DossierHost() {
-  const { view, status, error, send } = useDossier<DossierHostView>("host");
+  const { view, roster, status, error, send } = useDossier<DossierHostView>("host");
   const [confirmRestart, setConfirmRestart] = useState(false);
   useEffect(() => {
     if (!confirmRestart) return;
@@ -23,7 +24,6 @@ export function DossierHost() {
 
   if (!view) return <main className="ay-screen ay-host ds-host"><ConnectionNotice status={status} error={error} /></main>;
   const { phase, names, universe } = view;
-  const link = (path: string) => `${window.location.origin}${path}`;
   const lastRound = view.roundNumber >= view.roundCount;
   const turns = [...view.turns].reverse();
 
@@ -50,7 +50,7 @@ export function DossierHost() {
       {phase === "intro" && universe.ready && <label className="ds-pick">Cible
         <select value={view.secretTarget?.id ?? ""} onChange={event => send({ type: "dossier:target", characterId: event.target.value || null })}>
           <option value="">Au hasard</option>
-          {view.roster.map(entry => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+          {roster.map(entry => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
         </select>
       </label>}
       <button className="ay-button is-primary" disabled={phase !== "intro" || !universe.ready} onClick={() => send({ type: "dossier:start" })}>Démarrer le round</button>
@@ -87,13 +87,6 @@ export function DossierHost() {
       {turns.map(turn => <DossierTurnBlock key={turn.number} turn={turn} attributes={universe.attributes} names={names} labelled />)}
     </ol>}
 
-    <section className="ay-host-links">
-      <p className="ay-kicker">Liens à ouvrir</p>
-      <ul>
-        <li><span>Joueur 1</span><code>{link(`/player?room=${view.room}&player=1`)}</code></li>
-        <li><span>Joueur 2</span><code>{link(`/player?room=${view.room}&player=2`)}</code></li>
-        <li><span>Live (OBS)</span><code>{link(`/live?room=${view.room}`)}</code></li>
-      </ul>
-    </section>
+    <RoomLinks room={view.room} names={names} />
   </main>;
 }

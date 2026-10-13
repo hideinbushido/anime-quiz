@@ -5,14 +5,18 @@
 // Sans --write, le script affiche ce qu'il a lu, pour relecture. Le wiki sert
 // de source ; les colonnes, les traductions et les regroupements sont les nôtres.
 import { writeFileSync } from 'node:fs';
-import { wiki, templateFields } from './wiki.mjs';
+import { join } from 'node:path';
+import { wiki, templateFields, pool, slugger } from './wiki.mjs';
 
 const [cacheDir, flag] = process.argv.slice(2);
 if (!cacheDir) throw new Error('Usage : node scripts/dossier/build-naruto.mjs <dossier-de-cache> [--write]');
 const naruto = wiki('naruto', cacheDir);
 
-/** Le roster : le titre de la page du wiki, puis le nom affiché et les surnoms si besoin. */
-const ROSTER = [
+/**
+ * Le roster est complet : tous les personnages du wiki qui apparaissent dans le manga Naruto.
+ * Cette liste ne sert qu'à donner un nom d'affichage ou des surnoms aux plus connus.
+ */
+const KNOWN = [
   ['Naruto Uzumaki', null, ['Naruto']], ['Sasuke Uchiha', null, ['Sasuke']], ['Sakura Haruno', null, ['Sakura']],
   ['Kakashi Hatake', null, ['Kakashi', 'Le Ninja Copieur']], ['Iruka Umino', null, ['Iruka']],
   ['Hiruzen Sarutobi', null, ['Hiruzen', 'Troisième Hokage', 'Sandaime']], ['Konohamaru Sarutobi', null, ['Konohamaru']],
@@ -37,15 +41,9 @@ const ROSTER = [
 
 const VILLAGES = { Konohagakure: 'Konoha', Sunagakure: 'Suna', Kirigakure: 'Kiri', Kumogakure: 'Kumo', Iwagakure: 'Iwa', Amegakure: 'Ame',
   Otogakure: 'Oto', Takigakure: 'Taki', Yugakure: 'Yugakure', Uzushiogakure: 'Uzushio', Kusagakure: 'Kusa' };
-const AFFILIATIONS = { ...VILLAGES, Akatsuki: 'Akatsuki', 'Allied Shinobi Forces': 'Alliance Shinobi', Root: 'Racine',
-  'Mount Myōboku': 'Mont Myōboku', 'Ryūchi Cave': 'Grotte Ryūchi', 'Shikkotsu Forest': 'Forêt Shikkotsu', 'Land of Iron': 'Pays du Fer' };
-const TEAMS = { 'Team Kakashi': 'Équipe 7', 'Team 7': 'Équipe 7', 'Team Guy': 'Équipe Gaï', 'Team Asuma': 'Équipe 10', 'Team 10': 'Équipe 10',
-  'Team Kurenai': 'Équipe 8', 'Team 8': 'Équipe 8', Sannin: 'Sannin', Taka: 'Taka', Hebi: 'Taka',
-  'Team 10 (Asuma)': 'Équipe 10', 'Team Minato': 'Équipe Minato', 'Ame Orphans': "Orphelins d'Ame",
-  'Seven Ninja Swordsmen of the Mist': 'Sept Épéistes de la Brume', 'Three Sand Siblings': 'Fratrie du Sable',
-  'Twelve Guardian Ninja': 'Douze Ninjas Gardiens' };
-const NATURES = { 'Fire Release': 'Feu', 'Wind Release': 'Vent', 'Lightning Release': 'Foudre', 'Earth Release': 'Terre', 'Water Release': 'Eau', 'Yin Release': 'Yin', 'Yang Release': 'Yang' };
-const JUTSU = { Ninjutsu: 'Ninjutsu', Genjutsu: 'Genjutsu', Taijutsu: 'Taijutsu', Kenjutsu: 'Kenjutsu', 'Fūinjutsu': 'Fûinjutsu', 'Medical Ninjutsu': 'Iryō Ninjutsu', Senjutsu: 'Senjutsu' };
+const NATURES = { 'Fire Release': 'Feu', 'Wind Release': 'Vent', 'Lightning Release': 'Foudre', 'Earth Release': 'Terre', 'Water Release': 'Eau' };
+/** Les trois grands types de jutsu : les spécialités (fûinjutsu, kenjutsu, senjutsu…) ne font pas partie du jeu. */
+const JUTSU = { Ninjutsu: 'Ninjutsu', Genjutsu: 'Genjutsu', Taijutsu: 'Taijutsu' };
 /** Les arcs du manga, par chapitre de début. */
 const ARCS = [[1, 'Pays des Vagues'], [34, 'Examen Chūnin'], [116, 'Destruction de Konoha'], [139, 'Recherche de Tsunade'], [172, 'Poursuite de Sasuke'],
   [239, 'Kakashi Gaiden'], [245, 'Sauvetage du Kazekage'], [282, 'Pont Tenchi'], [311, 'Hidan et Kakuzu'], [343, "Poursuite d'Itachi"],
@@ -61,6 +59,12 @@ const CORRECTIONS = {
   Orochimaru: { sexe: 'Homme' },
 };
 
+/**
+ * Le wiki rattache à l'Akatsuki ceux qui n'ont fait que s'allier à elle (Sasuke et son équipe Taka, Kabuto).
+ * Pour le jeu, « Akatsuki » désigne ses membres : ceux-là n'en sont pas.
+ */
+const ALLIES_ONLY = new Set(['Sasuke Uchiha', 'Suigetsu Hōzuki', 'Karin', 'Jūgo', 'Kabuto Yakushi']);
+
 /** Une liste du wiki : « A, B~~note, C », sans ce qui n'existe que hors manga ni ce qui n'a été que provisoire. */
 const list = value => (value ?? '').replace(/<!--[\s\S]*?-->/g, '').split(',').map(item => item.trim()).filter(Boolean)
   .map(item => {
@@ -72,51 +76,64 @@ const list = value => (value ?? '').replace(/<!--[\s\S]*?-->/g, '').split(',').m
   .filter(item => item.name && !/temporar/i.test(item.note)
     && !(item.note && item.note.split(';').every(part => !part.trim() || MEDIA_ONLY.test(part))));
 const unique = values => [...new Set(values)];
-const unknown = new Map();
-const translate = (table, kind) => items => unique(items.flatMap(({ name }) => {
-  if (table[name]) return [table[name]];
-  unknown.set(`${kind} : ${name}`, (unknown.get(`${kind} : ${name}`) ?? 0) + 1);
-  return [];
-}));
+const known = new Map(KNOWN.map(([title, display, aliases]) => [title, { display, aliases }]));
+const titles = unique([...KNOWN.map(([title]) => title), ...await naruto.category('Category:Characters')]);
 
+// Les techniques du manga, en une seule requête : qui s'en sert, et comment elles sont classées
+const jutsu = await naruto.ask('[[Category:Jutsu]]|?User tech|?Jutsu classification|?Appears in');
+const techniques = new Map();
+for (const [name, item] of Object.entries(jutsu)) {
+  if (!(item.printouts['Appears in'] ?? []).includes('Manga')) continue;
+  const types = (item.printouts['Jutsu classification'] ?? []).map(type => type.fulltext);
+  for (const user of item.printouts['User tech'] ?? []) {
+    const who = user.Page?.item?.[0]?.fulltext;
+    if (!who) continue;
+    const entry = techniques.get(who) ?? { counts: {}, names: new Set() };
+    for (const type of types) entry.counts[type] = (entry.counts[type] ?? 0) + 1;
+    entry.names.add(name);
+    techniques.set(who, entry);
+  }
+}
+
+const slug = slugger();
+await naruto.pages(titles.map(title => `Infobox:${title}`));
+const sheets = await pool(titles, 1, async title => ({ title, infobox: await naruto.page(`Infobox:${title}`) }));
 const roster = [];
-for (const [title, display, aliases] of ROSTER) {
-  const infobox = await naruto.page(`Infobox:${title}`);
+for (const { title, infobox } of sheets) {
+  const { display = null, aliases = [] } = known.get(title) ?? {};
   const fields = infobox && templateFields(infobox.wikitext, /\{\{Infobox\/Naruto\/Character/);
-  if (!fields) { console.log('SANS FICHE', title); continue; }
+  // Seuls comptent les personnages nommés du manga Naruto : ni les anonymes, ni ceux de l'anime, des films, des jeux ou de Boruto
+  // (« boruto=Yes » : le chapitre de première apparition est un chapitre de Boruto, pas de Naruto)
+  if (!fields || /yes/i.test(fields['unnamed character'] ?? '') || /yes/i.test(fields.boruto ?? '') || fields['manga type'] !== 'Chapter' || !(Number(fields['manga debut']) >= 1 && Number(fields['manga debut']) <= 700)) continue;
 
-  // Ses techniques, telles que le manga les montre, avec leur classification
-  const techniques = await naruto.ask(`[[User tech::${title};?]]|?Jutsu classification|?Appears in`);
-  const manga = Object.entries(techniques).filter(([, item]) => (item.printouts['Appears in'] ?? []).includes('Manga'));
-  const counts = {};
-  for (const [, item] of manga) for (const type of item.printouts['Jutsu classification'] ?? []) counts[type.fulltext] = (counts[type.fulltext] ?? 0) + 1;
-  // Une technique isolée ne fait pas une spécialité : chaque type a son seuil. Le kenjutsu, toujours rare, compte dès la première.
+  const { counts = {}, names = new Set() } = techniques.get(title) ?? {};
+  // Une technique isolée ne fait pas une spécialité : trois techniques du manga pour compter, deux pour le genjutsu, plus rare
   const classes = list(fields.classification).map(item => item.name);
-  const practises = type => (counts[type] ?? 0) >= ({ Kenjutsu: 1, Genjutsu: 2 }[type] ?? 3)
-    || (type === 'Medical Ninjutsu' && classes.includes('Medical-nin')) || (type === 'Senjutsu' && classes.includes('Sage'));
+  const practises = type => (counts[type] ?? 0) >= (type === 'Genjutsu' ? 2 : 3);
   let typesJutsu = Object.keys(JUTSU).filter(practises).map(type => JUTSU[type]);
-  // Personne ne reste sans rien : à défaut, son type le plus fréquent
+  // À défaut, son type le plus fréquent ; un civil sans aucune technique n'en a pas
   if (!typesJutsu.length) typesJutsu = Object.keys(JUTSU).filter(type => counts[type]).sort((a, b) => counts[b] - counts[a]).slice(0, 1).map(type => JUTSU[type]);
-  const summoner = manga.some(([name]) => name === 'Summoning Technique');
+  const summoner = names.has('Summoning Technique');
 
   const affiliations = list(fields.affiliations);
   const village = affiliations.map(item => VILLAGES[item.name]).find(Boolean) ?? null;
   const classification = classes;
-  const anbu = /anbu/i.test(`${fields['rank-part1'] ?? ''} ${fields['rank-part2'] ?? ''} ${fields.occupations ?? ''}`);
   const chapter = Number(fields['manga debut']);
   const arc = fields['manga type'] === 'Chapter' && chapter ? [...ARCS].reverse().find(([from]) => chapter >= from)[1] : null;
   const clan = list(fields.clan)[0]?.name.replace(/ Clan$/, '').replace(/'s$/, '') ?? null;
 
   roster.push({
-    id: title.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    id: slug(title), title, image: fields['image name'] ?? null,
     name: display ?? title, aliases,
     attributes: {
-      sexe: fields.gender === 'Female' ? 'Femme' : fields.gender === 'Male' ? 'Homme' : fields.gender ?? null,
-      village, clan,
-      affiliations: unique([...translate(AFFILIATIONS, 'affiliation')(affiliations), ...translate(TEAMS, 'équipe')(list(fields.teams)), ...(classification.includes('Sannin') ? ['Sannin'] : []), ...(anbu ? ['ANBU'] : [])]),
+      sexe: fields.gender === 'Female' ? 'Femme' : fields.gender === 'Male' ? 'Homme' : null,
+      // Le village, et l'Akatsuki pour ceux qui en ont fait partie : rien de plus
+      affiliations: [...(village ? [village] : []), ...(affiliations.some(item => item.name === 'Akatsuki') && !ALLIES_ONLY.has(title) ? ['Akatsuki'] : [])],
+      clan,
       typesJutsu,
       naturesChakra: unique(list(fields['nature type']).flatMap(item => (NATURES[item.name] ? [NATURES[item.name]] : []))),
-      statutSpecial: [...(classification.includes('Jinchūriki') ? ['Jinchūriki'] : []), ...(classification.includes('Sage') ? ['Ermite'] : []), ...(summoner ? ['Invocateur'] : [])],
+      statutSpecial: [...(classification.includes('Jinchūriki') ? ['Jinchūriki'] : []), ...(classification.includes('Sage') ? ['Ermite'] : []), ...(summoner ? ['Invocateur'] : []),
+        ...(classification.includes('Missing-nin') ? ['Ninja déserteur'] : []), ...(classification.includes('Medical-nin') ? ['Ninja médical'] : [])],
       premiereApparition: arc,
     },
     debug: { chapter, counts, classification },
@@ -125,14 +142,15 @@ for (const [title, display, aliases] of ROSTER) {
 }
 
 if (flag !== '--write') {
-  for (const character of roster) {
+  const only = flag ? roster.filter(character => character.name.toLowerCase().includes(flag.toLowerCase())) : roster.slice(0, 40);
+  for (const character of only) {
     const a = character.attributes;
-    console.log(`${character.name} | ${a.sexe} | ${a.village} | ${a.clan} | ${a.affiliations.join(', ')} | ${a.typesJutsu.join(', ')} | ${a.naturesChakra.join(', ')} | ${a.statutSpecial.join(', ')} | ${a.premiereApparition} (ch.${character.debug.chapter})`);
-    console.log('     ', JSON.stringify(character.debug.counts), '|', character.debug.classification.join(', '));
+    console.log(`${character.name} | ${a.sexe} | ${a.affiliations.join(', ')} | ${a.clan} | ${a.typesJutsu.join(', ')} | ${a.naturesChakra.join(', ')} | ${a.statutSpecial.join(', ')} | ${a.premiereApparition} (ch.${character.debug.chapter})`);
   }
-  console.log('\nNon traduits (ignorés) :');
-  for (const [name, count] of [...unknown].sort((x, y) => y[1] - x[1])) console.log(`  ${count} × ${name}`);
+  console.log(`\n${roster.length} personnages sur ${titles.length} pages du wiki`);
 } else {
+  writeFileSync(join(cacheDir, 'images-naruto.json'), JSON.stringify(Object.fromEntries(roster.filter(character => character.image).map(character => [character.id, character.image]))));
+  writeFileSync(join(cacheDir, 'pages-naruto.json'), JSON.stringify(Object.fromEntries(roster.map(character => [character.id, character.title]))));
   const lines = roster.map(({ id, name, aliases, attributes }) => `  ${JSON.stringify({ id, name, ...(aliases.length ? { aliases } : {}), attributes })},`);
   writeFileSync('src/dossier/data/naruto.roster.ts', `// GÉNÉRÉ par scripts/dossier/build-naruto.mjs à partir de naruto.fandom.com — ne pas modifier à la main.
 // Pour corriger une fiche : ajuster le script (traductions, roster) ou la table de corrections de naruto.ts.

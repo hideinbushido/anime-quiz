@@ -1,6 +1,19 @@
 import type { PlayerId } from "../../types";
 import type { AttributeConfig, GuessResult, PublicTurn, TargetCard } from "../../dossier/types";
 
+/** Le nom de fichier d'une icône : « Armement » devient `armement`. */
+const iconSlug = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/**
+ * Les valeurs d'une colonne « en icônes » : une image par valeur, prise dans
+ * `public/dossier/icones/<colonne>-<valeur>.svg`. Pour changer une icône, il
+ * suffit de remplacer ce fichier. Sans aucune valeur, la case montre un tiret.
+ */
+function CellIcons({ attribute, values }: { attribute: string; values: string[] }) {
+  if (!values.length) return <span className="ds-icons is-empty" aria-hidden="true">—</span>;
+  return <span className="ds-icons">{values.map(value => <img key={value} src={`/dossier/icones/${iconSlug(attribute)}-${iconSlug(value)}.svg`} alt={value} title={value} />)}</span>;
+}
+
 const STATE_LABEL = { correct: "correspond", partial: "en partie", wrong: "ne correspond pas" } as const;
 
 /** Le portrait d'un personnage, ou son initiale tant qu'aucune image n'est fournie. */
@@ -29,10 +42,12 @@ export function DossierGuessRow({ guess, attributes, player, playerName, fresh, 
     </div>
     <ul className="ds-cells">
       {guess.cells.map((cell, index) => {
-        const label = attributes.find(attribute => attribute.key === cell.key)?.label ?? cell.key;
+        const config = attributes.find(attribute => attribute.key === cell.key);
+        const label = config?.label ?? cell.key;
         return <li key={cell.key} className={`ds-cell is-${cell.state}`} style={{ ["--i" as string]: index }} aria-label={`${label} : ${cell.value}, ${STATE_LABEL[cell.state]}`}>
           {labelled && <small>{label}</small>}
-          <span>{cell.value}{cell.direction && <i aria-hidden="true">{cell.direction === "up" ? "▲" : "▼"}</i>}</span>
+          {config?.display === "icons" ? <CellIcons attribute={cell.key} values={cell.values} />
+            : <span>{cell.value}{cell.direction && <i aria-hidden="true">{cell.direction === "up" ? "▲" : "▼"}</i>}</span>}
         </li>;
       })}
     </ul>

@@ -7,6 +7,8 @@ export interface AttributeConfig {
   key: string;
   label: string;
   comparisonType: ComparisonType;
+  /** « icons » : la case montre une petite icône par valeur plutôt que du texte (le Haki, par exemple). */
+  display?: "icons";
 }
 
 /** La valeur d'un attribut : une seule, plusieurs, un nombre (attribut ordonné), ou rien. */
@@ -37,6 +39,8 @@ export interface CellResult {
   state: MatchState;
   /** Ce que vaut l'attribut pour le personnage proposé : c'est une information publique. */
   value: string;
+  /** Les mêmes valeurs, une par une, pour les colonnes affichées en icônes. */
+  values: string[];
   /** Pour un attribut ordonné seulement : la cible est plus haut ou plus bas. */
   direction?: "up" | "down";
 }
@@ -120,7 +124,6 @@ interface DossierBaseView {
 
 export interface DossierPlayerView extends DossierBaseView {
   role: PlayerId;
-  roster: RosterEntry[];
   /** Sa propre proposition verrouillée, pour la retrouver après un rechargement. */
   myGuess: string | null;
   canGuess: boolean;
@@ -132,7 +135,6 @@ export interface DossierLiveView extends DossierBaseView {
 
 export interface DossierHostView extends DossierBaseView {
   role: "host";
-  roster: RosterEntry[];
   /** Visible du présentateur seulement, dès le début du round. */
   secretTarget: TargetCard | null;
   /** Les propositions verrouillées, que le présentateur voit avant tout le monde. */
@@ -152,4 +154,10 @@ export type DossierHostAction =
 
 export type DossierClientMessage = { type: "dossier:guess"; characterId: string } | DossierHostAction;
 
-export type DossierServerMessage = { type: "dossier:state"; view: DossierView };
+/**
+ * Le catalogue d'un univers part à part, une seule fois par écran et par univers :
+ * avec des centaines de personnages, il n'a pas à voyager à chaque tour.
+ */
+export type DossierServerMessage =
+  | { type: "dossier:state"; view: DossierView }
+  | { type: "dossier:roster"; universe: string; roster: RosterEntry[] };

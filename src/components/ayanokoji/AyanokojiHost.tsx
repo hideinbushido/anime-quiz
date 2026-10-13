@@ -4,6 +4,7 @@ import { formatClock, PHASE_LABEL, useAyanokojiRoom } from "../../ayanokoji/useA
 import { AyanokojiBoard, AyanokojiSolution } from "./AyanokojiBoard";
 import { AyanokojiTimer, ConnectionNotice, LockIcon, RoundBadge } from "./AyanokojiParts";
 import { GameSwitch } from "../realtime/GameSwitch";
+import { RoomLinks } from "../realtime/RoomLinks";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -25,7 +26,6 @@ export function AyanokojiHost() {
     reveal: phase === "locked",
     next: phase === "revealing" || phase === "complete",
   };
-  const link = (path: string) => `${window.location.origin}${path}`;
 
   return <main className="ay-screen ay-host">
     <header className="ay-host-head">
@@ -80,13 +80,6 @@ export function AyanokojiHost() {
       </section>
     </>}
 
-    <section className="ay-host-links">
-      <p className="ay-kicker">Liens à ouvrir</p>
-      <ul>
-        <li><span>Joueur 1</span><code>{link(`/player?room=${view.room}&player=1`)}</code></li>
-        <li><span>Joueur 2</span><code>{link(`/player?room=${view.room}&player=2`)}</code></li>
-        <li><span>Live (OBS)</span><code>{link(`/live?room=${view.room}`)}</code></li>
-      </ul>
-    </section>
+    <RoomLinks room={view.room} names={view.names} />
   </main>;
 }

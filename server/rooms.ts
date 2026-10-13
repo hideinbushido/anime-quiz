@@ -39,6 +39,8 @@ export interface Room {
   revealAt: number | null;
   seats: Record<PlayerId, Seat>;
   names: Record<PlayerId, string>;
+  /** La photo de profil de chaque joueur : une petite image encodée, ou rien. */
+  avatars: Record<PlayerId, string | null>;
   /** Le total de chaque joueur sur l'épreuve, et les manches déjà comptées. */
   scores: Record<PlayerId, number>;
   scored: string[];
@@ -54,6 +56,7 @@ export function createRoom(id: string): Room {
     timer: { elapsedMs: 0, runningSince: null },
     seats: { player1: emptySeat(), player2: emptySeat() },
     names: { player1: "Joueur 1", player2: "Joueur 2" },
+    avatars: { player1: null, player2: null },
     scores: { player1: 0, player2: 0 },
     scored: [],
     tokens: {},
@@ -108,6 +111,18 @@ export function switchGame(room: Room, game: unknown): string | null {
   room.game = game;
   if (game === "feud") room.feud ??= createFeud();
   if (game === "dossier") room.dossier ??= createDossier();
+  return null;
+}
+
+/** Une photo de profil tient en quelques kilo-octets : le téléphone la réduit avant de l'envoyer. */
+const AVATAR = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const AVATAR_MAX_LENGTH = 40_000;
+
+/** Un joueur change sa photo, ou la retire. Tout ce qui n'est pas une petite image est refusé. */
+export function setAvatar(room: Room, player: PlayerId, image: unknown): string | null {
+  if (image === null) { room.avatars[player] = null; return null; }
+  if (typeof image !== "string" || image.length > AVATAR_MAX_LENGTH || !AVATAR.test(image)) return "Cette image ne peut pas servir de photo de profil.";
+  room.avatars[player] = image;
   return null;
 }
 

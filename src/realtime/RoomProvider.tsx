@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { connectRoom, type ConnectionStatus, type RoomConnection } from "../ayanokoji/realtime";
 import type { ClientMessage, Role, RoomView } from "../ayanokoji/types";
 import type { FeudClientMessage, FeudView } from "../feud/types";
-import type { DossierClientMessage, DossierView } from "../dossier/types";
+import type { DossierClientMessage, DossierView, RosterEntry } from "../dossier/types";
 import { RoomContext, type RoomState } from "./roomContext";
 
 interface Props {
@@ -26,6 +26,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
   const [view, setView] = useState<RoomView | null>(null);
   const [feud, setFeud] = useState<FeudView | null>(null);
   const [dossier, setDossier] = useState<DossierView | null>(null);
+  const [dossierRosters, setDossierRosters] = useState<Record<string, RosterEntry[]>>({});
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [error, setError] = useState("");
   const [clockOffset, setClockOffset] = useState(0);
@@ -55,7 +56,9 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
         setFeud(null);
         setClockOffset(next.serverNow - receivedAt);
       },
-      onStatus: setStatus,
+      onDossierRoster: (universe, roster) => setDossierRosters(current => ({ ...current, [universe]: roster })),
+      // Après une coupure, le serveur renvoie les catalogues : on repart d'une ardoise vide
+      onStatus: next => { setStatus(next); if (next === "connecting") setDossierRosters({}); },
       onError: setError,
     });
     connection.current = link;
@@ -72,7 +75,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
   }, [error, joined]);
 
   const send = useCallback((message: ClientMessage | FeudClientMessage | DossierClientMessage) => connection.current?.send(message), []);
-  const state = useMemo<RoomState>(() => ({ game: dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null, view, feud, dossier, status, error, clockOffset, send }),
-    [view, feud, dossier, status, error, clockOffset, send]);
+  const state = useMemo<RoomState>(() => ({ game: dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null, view, feud, dossier, dossierRosters, status, error, clockOffset, send }),
+    [view, feud, dossier, dossierRosters, status, error, clockOffset, send]);
   return <RoomContext.Provider value={state}>{children}</RoomContext.Provider>;
 }

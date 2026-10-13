@@ -16,7 +16,7 @@ export function TitleSessionResume({ session, onContinue, onDelete }: {
     <div className="arena-resume-summary">
       <p className="arena-overline" id="resume-title">{session.phase === "recap" ? "DERNIER DUEL" : "DUEL SAUVEGARDÉ"}</p>
       <strong>{session.players.player1.name} <span>VS</span> {session.players.player2.name}</strong>
-      <p>{phase}<span className="arena-resume-score"> · {session.players.player1.score} — {session.players.player2.score} pts</span></p>
+      <p>{phase}<span className="arena-resume-score"> · {session.players.player1.score} — {session.players.player2.score} épreuve{Math.max(session.players.player1.score, session.players.player2.score) > 1 ? "s" : ""}</span></p>
     </div>
     <div className="arena-resume-actions">
       <button type="button" className="arena-resume-button" onClick={onContinue}>{session.phase === "recap" ? "Voir les résultats" : "Reprendre le duel"}<span aria-hidden="true">↗</span></button>

@@ -1,6 +1,6 @@
 import type { ClientMessage, Role, RoomView, ServerMessage } from "./types";
 import type { FeudClientMessage, FeudServerMessage, FeudView } from "../feud/types";
-import type { DossierClientMessage, DossierServerMessage, DossierView } from "../dossier/types";
+import type { DossierClientMessage, DossierServerMessage, DossierView, RosterEntry } from "../dossier/types";
 
 /**
  * La couche réseau des épreuves en temps réel. Les composants ne parlent jamais au
@@ -27,6 +27,8 @@ interface Options {
   onFeud?: (view: FeudView, receivedAt: number) => void;
   /** L'état du Dossier de L, quand c'est l'épreuve ouverte dans la room. */
   onDossier?: (view: DossierView, receivedAt: number) => void;
+  /** Le catalogue de personnages d'un univers du Dossier de L. */
+  onDossierRoster?: (universe: string, roster: RosterEntry[]) => void;
   onStatus: (status: ConnectionStatus) => void;
   onError: (message: string) => void;
 }
@@ -40,7 +42,7 @@ export function realtimeUrl(): string {
 
 const tokenKey = (room: string, role: Role) => `ayanokoji-token-${room}-${role}`;
 
-export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onStatus, onError }: Options): RoomConnection {
+export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onDossierRoster, onStatus, onError }: Options): RoomConnection {
   let socket: WebSocket | null = null;
   let closed = false;
   let retry = 0;
@@ -65,6 +67,7 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       } else if (message.type === "room:state") onView(message.view, Date.now());
       else if (message.type === "feud:state") onFeud?.(message.view, Date.now());
       else if (message.type === "dossier:state") onDossier?.(message.view, Date.now());
+      else if (message.type === "dossier:roster") onDossierRoster?.(message.universe, message.roster);
       else if (message.type === "room:error") onError(message.message);
     };
     socket.onclose = () => {

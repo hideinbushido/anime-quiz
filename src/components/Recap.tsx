@@ -50,7 +50,7 @@ export function Recap({ epreuves, session, onRestart }: { epreuves: Epreuve[]; s
         {(["player1", "player2"] as const).map(id => <div key={id} className={id + (winner === id ? " is-winner" : "")}>
           <span>{session.players[id].name}</span>
           <b><CountUp value={session.players[id].score} delay={1500} /></b>
-          <small>pts</small>
+          <small>{session.players[id].score > 1 ? "épreuves gagnées" : "épreuve gagnée"}</small>
         </div>)}
       </div>
     </section>

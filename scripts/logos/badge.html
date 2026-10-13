@@ -51,6 +51,9 @@
   .inside { left: 0; top: 0; width: 1024px; height: 1024px; clip-path: circle(calc(var(--r) - 9px) at var(--cx) var(--cy)); }
   .over { left: 0; top: 0; width: 1024px; height: 1024px; clip-path: inset(0 0 calc(1024px - var(--cy)) 0); }
   .glow img { filter: drop-shadow(0 0 2px var(--gold-1)) drop-shadow(0 0 18px rgba(243, 214, 126, 0.55)); }
+  /* Mode « plein » (?plein=1) : une photo non détourée remplit le médaillon, sans déborder de l'anneau */
+  .plein .over { display: none; }
+  .plein .glow img { filter: none; }
 
   /* Le cartouche du titre */
   .plate {
@@ -119,8 +122,9 @@
   <div class="abs seal"><img alt=""></div>
 </div>
 <script>
-  // Paramètres : ?perso=<url>&sceau=<url>&petit=<ligne du haut>&grand=<ligne du bas>&h=<hauteur du personnage>&x=<décalage>&y=<haut>
+  // Paramètres : ?perso=<url>&plein=1 (photo non détourée)&sceau=<url>&petit=<ligne du haut>&grand=<ligne du bas>&h=<hauteur du personnage>&x=<décalage>&y=<haut>
   const q = new URLSearchParams(location.search);
+  if (q.get("plein")) document.body.classList.add("plein");
   const hauteur = Number(q.get("h") || 820), dx = Number(q.get("x") || 0), haut = Number(q.get("y") || 20);
   for (const img of document.querySelectorAll("img.p")) {
     img.src = q.get("perso");

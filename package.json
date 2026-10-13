@@ -13,6 +13,7 @@
     "server": "node --import ./scripts/register-ts.mjs server/index.ts"
   },
   "dependencies": {
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "three": "^0.185.1",
