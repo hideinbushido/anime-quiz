@@ -139,7 +139,8 @@ export type FeudHostAction =
   | { type: "feud:undo" }
   | { type: "feud:restart" };
 
-export type RoomGame = "ayanokoji" | "feud";
+/** Les épreuves en temps réel qu'une room peut jouer. */
+export type RoomGame = "ayanokoji" | "feud" | "dossier";
 
 export type FeudClientMessage =
   | { type: "room:game"; game: RoomGame }

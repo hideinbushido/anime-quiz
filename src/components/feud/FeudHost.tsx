@@ -4,6 +4,7 @@ import type { FeudHostView } from "../../feud/types";
 import { FEUD_PHASE_LABEL, useFeud } from "../../feud/useFeud";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { FeudStrikes } from "./FeudParts";
+import { GameSwitch } from "../realtime/GameSwitch";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -35,8 +36,8 @@ export function FeudHost() {
       </div>
       <p className="fd-round">Manche <b>{view.roundNumber}</b>/{view.roundCount}</p>
       <p className="ay-phase">{FEUD_PHASE_LABEL[phase]}</p>
-      <button className="ay-button ay-switch" onClick={() => send({ type: "room:game", game: "ayanokoji" })}>Passer aux Liens d'Ayanokoji</button>
     </header>
+    <GameSwitch />
     <ConnectionNotice status={status} error={error} />
 
     <p className="fd-host-question">{view.question}</p>

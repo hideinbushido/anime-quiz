@@ -3,6 +3,7 @@ import type { HostView } from "../../ayanokoji/types";
 import { formatClock, PHASE_LABEL, useAyanokojiRoom } from "../../ayanokoji/useAyanokojiRoom";
 import { AyanokojiBoard, AyanokojiSolution } from "./AyanokojiBoard";
 import { AyanokojiTimer, ConnectionNotice, LockIcon, RoundBadge } from "./AyanokojiParts";
+import { GameSwitch } from "../realtime/GameSwitch";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -35,8 +36,8 @@ export function AyanokojiHost() {
       {round && <RoundBadge round={round} />}
       <AyanokojiTimer timer={view.timer} clockOffset={clockOffset} />
       <p className="ay-phase">{PHASE_LABEL[phase]}</p>
-      <button className="ay-button ay-switch" onClick={() => send({ type: "room:game", game: "feud" })}>Passer aux Pensées d'Anya</button>
     </header>
+    <GameSwitch />
     <ConnectionNotice status={status} error={error} />
 
     <section className="ay-host-controls" aria-label="Commandes de la manche">

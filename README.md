@@ -182,6 +182,20 @@ Un sondage en duel, façon « Une famille en or », adapté au 1v1 : trois manch
 
 Tests : `tests/feud.test.mjs` (règles, puis une partie en temps réel avec quatre clients).
 
+## Le Dossier de L en temps réel
+
+Un duel de déduction : cinq rounds (Naruto, Naruto, One Piece, One Piece, Dragon Ball), un personnage mystère commun aux deux joueurs par round. Chacun propose un personnage ; quand les deux ont validé, les deux lignes se révèlent ensemble, une case par colonne : verte (correspond), orange (en partie), rouge (rien en commun). Il se joue sur les mêmes adresses que les autres épreuves en temps réel ; la régie choisit l'épreuve avec le sélecteur du haut.
+
+- **Le moteur** (`src/dossier/engine.ts`) ne connaît aucun univers : `compareExact`, `compareMulti`, `compareOrdered`, puis `compareCharacterGuess` qui applique à chaque colonne le type que lui donne la configuration.
+- **Un univers** est un fichier de `src/dossier/data/` : ses colonnes (`key`, `label`, `comparisonType`), écrites à la main dans `naruto.ts`, `onePiece.ts` et `dragonBall.ts`, et ses personnages dans le fichier `*.roster.ts` voisin.
+- **Les personnages viennent des wikis** (naruto, onepiece et dragonball sur fandom.com), lus par les scripts de `scripts/dossier/`. Pour ajouter un personnage ou corriger une traduction : modifier le script de l'univers, puis le relancer avec `node scripts/dossier/build-naruto.mjs <dossier-de-cache> --write` (sans `--write`, il affiche ce qu'il a lu). Les fichiers `*.roster.ts` ne se modifient pas à la main.
+- **L'ordre des rounds** est dans `src/dossier/data/universes.ts`.
+- **Les règles** (`src/dossier/reducer.ts`) : une proposition est verrouillée sans rien révéler ; la seconde déclenche la révélation commune. Trouver la cible ferme le round ; deux bonnes réponses dans le même tour font égalité. La régie peut terminer un round à la main, et seul « Round suivant » fait avancer.
+- **La cible** ne quitte pas le serveur avant la fin du round : les cases sont calculées côté serveur, et les écrans des joueurs et du live ne reçoivent que le nom des personnages du catalogue et les cases des propositions déjà révélées.
+- **La cible d'un round** est tirée au hasard par le serveur, sauf si la régie en choisit une avant de démarrer.
+
+Tests : `tests/dossier.test.mjs`, avec deux univers d'essai dans `tests/fixtures/dossierFixtures.mjs` (jamais utilisés par le jeu).
+
 ## Héberger le serveur temps réel
 
 `render.yaml` décrit le service pour Render (`npm install`, `npm run server`, sonde `/health`, Node 24). Une fois le service en ligne, renseigner `VITE_REALTIME_URL=wss://<service>.onrender.com` dans les variables d'environnement du site sur Vercel, puis redéployer le site.

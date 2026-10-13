@@ -1,5 +1,6 @@
 import "../../design/ayanokoji.css";
 import "../../design/feud.css";
+import "../../design/dossier.css";
 import { useState, type FormEvent, type ReactNode } from "react";
 import type { Role } from "../../ayanokoji/types";
 import { RoomProvider } from "../../realtime/RoomProvider";
@@ -7,6 +8,9 @@ import { useRoom } from "../../realtime/roomContext";
 import { FeudHost } from "../feud/FeudHost";
 import { FeudLive } from "../feud/FeudLive";
 import { FeudPlayer } from "../feud/FeudPlayer";
+import { DossierHost } from "../dossier/DossierHost";
+import { DossierLive } from "../dossier/DossierLive";
+import { DossierPlayer } from "../dossier/DossierPlayer";
 import { AyanokojiHost } from "./AyanokojiHost";
 import { AyanokojiLive } from "./AyanokojiLive";
 import { AyanokojiPlayer } from "./AyanokojiPlayer";
@@ -18,6 +22,11 @@ function RoomScreen({ role }: { role: Role }) {
     if (role === "live") return <FeudLive />;
     if (role === "host") return <FeudHost />;
     return <FeudPlayer player={role} />;
+  }
+  if (game === "dossier") {
+    if (role === "live") return <DossierLive />;
+    if (role === "host") return <DossierHost />;
+    return <DossierPlayer player={role} />;
   }
   if (role === "live") return <AyanokojiLive />;
   if (role === "host") return <AyanokojiHost />;

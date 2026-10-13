@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { ConnectionStatus } from "../ayanokoji/realtime";
 import type { ClientMessage, RoomView } from "../ayanokoji/types";
 import type { FeudClientMessage, FeudView, RoomGame } from "../feud/types";
+import type { DossierClientMessage, DossierView } from "../dossier/types";
 
 /**
  * Ce qu'un écran sait de sa room : une seule connexion, partagée par toutes
@@ -13,11 +14,13 @@ export interface RoomState {
   view: RoomView | null;
   /** La vue des Pensées d'Anya, quand c'est l'épreuve en cours. */
   feud: FeudView | null;
+  /** La vue du Dossier de L, quand c'est l'épreuve en cours. */
+  dossier: DossierView | null;
   status: ConnectionStatus;
   error: string;
   /** L'écart entre l'horloge du serveur et celle de l'appareil. */
   clockOffset: number;
-  send: (message: ClientMessage | FeudClientMessage) => void;
+  send: (message: ClientMessage | FeudClientMessage | DossierClientMessage) => void;
 }
 
 export const RoomContext = createContext<RoomState | null>(null);

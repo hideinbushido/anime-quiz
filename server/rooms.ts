@@ -11,6 +11,8 @@ import { isPermutation, validateOrder } from "../src/ayanokoji/validator.ts";
 import { maxRoundPoints, roundPoints } from "../src/ayanokoji/scoring.ts";
 import type { FeudState, RoomGame } from "../src/feud/types.ts";
 import { createFeud } from "../src/feud/reducer.ts";
+import type { DossierState } from "../src/dossier/types.ts";
+import { createDossier } from "../src/dossier/reducer.ts";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 const COUNTDOWN_MS = 3000;
@@ -28,6 +30,8 @@ export interface Room {
   game: RoomGame;
   /** La partie des Pensées d'Anya, créée à sa première ouverture et gardée ensuite. */
   feud: FeudState | null;
+  /** La partie du Dossier de L, créée à sa première ouverture et gardée ensuite. */
+  dossier: DossierState | null;
   phase: RoundPhase;
   roundId: string | null;
   initialOrder: string[];
@@ -46,7 +50,7 @@ const emptySeat = (order: string[] = []): Seat => ({ order: [...order], moveCoun
 
 export function createRoom(id: string): Room {
   return {
-    id, game: "ayanokoji", feud: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
+    id, game: "ayanokoji", feud: null, dossier: null, phase: "waiting", roundId: null, initialOrder: [], revealAt: null,
     timer: { elapsedMs: 0, runningSince: null },
     seats: { player1: emptySeat(), player2: emptySeat() },
     names: { player1: "Joueur 1", player2: "Joueur 2" },
@@ -100,9 +104,10 @@ export function rename(room: Room, player: PlayerId, name: unknown): void {
 
 /** Le présentateur fait passer la room d'une épreuve à l'autre ; chaque partie reste en l'état. */
 export function switchGame(room: Room, game: unknown): string | null {
-  if (game !== "ayanokoji" && game !== "feud") return "Épreuve inconnue.";
+  if (game !== "ayanokoji" && game !== "feud" && game !== "dossier") return "Épreuve inconnue.";
   room.game = game;
   if (game === "feud") room.feud ??= createFeud();
+  if (game === "dossier") room.dossier ??= createDossier();
   return null;
 }
 

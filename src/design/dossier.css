@@ -1,0 +1,275 @@
+/* LE DOSSIER DE L — la déduction de personnage, en duel et en temps réel.
+   Même identité que le reste du quiz. Les trois couleurs des cases sont
+   propres à cette épreuve : vert, orange, rouge, et rien d'autre ne les porte. */
+.ay-screen {
+  --ok: #2fa866;
+  --ok-deep: #0f4a2b;
+  --part: #e88a2a;
+  --part-deep: #6b3a08;
+  --ko: #c22f46;
+  --ko-deep: #561320;
+}
+
+/* Le choix de l'épreuve, commun aux trois régies */
+.rt-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--hair); }
+.rt-switch span { font: 700 11px / 1.2 var(--f-accent); letter-spacing: 0.26em; text-transform: uppercase; color: var(--paper-dim); margin-right: 6px; }
+.rt-switch .ay-button { min-height: 38px; font-size: 0.95rem; }
+.rt-switch .ay-button.is-current { border-color: transparent; background: var(--foil); color: var(--ink); }
+
+/* Le portrait, ou l'initiale */
+.ds-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.4em;
+  height: 2.4em;
+  overflow: hidden;
+  border: 2px solid var(--c, var(--gold-2));
+  background: var(--ink-3);
+  color: var(--c, var(--gold-2));
+  font: 900 1.3em / 1 var(--f-title);
+}
+.ds-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+
+/* Une proposition corrigée */
+.ds-history { display: grid; align-content: start; gap: clamp(8px, 1.3vh, 16px); margin: 0; padding: 0; list-style: none; }
+.ds-turn { display: grid; gap: 4px; }
+.ds-turn-number { font: 700 clamp(9px, 0.8vw, 12px) / 1 var(--f-accent); letter-spacing: 0.3em; text-transform: uppercase; color: var(--paper-dim); }
+.ds-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 8fr);
+  gap: 6px;
+  align-items: stretch;
+}
+.ds-who {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-width: 0;
+  padding: 6px 10px;
+  border-left: 5px solid var(--c);
+  background: color-mix(in srgb, var(--c-deep) 60%, var(--ink-2));
+}
+.ds-who p { min-width: 0; display: grid; gap: 2px; }
+.ds-who strong { font: 900 1.25em / 1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--paper); overflow-wrap: anywhere; }
+.ds-who em { font: 700 0.62em / 1 var(--f-accent); font-style: normal; letter-spacing: 0.2em; text-transform: uppercase; color: var(--c); }
+.ds-found {
+  position: absolute;
+  right: 6px;
+  top: -0.7em;
+  padding: 0.25em 0.6em 0.12em;
+  background: var(--ok);
+  color: var(--ink);
+  font: 900 0.7em / 1 var(--f-title);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ds-cells { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ds-cell {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 6px 5px;
+  border: 2px solid transparent;
+  text-align: center;
+  color: #fff;
+}
+.ds-cell span { font: 800 1em / 1.12 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ds-cell i { margin-left: 0.4em; font: 400 0.8em / 1 system-ui, sans-serif; font-style: normal; }
+.ds-cell small { font: 700 0.56em / 1.1 var(--f-accent); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+.ds-cell.is-correct { background: var(--ok-deep); border-color: var(--ok); }
+.ds-cell.is-partial { background: var(--part-deep); border-color: var(--part); }
+.ds-cell.is-wrong { background: var(--ko-deep); border-color: var(--ko); }
+/* La révélation : les deux lignes ensemble, case après case */
+.ds-row.is-fresh .ds-who { animation: dsIn 500ms var(--spring-soft) both; }
+.ds-row.is-fresh .ds-cell { animation: dsFlip 520ms var(--spring-soft) both; animation-delay: calc(300ms + var(--i) * 130ms); }
+.ds-row.is-found .ds-who { box-shadow: 0 0 0 3px var(--ok), 0 0 50px color-mix(in srgb, var(--ok) 70%, transparent); }
+@keyframes dsIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+@keyframes dsFlip { from { opacity: 0; transform: perspective(600px) rotateX(-90deg); filter: brightness(2.4); } to { opacity: 1; transform: none; filter: none; } }
+
+/* La fiche du personnage mystère */
+.ds-target {
+  --c: var(--gold-2);
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 28px);
+  padding: clamp(10px, 1.4vh, 18px) clamp(12px, 1.6vw, 24px);
+  border: 2px solid var(--gold-2);
+  background: rgba(243, 214, 126, 0.07);
+}
+.ds-target > .ds-avatar { font-size: clamp(1.6rem, 3vw, 3.4rem); }
+.ds-target > div { min-width: 0; flex: 1; display: grid; gap: 6px; }
+.ds-target h2 { font: 900 clamp(1.5rem, 3.2vw, 3.6rem) / 0.95 var(--f-title); color: var(--gold-1); }
+.ds-target dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px 14px; margin: 0; }
+.ds-target dt { font: 700 clamp(8px, 0.7vw, 11px) / 1.2 var(--f-accent); letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper-dim); }
+.ds-target dd { margin: 2px 0 0; font: 800 clamp(0.85rem, 1.05vw, 1.2rem) / 1.15 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; }
+
+/* Le score de l'épreuve */
+.ds-score { display: flex; align-items: baseline; gap: 0.5em; font: 800 clamp(1rem, 1.6vw, 1.9rem) / 1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; }
+.ds-score span { color: var(--c); }
+.ds-score b { font-size: 1.7em; color: var(--paper); font-variant-numeric: tabular-nums; }
+.ds-score i { font-style: normal; color: var(--paper-dim); }
+.ds-score small { font: 700 0.5em / 1 var(--f-accent); letter-spacing: 0.2em; color: var(--paper-dim); }
+.ds-outcome {
+  font: 900 clamp(1.4rem, 3vw, 3.4rem) / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c, var(--gold-1));
+  text-align: center;
+  animation: fdSlam 600ms var(--spring) both;
+}
+
+/* ── Le live ── */
+.ds-live { height: 100svh; overflow: hidden; font-size: clamp(10px, 0.94vw, 18px); }
+.ds-head { display: flex; align-items: center; gap: clamp(14px, 2.4vw, 46px); }
+.ds-head > div { flex: 1; min-width: 0; }
+.ds-head h1 {
+  padding-top: 0.14em;
+  font: 900 clamp(1.8rem, 4.2vw, 4.8rem) / 0.9 var(--f-title);
+  background: var(--foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ds-locks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 30px); }
+.ds-locks p {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  padding: 0.5em 0.9em 0.36em;
+  border: 2px solid color-mix(in srgb, var(--c) 45%, transparent);
+  font: 700 clamp(0.7rem, 1vw, 1.15rem) / 1 var(--f-accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  transition: background 200ms, border-color 200ms, color 200ms;
+}
+.ds-locks strong { font: 900 clamp(1.1rem, 2vw, 2.3rem) / 1 var(--f-title); letter-spacing: 0.04em; color: var(--c); }
+.ds-locks p.is-locked { border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--paper); }
+.ds-columns {
+  font: 700 clamp(8px, 0.72vw, 13px) / 1.15 var(--f-accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--gold-2);
+}
+.ds-columns > span { text-align: left; align-self: end; }
+.ds-columns li { align-self: end; }
+.ds-live .ds-history {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  /* Les tours anciens s'effacent vers le bas : le dernier reste en haut, bien lisible */
+  mask-image: linear-gradient(180deg, #000 72%, transparent);
+}
+.ds-live .ds-cell { min-height: clamp(44px, 7.6vh, 86px); }
+/* Sur le live, la fiche tient sur une seule rangée, comme une ligne du tableau */
+.ds-live .ds-target dl { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.ds-debrief { display: grid; gap: clamp(8px, 1.4vh, 16px); }
+.ds-final {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(12px, 2.6vh, 34px);
+  --c: var(--gold-2);
+  text-align: center;
+}
+.ds-final > strong { font: 900 clamp(1.8rem, 5vw, 6rem) / 1 var(--f-title); text-transform: uppercase; color: var(--c); animation: fdSlam 700ms var(--spring) 600ms both; }
+.ds-recap, .ds-rounds { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ds-recap li, .ds-rounds li {
+  display: flex;
+  justify-content: space-between;
+  gap: 2em;
+  padding: 0.3em 0.8em 0.2em;
+  border-left: 4px solid var(--c, var(--hair-strong));
+  font: 800 clamp(0.85rem, 1.2vw, 1.4rem) / 1.2 var(--f-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ds-recap span, .ds-rounds span { color: var(--paper-dim); }
+.ds-recap b, .ds-rounds b { color: var(--c, var(--paper)); }
+.ds-rounds li.is-current { background: rgba(243, 214, 126, 0.1); border-left-color: var(--gold-2); }
+
+/* ── Le téléphone du joueur ── */
+.ds-player { max-width: 720px; margin: 0 auto; width: 100%; font-size: 13px; }
+.ds-player-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
+.ds-player-head .ay-kicker { flex: 1 0 100%; }
+.ds-state {
+  padding: 0.5em 0.8em 0.36em;
+  border: 2px solid var(--gold-2);
+  text-align: center;
+  font: 900 clamp(1.2rem, 5.4vw, 2rem) / 1 var(--f-title);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-1);
+}
+.ds-state.is-locked { border-color: var(--c); color: var(--c); }
+.ds-search { display: grid; gap: 8px; }
+.ds-search label { font: 700 11px / 1.2 var(--f-accent); letter-spacing: 0.24em; text-transform: uppercase; color: var(--paper-dim); }
+.ds-search input, .ds-pick select {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 2px solid var(--hair-strong);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--paper);
+  font-size: 17px;
+}
+.ds-search input:focus-visible, .ds-pick select:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 2px; }
+.ds-suggestions { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ds-suggestions button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px 10px;
+  border: 1px solid var(--hair);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--paper);
+  font: 800 1.15rem / 1 var(--f-title);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+}
+.ds-suggestions button:enabled:hover { border-color: var(--gold-1); background: rgba(243, 214, 126, 0.1); }
+.ds-suggestions button:disabled { opacity: 0.4; }
+.ds-suggestions small { margin-left: auto; font: 700 10px / 1 var(--f-accent); letter-spacing: 0.14em; }
+.ds-suggestions .ds-avatar { font-size: 0.8rem; }
+.ds-none { font-size: 14px; color: var(--paper-dim); }
+.ds-lockbox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 2px solid var(--c);
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  font-size: 1.3rem;
+}
+.ds-lockbox p { display: grid; gap: 4px; }
+.ds-lockbox strong { font: 900 1.4em / 1 var(--f-title); text-transform: uppercase; }
+.ds-lockbox span { font: 700 11px / 1 var(--f-accent); letter-spacing: 0.22em; text-transform: uppercase; color: var(--c); }
+/* Sur téléphone, une proposition devient une carte : le nom au-dessus, les cases étiquetées sur deux rangées */
+.ds-player .ds-row, .ds-host .ds-row { grid-template-columns: minmax(0, 1fr); }
+.ds-player .ds-cells, .ds-host .ds-cells { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ds-player .ds-cell { min-height: 52px; }
+.ds-player .ds-target { flex-direction: column; align-items: flex-start; }
+.ds-player .ds-target dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ── La régie ── */
+.ds-host { font-size: 14px; }
+.ds-host .ds-cells { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.ds-pick { display: flex; align-items: center; gap: 10px; font: 700 11px / 1.2 var(--f-accent); letter-spacing: 0.24em; text-transform: uppercase; color: var(--paper-dim); }
+.ds-pick select { min-height: 48px; font-size: 15px; }
+.ds-pick option { color: #111; }
+.ds-pending { font-size: 15px; color: var(--paper-dim); }
+.ds-pending.is-locked { color: var(--paper); }
+.ds-pending b { font: 900 1.25em / 1 var(--f-title); text-transform: uppercase; color: var(--c); }
+
+@media (max-width: 760px) {
+  .ds-host .ds-cells { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ds-locks { grid-template-columns: minmax(0, 1fr); }
+}

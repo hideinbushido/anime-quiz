@@ -1,5 +1,5 @@
 /**
- * Serveur temps réel du Quiz'Animanga : les Liens d'Ayanokoji et les Pensées d'Anya.
+ * Serveur temps réel du Quiz'Animanga : les Liens d'Ayanokoji, les Pensées d'Anya et le Dossier de L.
  *
  *   npm run server            (port 8787, ou la variable PORT)
  *
@@ -18,6 +18,8 @@ import type { PlayerId } from "../src/types.ts";
 import type { ClientMessage, Role, ServerMessage } from "../src/ayanokoji/types.ts";
 import type { FeudClientMessage, FeudHostAction, FeudServerMessage } from "../src/feud/types.ts";
 import { feudView, hostFeud, pressBuzzer, tickFeud } from "../src/feud/reducer.ts";
+import type { DossierClientMessage, DossierHostAction, DossierServerMessage } from "../src/dossier/types.ts";
+import { dossierView, guessDossier, hostDossier } from "../src/dossier/reducer.ts";
 import { claim, createRoom, hostAction, loadRound, move, rename, submit, switchGame, tick, viewFor, type Room } from "./rooms.ts";
 
 const ROLES: Role[] = ["player1", "player2", "host", "live"];
@@ -45,7 +47,7 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
     }, 150);
   };
 
-  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
+  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage | DossierServerMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
   const connected = (roomId: string): Record<PlayerId, boolean> => {
     const here = (role: Role) => [...clients].some(client => client.room === roomId && client.role === role);
     return { player1: here("player1"), player2: here("player2") };
@@ -57,7 +59,9 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
     for (const client of clients) {
       if (client.room !== room.id) continue;
       // Un seul état part vers chaque écran : celui de l'épreuve en cours, taillé pour son rôle
-      if (room.game === "feud" && room.feud) send(client.socket, { type: "feud:state", view: feudView(room.feud, client.role, { room: room.id, names: room.names, connected: present, now }) });
+      const context = { room: room.id, names: room.names, connected: present, now };
+      if (room.game === "dossier" && room.dossier) send(client.socket, { type: "dossier:state", view: dossierView(room.dossier, client.role, context) });
+      else if (room.game === "feud" && room.feud) send(client.socket, { type: "feud:state", view: feudView(room.feud, client.role, { room: room.id, names: room.names, connected: present, now }) });
       else send(client.socket, { type: "room:state", view: viewFor(room, client.role, present, now) });
     }
     save();
@@ -72,8 +76,8 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
   wss.on("connection", socket => {
     let client: Client | null = null;
     socket.on("message", raw => {
-      let message: ClientMessage | FeudClientMessage;
-      try { message = JSON.parse(String(raw)) as ClientMessage | FeudClientMessage; } catch { return; }
+      let message: ClientMessage | FeudClientMessage | DossierClientMessage;
+      try { message = JSON.parse(String(raw)) as ClientMessage | FeudClientMessage | DossierClientMessage; } catch { return; }
       if (!message || typeof message.type !== "string") return;
 
       if (message.type === "room:join") {
@@ -106,6 +110,12 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
       const isPlayer = client.role === "player1" || client.role === "player2";
       let error: string | null = "Action non autorisée.";
       if (message.type === "room:game") error = client.role === "host" ? switchGame(room, message.game) : error;
+      else if (message.type.startsWith("dossier:")) {
+        // Le Dossier de L : un joueur n'envoie que l'identifiant de sa proposition, le serveur corrige
+        if (room.game !== "dossier" || !room.dossier) error = "Cette épreuve n'est pas ouverte.";
+        else if (message.type === "dossier:guess") error = isPlayer ? guessDossier(room.dossier, client.role as PlayerId, message.characterId, now) : error;
+        else if (client.role === "host") error = hostDossier(room.dossier, message as DossierHostAction, now) ?? null;
+      }
       else if (message.type === "buzzer:press" || message.type.startsWith("feud:")) {
         // Le buzzer et la régie des Pensées d'Anya : le rôle vient de la connexion, jamais du message
         if (room.game !== "feud" || !room.feud) error = "Cette épreuve n'est pas ouverte.";
