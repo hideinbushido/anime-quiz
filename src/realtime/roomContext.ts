@@ -4,6 +4,7 @@ import type { QuizClientMessage, QuizView } from "../quiz/types";
 import type { ClientMessage, RoomView } from "../ayanokoji/types";
 import type { FeudClientMessage, FeudView, RoomGame } from "../feud/types";
 import type { DossierClientMessage, DossierView, RosterEntry } from "../dossier/types";
+import type { CamBus } from "./camBus";
 
 /**
  * Ce qu'un écran sait de sa room : une seule connexion, partagée par toutes
@@ -23,6 +24,8 @@ export interface RoomState {
   quiz: QuizView | null;
   /** L'épreuve en cours, les joueurs et l'état de l'émission. */
   info: RoomInfo | null;
+  /** Les images des caméras des joueurs (reçues par le live et la régie). */
+  cams: CamBus;
   room: string;
   status: ConnectionStatus;
   error: string;

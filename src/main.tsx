@@ -14,6 +14,7 @@ import './design/epreuves-or.css'
 import './design/recap.css'
 import './design/regles.css'
 import './design/scores.css'
+import './design/fx.css'
 import { Root } from './Root.tsx'
 
 createRoot(document.getElementById('root')!).render(

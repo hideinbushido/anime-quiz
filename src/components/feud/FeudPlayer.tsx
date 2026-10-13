@@ -3,6 +3,8 @@ import type { PlayerId } from "../../types";
 import type { FeudPlayerView } from "../../feud/types";
 import { useFeud } from "../../feud/useFeud";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
+import { CamToggle } from "../realtime/CamToggle";
+import { StageFx } from "../fx/StageFx";
 import { FeudAvatar, FeudStrikes } from "./FeudParts";
 
 import { shrinkPhoto } from "../../realtime/avatar";
@@ -66,7 +68,9 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
       <p className="ay-kicker">{view.title}</p>
       <p className="fd-round">Manche <b>{view.roundNumber}</b>/{view.roundCount}</p>
     </header>
+    <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
+    <CamToggle />
 
     <dl className="fd-player-stats">
       <div><dt>Strikes</dt><dd><FeudStrikes count={view.strikes[player]} max={view.maxStrikes} /></dd></div>

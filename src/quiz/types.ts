@@ -66,6 +66,8 @@ interface QuizBaseView {
   buzzWinner: PlayerId | null;
   /** La réponse, une fois révélée : jamais avant. */
   revealed: { answer: string; imageSrc?: string; winner: PlayerId | null } | null;
+  /** Le fil de l'épreuve, sans les réponses : ce que vaut chaque question et qui l'a trouvée. */
+  steps: { points: number; winner: PlayerId | null; played: boolean }[];
   serverNow: number;
   event: QuizEvent;
 }

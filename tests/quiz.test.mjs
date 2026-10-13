@@ -97,12 +97,13 @@ test('la réponse, son image et l\'extrait ne quittent le serveur que vers le pr
 
 function connect(port, room, role) {
   const socket = new WebSocket(`ws://127.0.0.1:${port}`);
-  const client = { quiz: null, show: null, game: null, errors: [], socket };
+  const client = { quiz: null, show: null, game: null, errors: [], cams: [], socket };
   const waiters = [];
   socket.onmessage = event => {
     const message = JSON.parse(event.data);
     if (message.type === 'room:error') client.errors.push(message.message);
     if (message.type === 'quiz:state') client.quiz = message.view;
+    if (message.type === 'room:cam') client.cams.push(message);
     if (message.type === 'show:state') { client.show = message.show; client.game = message.game; client.intro = message.intro; }
     for (const waiter of [...waiters]) if (waiter.test()) { waiters.splice(waiters.indexOf(waiter), 1); waiter.resolve(); }
   };
@@ -142,6 +143,17 @@ test('en temps réel : Killer Bee au buzzer, puis l\'écran d\'émission entre d
     await live.until(c => c.quiz.revealed?.winner === 'player2', 'réponse révélée');
     assert.equal(live.quiz.revealed.answer, host.quiz.answer);
     assert.deepEqual(live.quiz.scores, { player1: 0, player2: 4 });
+
+    // La caméra d'un joueur : relayée au live et à la régie, jamais à l'adversaire ; une image invalide est ignorée
+    const frame = 'data:image/jpeg;base64,AAAA';
+    p1.send({ type: 'room:cam', image: 'data:text/html;base64,AAAA' });
+    live.send({ type: 'room:cam', image: frame });
+    p1.send({ type: 'room:cam', image: frame });
+    await Promise.all([live, host].map(c => c.until(x => x.cams.length === 1, 'image de caméra reçue')));
+    assert.deepEqual(live.cams[0], { type: 'room:cam', player: 'player1', image: frame });
+    assert.equal(p2.cams.length, 0);
+    assert.equal(live.quiz.steps.length, 7);
+    assert.deepEqual(live.quiz.steps[0], { points: 4, winner: 'player2', played: true });
 
     // La vidéo des règles : lancée par le présentateur, elle arrive sur le live avec son heure de départ, puis se coupe
     live.send({ type: 'show:intro', src: '/regles/blind-test-openings.mp4' });

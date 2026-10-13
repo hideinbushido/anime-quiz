@@ -33,7 +33,7 @@ const ROLES: Role[] = ["player1", "player2", "host", "live"];
 const ROOM_ID = /^[A-Za-z0-9_-]{1,24}$/;
 const HOST_PASSWORD_ERROR = "Mot de passe de la régie incorrect.";
 
-interface Client { socket: WebSocket; room: string; role: Role; /** L'univers dont cet écran a déjà reçu le catalogue. */ roster?: string }
+interface Client { socket: WebSocket; room: string; role: Role; /** L'heure de la dernière image de caméra relayée. */ camAt?: number; /** L'univers dont cet écran a déjà reçu le catalogue. */ roster?: string }
 
 export function startServer({ port = Number(process.env.PORT) || 8787, hostPassword = process.env.HOST_PASSWORD ?? "", storeFile = process.env.ROOMS_FILE ?? join(dirname(fileURLToPath(import.meta.url)), "data", "rooms.json") } = {}) {
   // Les portraits déposés dans public/dossier/ rejoignent les fiches des personnages
@@ -58,10 +58,15 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
 
   /** Ce que tout écran sait de la room, quelle que soit l'épreuve : laquelle se joue, qui est là, où en est l'émission. */
   type ShowMessage = { type: "show:state"; game: RoomGame; show: ShowState | null; intro: IntroState | null; serverNow: number; names: Room["names"]; avatars: Room["avatars"]; connected: Record<PlayerId, boolean> };
-  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | ShowMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
+  type CamMessage = { type: "room:cam"; player: PlayerId; image: string | null };
+  const send = (socket: WebSocket, message: ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | ShowMessage | CamMessage) => { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); };
   const connected = (roomId: string): Record<PlayerId, boolean> => {
     const here = (role: Role) => [...clients].some(client => client.room === roomId && client.role === role);
     return { player1: here("player1"), player2: here("player2") };
+  };
+  /** L'image de la caméra d'un joueur part vers le live et la régie ; elle n'est jamais gardée. */
+  const relayCam = (roomId: string, player: PlayerId, image: string | null) => {
+    for (const other of clients) if (other.room === roomId && (other.role === "live" || other.role === "host")) send(other.socket, { type: "room:cam", player, image });
   };
   /** Chaque client reçoit sa propre vue : c'est ce qui garde le plateau adverse et la solution secrets. */
   const broadcast = (room: Room) => {
@@ -133,6 +138,14 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
       if (!room) return;
       const now = Date.now();
       const isPlayer = client.role === "player1" || client.role === "player2";
+      if (message.type === "room:cam") {
+        // Plusieurs images par seconde : elles sont relayées sans toucher à l'état de la room
+        if (!isPlayer) return;
+        const image = message.image === null ? null : typeof message.image === "string" && message.image.startsWith("data:image/jpeg;base64,") && message.image.length <= 60000 ? message.image : undefined;
+        if (image === undefined || (image && now - (client.camAt ?? 0) < 60)) return;
+        client.camAt = now;
+        return relayCam(client.room, client.role as PlayerId, image);
+      }
       let error: string | null = "Action non autorisée.";
       if (message.type === "room:avatar") {
         // Un joueur ne change que sa photo ; le présentateur peut poser celle de l'un ou de l'autre
@@ -185,6 +198,7 @@ export function startServer({ port = Number(process.env.PORT) || 8787, hostPassw
     socket.on("close", () => {
       if (!client) return;
       clients.delete(client);
+      if (client.role === "player1" || client.role === "player2") relayCam(client.room, client.role, null);
       const room = rooms.get(client.room);
       if (room) broadcast(room);
     });

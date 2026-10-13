@@ -148,6 +148,8 @@ export type FeudClientMessage =
   | { type: "room:game"; game: RoomGame }
   /** Un joueur change sa propre photo ; le présentateur précise de quel joueur il s'agit. */
   | { type: "room:avatar"; image: string | null; player?: PlayerId }
+  /** Une image de la caméra du joueur (JPEG en data URL), ou null quand il la coupe. */
+  | { type: "room:cam"; image: string | null }
   | { type: "buzzer:press" }
   | FeudHostAction;
 

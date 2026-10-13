@@ -4,6 +4,8 @@ import type { DossierPlayerView, RosterEntry } from "../../dossier/types";
 import { searchRoster } from "../../dossier/engine";
 import { outcomeLabel, useDossier } from "../../dossier/useDossier";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
+import { CamToggle } from "../realtime/CamToggle";
+import { StageFx } from "../fx/StageFx";
 import { DossierAvatar, DossierScore, DossierTarget, DossierTurnBlock } from "./DossierParts";
 
 /**
@@ -39,7 +41,9 @@ export function DossierPlayer({ player }: { player: PlayerId }) {
       <p className="fd-round">Round <b>{view.roundNumber}</b>/{view.roundCount}</p>
       <DossierScore names={names} wins={view.wins} draws={view.draws} />
     </header>
+    <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
+    <CamToggle />
 
     <p className={"ds-state" + (locked ? " is-locked" : "")} role="status">{state}</p>
 

@@ -6,6 +6,8 @@ import { shrinkPhoto } from "../../realtime/avatar";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { FeudAvatar } from "../feud/FeudParts";
 import { QuizAttempts } from "./QuizLive";
+import { CamToggle } from "../realtime/CamToggle";
+import { StageFx } from "../fx/StageFx";
 
 /**
  * Le téléphone du joueur pendant une épreuve au buzzer : un gros buzzer, ses
@@ -61,7 +63,9 @@ export function QuizPlayer({ player }: { player: PlayerId }) {
       <p className="ay-kicker">{view.title}</p>
       {phase !== "done" && <p className="fd-round">{look.item} <b>{view.itemNumber}</b>/{view.itemCount}</p>}
     </header>
+    <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
+    <CamToggle />
 
     <dl className="fd-player-stats">
       <div><dt>Tentatives</dt><dd><QuizAttempts left={view.attempts[player]} max={view.maxAttempts} /></dd></div>

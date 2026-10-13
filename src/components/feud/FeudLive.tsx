@@ -4,7 +4,9 @@ import type { FeudLiveView } from "../../feud/types";
 import { playFeudSound, revealProgress, useFeud, useFeudSounds } from "../../feud/useFeud";
 import { useServerNow } from "../../ayanokoji/useAyanokojiRoom";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
-import { FeudAnswerRow, FeudAvatar, FeudStrikes } from "./FeudParts";
+import { FeudAnswerRow, FeudStrikes } from "./FeudParts";
+import { StageFx, type FxBurst } from "../fx/StageFx";
+import { PlayerFrame } from "../realtime/PlayerFrame";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -38,10 +40,14 @@ export function FeudLive() {
   const half = Math.ceil(view.slots.length / 2);
   const roundWinner = reveal.finished && reveal.score.player1 !== reveal.score.player2 ? (reveal.score.player1 > reveal.score.player2 ? "player1" : "player2") : null;
 
+  const burst: FxBurst | null = final ? { key: "final", tone: view.result?.winner ?? "gold", from: "rain" }
+    : roundWinner ? { key: `round${view.roundNumber}`, tone: roundWinner, from: roundWinner === "player1" ? "left" : "right" }
+    : view.event.kind === "correct" && view.event.player ? { key: view.event.seq, tone: view.event.player, from: view.event.player === "player1" ? "left" : "right" } : null;
+
   const side = (id: PlayerId) => {
     const out = view.strikes[id] >= view.maxStrikes && !reveal.active;
     return <section key={id} className={`fd-side ${id}` + (view.buzzWinner === id ? " is-buzzing" : "") + (out ? " is-out" : "")}>
-      <FeudAvatar player={id} name={names[id]} image={view.avatars[id]} />
+      <PlayerFrame player={id} name={names[id]} image={view.avatars[id]} />
       <h2><i className={"ay-dot" + (view.connected[id] ? " is-on" : "")} aria-hidden="true" />{names[id]}</h2>
       {view.buzzWinner === id && <p className="fd-hand">A la main</p>}
       <FeudStrikes count={view.strikes[id]} max={view.maxStrikes} />
@@ -59,6 +65,7 @@ export function FeudLive() {
       <h1>{view.title}</h1>
       <p className="fd-round">Manche <b>{view.roundNumber}</b>/{view.roundCount}</p>
     </header>
+    <StageFx burst={burst} />
     <ConnectionNotice status={status} error={error} />
 
     <div className="fd-stage">

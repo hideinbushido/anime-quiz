@@ -2,7 +2,8 @@ import type { PlayerId } from "../../types";
 import type { QuizLiveView } from "../../quiz/types";
 import { QUIZ_LOOK, useQuiz } from "../../quiz/useQuiz";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
-import { FeudAvatar } from "../feud/FeudParts";
+import { StageFx, type FxBurst } from "../fx/StageFx";
+import { PlayerFrame } from "../realtime/PlayerFrame";
 
 /** Les tentatives qui restent à un joueur : des pastilles qui s'éteignent. */
 export function QuizAttempts({ left, max }: { left: number; max: number }) {
@@ -21,11 +22,14 @@ export function QuizLive() {
   if (!view) return <main className="ay-screen qz-live"><ConnectionNotice status={status} error={error} /></main>;
   const { names, phase, kind } = view;
   const look = QUIZ_LOOK[kind];
+  const leader: PlayerId | null = view.scores.player1 === view.scores.player2 ? null : view.scores.player1 > view.scores.player2 ? "player1" : "player2";
+  const burst: FxBurst | null = phase === "done" ? { key: "done", tone: leader ?? "gold", from: "rain" }
+    : view.event.kind === "correct" && view.event.player ? { key: view.event.seq, tone: view.event.player, from: view.event.player === "player1" ? "left" : "right" } : null;
 
   const side = (id: PlayerId) => {
     const wait = lockLeft(id);
     return <section key={id} className={`fd-side ${id}` + (view.buzzWinner === id ? " is-buzzing" : "") + (view.attempts[id] <= 0 && phase !== "revealed" && phase !== "done" ? " is-out" : "")}>
-      <FeudAvatar player={id} name={names[id]} image={view.avatars[id]} />
+      <PlayerFrame player={id} name={names[id]} image={view.avatars[id]} />
       <h2><i className={"ay-dot" + (view.connected[id] ? " is-on" : "")} aria-hidden="true" />{names[id]}</h2>
       {view.buzzWinner === id && <p className="fd-hand">A la main</p>}
       {phase !== "done" && <QuizAttempts left={view.attempts[id]} max={view.maxAttempts} />}
@@ -40,6 +44,7 @@ export function QuizLive() {
       <h1>{view.title}</h1>
       {phase !== "done" && <p className="fd-round">{look.item} <b>{view.itemNumber}</b>/{view.itemCount} · <b>{view.points}</b> pts</p>}
     </header>
+    <StageFx burst={burst} />
     <ConnectionNotice status={status} error={error} />
 
     <div className="fd-stage">

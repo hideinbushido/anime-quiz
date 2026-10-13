@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PlayerId } from "../../types";
+import { CamToggle } from "../realtime/CamToggle";
+import { StageFx } from "../fx/StageFx";
 import type { PlayerView } from "../../ayanokoji/types";
 import { REVEAL_STEP_MS, useAyanokojiRoom, useServerNow } from "../../ayanokoji/useAyanokojiRoom";
 import { AyanokojiBoard, AyanokojiSolution } from "./AyanokojiBoard";
@@ -47,7 +49,9 @@ export function AyanokojiPlayer({ player }: { player: PlayerId }) {
       {round && <RoundBadge round={round} />}
       <AyanokojiTimer timer={view.timer} clockOffset={clockOffset} />
     </header>
+    <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
+    <CamToggle />
 
     {!round || phase === "waiting" ? <p className="ay-wait">En attente du présentateur…</p> : <>
       <p className={"ay-opponent" + (view.seats[opponent].submitted ? " is-alert" : "")} role="status">

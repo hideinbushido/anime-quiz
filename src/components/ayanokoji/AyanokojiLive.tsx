@@ -1,10 +1,13 @@
 import type { PlayerId } from "../../types";
+import { useRoom } from "../../realtime/roomContext";
 import type { LiveView } from "../../ayanokoji/types";
 import { REVEAL_STEP_MS, PHASE_LABEL, useAyanokojiRoom, useServerNow } from "../../ayanokoji/useAyanokojiRoom";
 import { ROUNDS_PER_EPREUVE } from "../../ayanokoji/scoring";
 import { EpreuveLogo } from "../EpreuveLogo";
 import { AyanokojiBoard, AyanokojiSolution } from "./AyanokojiBoard";
 import { AyanokojiTimer, ConnectionNotice, Countdown, LockIcon, RoundBadge } from "./AyanokojiParts";
+import { StageFx, type FxBurst } from "../fx/StageFx";
+import { PlayerFrame } from "../realtime/PlayerFrame";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -15,6 +18,7 @@ const PLAYERS: PlayerId[] = ["player1", "player2"];
  */
 export function AyanokojiLive() {
   const { view, status, error, clockOffset } = useAyanokojiRoom<LiveView>("live");
+  const { info } = useRoom();
   const revealing = view?.phase === "revealing" || view?.phase === "complete";
   const now = useServerNow(clockOffset, Boolean(revealing && view?.revealAt));
   const revealed = revealing && view?.revealAt ? Math.floor((now - view.revealAt) / REVEAL_STEP_MS) : 0;
@@ -22,6 +26,9 @@ export function AyanokojiLive() {
   if (!view) return <main className="ay-screen ay-live"><ConnectionNotice status={status} error={error} /></main>;
   const { round, phase } = view;
   const done = revealed > (round?.links.length ?? 5);
+  const gains = { player1: view.results?.player1.points ?? 0, player2: view.results?.player2.points ?? 0 };
+  const best: PlayerId | null = gains.player1 === gains.player2 ? null : gains.player1 > gains.player2 ? "player1" : "player2";
+  const burst: FxBurst | null = round && done && view.results ? { key: round.id, tone: best ?? "gold", from: best === "player1" ? "left" : best === "player2" ? "right" : "center" } : null;
 
   return <main className={"ay-screen ay-live phase-" + phase}>
     <header className="ay-live-head">
@@ -34,6 +41,7 @@ export function AyanokojiLive() {
       {round && <p className="ay-round-count">Manche {round.level}/{ROUNDS_PER_EPREUVE}<span>{view.maxPoints} pts en jeu</span></p>}
       <AyanokojiTimer timer={view.timer} clockOffset={clockOffset} />
     </header>
+    <StageFx burst={burst} />
     <ConnectionNotice status={status} error={error} />
 
     {!round ? <p className="ay-wait">La manche arrive…</p> : <div className="ay-duel">
@@ -42,6 +50,7 @@ export function AyanokojiLive() {
         const moves = view.moveCounts[id];
         return <section key={id} className={`ay-side ${id}` + (view.seats[id].submitted ? " is-submitted" : "") + (done && result?.perfect ? " is-perfect" : "")}>
           <header className="ay-side-head">
+            <PlayerFrame player={id} name={view.names[id]} image={info?.avatars[id] ?? null} />
             <h2>{view.names[id]}</h2>
             <p className="ay-score" aria-label={`${view.scores[id]} points`}><b key={view.scores[id]}>{view.scores[id]}</b> pts</p>
             <p className="ay-moves"><b key={moves}>{moves}</b> mouvement{moves > 1 ? "s" : ""}</p>

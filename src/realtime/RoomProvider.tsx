@@ -5,6 +5,7 @@ import type { ClientMessage, Role, RoomView } from "../ayanokoji/types";
 import type { FeudClientMessage, FeudView } from "../feud/types";
 import type { DossierClientMessage, DossierView, RosterEntry } from "../dossier/types";
 import { RoomContext, type RoomState } from "./roomContext";
+import { createCamBus } from "./camBus";
 
 interface Props {
   room: string;
@@ -34,6 +35,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
   const [error, setError] = useState("");
   const [clockOffset, setClockOffset] = useState(0);
   const connection = useRef<RoomConnection | null>(null);
+  const cams = useMemo(createCamBus, []);
 
   useEffect(() => {
     const link = connectRoom({
@@ -65,6 +67,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
         setClockOffset(next.serverNow - receivedAt);
       },
       onInfo: setInfo,
+      onCam: cams.push,
       onDossierRoster: (universe, roster) => setDossierRosters(current => ({ ...current, [universe]: roster })),
       // Après une coupure, le serveur renvoie les catalogues : on repart d'une ardoise vide
       onStatus: next => { setStatus(next); if (next === "connecting") setDossierRosters({}); },
@@ -72,7 +75,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
     });
     connection.current = link;
     return () => { link.close(); connection.current = null; };
-  }, [room, role, name, j1, j2, password]);
+  }, [room, role, name, j1, j2, password, cams]);
 
   // Un refus du serveur s'affiche quelques secondes, puis s'efface de lui-même
   // (un refus à l'entrée, lui, reste affiché : sans vue, il n'y a rien d'autre à montrer)
@@ -85,7 +88,7 @@ export function RoomProvider({ room, role, name, j1, j2, password, children }: P
 
   const send = useCallback((message: ClientMessage | FeudClientMessage | DossierClientMessage | QuizClientMessage) => connection.current?.send(message), []);
   const state = useMemo<RoomState>(() => ({ // Le serveur dit quelle épreuve se joue ; à défaut (ancien serveur), on la déduit de la vue reçue
-    game: info?.game ?? (dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null), view, feud, dossier, dossierRosters, quiz, info, room, status, error, clockOffset, send }),
-    [view, feud, dossier, dossierRosters, quiz, info, room, status, error, clockOffset, send]);
+    game: info?.game ?? (dossier ? "dossier" : feud ? "feud" : view ? "ayanokoji" : null), view, feud, dossier, dossierRosters, quiz, info, cams, room, status, error, clockOffset, send }),
+    [view, feud, dossier, dossierRosters, quiz, info, cams, room, status, error, clockOffset, send]);
   return <RoomContext.Provider value={state}>{children}</RoomContext.Provider>;
 }

@@ -21,6 +21,8 @@ import { HostRoom } from "./realtime/HostRoom";
 import { ShowSync } from "./components/realtime/ShowSync";
 import { roomOf } from "./realtime/roomOf";
 import { RoomLinks } from "./components/realtime/RoomLinks";
+import { StageFx } from "./components/fx/StageFx";
+import { startPointerFx } from "./fx/pointer";
 
 type View = "home" | "match" | "scores" | "rules";
 const PHASE_PATH = { selection: "/menu", ready: "/programme", playing: "/jeu", recap: "/recap" };
@@ -39,6 +41,7 @@ export default function App() {
   const path = effectiveView === "scores" ? "/scores" : effectiveView === "rules" ? "/regles" : effectiveView === "match" && session ? PHASE_PATH[session.phase] : "/";
 
   useEffect(() => { window.history.replaceState(null, "", path); }, [path]);
+  useEffect(() => startPointerFx(), []);
   useEffect(() => {
     const onPop = () => { setPreview(null); setView(viewFromPath()); };
     window.addEventListener("popstate", onPop);
@@ -54,6 +57,7 @@ export default function App() {
   const previewEpreuve = preview ? epreuves.find(epreuve => epreuve.id === preview.id) : undefined;
 
   return <>
+    <StageFx density={0.6} over />
     <Intro />
     {overlay}
     {warning && <p className="duel-notice" role="alert">{warning}</p>}

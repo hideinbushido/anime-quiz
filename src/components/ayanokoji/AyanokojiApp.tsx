@@ -11,6 +11,7 @@ import { DossierLive } from "../dossier/DossierLive";
 import { DossierPlayer } from "../dossier/DossierPlayer";
 import { QuizHost } from "../quiz/QuizHost";
 import { QuizLive } from "../quiz/QuizLive";
+import { BeatsLive } from "../quiz/BeatsLive";
 import { QuizPlayer } from "../quiz/QuizPlayer";
 import { ShowLive, ShowPlayer } from "../realtime/ShowScreens";
 import { RulesOverlay } from "../realtime/RulesOverlay";
@@ -29,7 +30,7 @@ function RoomScreen({ role }: { role: Role }) {
   // Entre deux épreuves, tous les écrans montrent l'émission : le programme et le score du duel
   if (game === "lobby" && role !== "host") return role === "live" ? <ShowLive /> : <ShowPlayer player={role} />;
   if (game === "beats" || game === "citations") {
-    if (role === "live") return <QuizLive />;
+    if (role === "live") return game === "beats" ? <BeatsLive /> : <QuizLive />;
     if (role === "host") return <QuizHost />;
     return <QuizPlayer player={role} />;
   }

@@ -2,6 +2,9 @@ import type { PlayerId } from "../../types";
 import { useRoom } from "../../realtime/roomContext";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { FeudAvatar } from "../feud/FeudParts";
+import { StageFx } from "../fx/StageFx";
+import { PlayerFrame } from "./PlayerFrame";
+import { CamToggle } from "./CamToggle";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 const LOGOS: Record<string, string> = {
@@ -28,11 +31,12 @@ export function ShowLive() {
       <h1>Quiz'Animanga</h1>
       <p className="ay-kicker">{final ? "Fin du live" : show?.phase === "between" ? "Le duel continue" : "Le duel va commencer"}</p>
     </header>
+    <StageFx burst={final ? { key: "final", tone: winner ?? "gold", from: "rain" } : null} />
     <ConnectionNotice status={status} error={error} />
 
     <section className="sh-duel">
       {PLAYERS.map(id => <article key={id} className={id + (final && winner === id ? " is-winner" : "")}>
-        <FeudAvatar player={id} name={names[id]} image={info.avatars[id]} />
+        <PlayerFrame player={id} name={names[id]} image={info.avatars[id]} />
         <h2><i className={"ay-dot" + (info.connected[id] ? " is-on" : "")} aria-hidden="true" />{names[id]}</h2>
         <b key={wins[id]}>{wins[id]}</b>
       </article>)}
@@ -71,7 +75,9 @@ export function ShowPlayer({ player }: { player: PlayerId }) {
       <h1>{info.names[player]}</h1>
       <p className="ay-kicker">Quiz'Animanga</p>
     </header>
+    <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
+    <CamToggle />
     <p className="sh-phone-score"><b>{wins[player]}</b><span>–</span><b>{wins[opponent]}</b></p>
     <p className="fd-player-state" role="status">
       <strong>{final ? (wins[player] === wins[opponent] ? "Égalité" : wins[player] > wins[opponent] ? "Tu gagnes le live" : `${info.names[opponent]} gagne le live`) : next ? next.name : "Tu es connecté"}</strong>

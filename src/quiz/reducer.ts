@@ -133,6 +133,7 @@ export function quizView(state: QuizState, role: PlayerId | "host" | "live", con
     names: context.names, avatars: context.avatars ?? { player1: null, player2: null }, connected: context.connected,
     attempts: state.attempts, maxAttempts: QUIZ_ATTEMPTS, lockedUntil: state.lockedUntil, scores: state.scores, buzzWinner: state.buzzWinner,
     revealed: shown && item ? { answer: item.answer, ...(item.imageSrc ? { imageSrc: item.imageSrc } : {}), winner: state.winners[state.itemIndex] ?? null } : null,
+    steps: items.map((entry, index) => ({ points: entry.points, winner: state.winners[index] ?? null, played: index < state.itemIndex || (index === state.itemIndex && shown) })),
     serverNow: context.now, event: state.event,
   };
   if (role === "player1" || role === "player2") { const view: QuizPlayerView = { ...base, role }; return view; }

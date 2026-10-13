@@ -96,7 +96,10 @@ function drawTails(ctx: CanvasRenderingContext2D, size: number, levels: Float32A
   }
 }
 
-export function KillerBeeDeck({ audio }: { audio: RefObject<HTMLAudioElement | null> }) {
+/** Sans lecteur sur la page (le live), `playing` dit si la platine tourne : le groove est alors simulé. */
+export function KillerBeeDeck({ audio, playing: forced = false }: { audio: RefObject<HTMLAudioElement | null>; playing?: boolean }) {
+  const forcedPlay = useRef(forced);
+  forcedPlay.current = forced;
   const deck = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const vinyl = useRef<HTMLDivElement>(null);
@@ -131,7 +134,7 @@ export function KillerBeeDeck({ audio }: { audio: RefObject<HTMLAudioElement | n
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const on = Boolean(element && !element.paused && !element.ended);
+      const on = element ? !element.paused && !element.ended : forcedPlay.current;
       if (on !== playing) {
         playing = on;
         root.dataset.playing = String(on);

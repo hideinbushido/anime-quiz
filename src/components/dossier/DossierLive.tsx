@@ -1,8 +1,11 @@
 import type { PlayerId } from "../../types";
+import { useRoom } from "../../realtime/roomContext";
 import type { DossierLiveView } from "../../dossier/types";
 import { outcomeLabel, useDossier } from "../../dossier/useDossier";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { DossierScore, DossierTarget, DossierTurnBlock } from "./DossierParts";
+import { StageFx, type FxBurst } from "../fx/StageFx";
+import { PlayerFrame } from "../realtime/PlayerFrame";
 
 const PLAYERS: PlayerId[] = ["player1", "player2"];
 
@@ -13,10 +16,13 @@ const PLAYERS: PlayerId[] = ["player1", "player2"];
  */
 export function DossierLive() {
   const { view, status, error } = useDossier<DossierLiveView>("live");
+  const { info } = useRoom();
   if (!view) return <main className="ay-screen ds-live"><ConnectionNotice status={status} error={error} /></main>;
   const { phase, names, universe } = view;
   const turns = [...view.turns].reverse();
   const winner = view.outcome === "player1" || view.outcome === "player2" ? view.outcome : null;
+  const burst: FxBurst | null = phase === "finished" ? { key: "final", tone: view.result?.winner ?? "gold", from: "rain" }
+    : phase === "debrief" && winner ? { key: `round${view.roundNumber}`, tone: winner, from: winner === "player1" ? "left" : "right" } : null;
 
   return <main className={`ay-screen ds-live phase-${phase}`}>
     <header className="ds-head">
@@ -28,6 +34,7 @@ export function DossierLive() {
       <p className="fd-round">Round <b>{view.roundNumber}</b>/{view.roundCount}</p>
       <DossierScore names={names} wins={view.wins} draws={view.draws} />
     </header>
+    <StageFx burst={burst} />
     <ConnectionNotice status={status} error={error} />
 
     {phase === "finished" && view.result ? <div className={"ds-final" + (view.result.winner ? ` ${view.result.winner}` : "")}>
@@ -44,7 +51,7 @@ export function DossierLive() {
       </div>}
 
       {phase === "guessing" && <div className="ds-locks" role="status">
-        {PLAYERS.map(id => <p key={id} className={id + (view.locked[id] ? " is-locked" : "")}><strong>{names[id]}</strong>{view.locked[id] ? "Proposition verrouillée" : "Réfléchit…"}</p>)}
+        {PLAYERS.map(id => <p key={id} className={id + (view.locked[id] ? " is-locked" : "")}><PlayerFrame player={id} name={names[id]} image={info?.avatars[id] ?? null} /><strong>{names[id]}</strong>{view.locked[id] ? "Proposition verrouillée" : "Réfléchit…"}</p>)}
       </div>}
 
       {phase === "intro" && <p className="ay-wait">{universe.ready ? `Round ${view.roundNumber} : un personnage de ${universe.name} à démasquer` : `${universe.name} : bientôt disponible`}</p>}

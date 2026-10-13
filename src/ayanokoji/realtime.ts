@@ -22,6 +22,9 @@ export interface RoomInfo {
   connected: Record<PlayerId, boolean>;
 }
 type InfoMessage = { type: "show:state" } & RoomInfo;
+/** Une image de la caméra d'un joueur, relayée par le serveur au live et à la régie. */
+type CamMessage = { type: "room:cam"; player: PlayerId; image: string | null };
+type Incoming = ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | InfoMessage | CamMessage;
 
 export type ConnectionStatus = "connecting" | "online" | "offline";
 
@@ -48,6 +51,7 @@ interface Options {
   /** L'état d'une épreuve au buzzer (Killer Bee, Répliques Cultes). */
   onQuiz?: (view: QuizView, receivedAt: number) => void;
   onInfo?: (info: RoomInfo) => void;
+  onCam?: (player: PlayerId, image: string | null) => void;
   onStatus: (status: ConnectionStatus) => void;
   onError: (message: string) => void;
 }
@@ -61,7 +65,7 @@ export function realtimeUrl(): string {
 
 const tokenKey = (room: string, role: Role) => `ayanokoji-token-${room}-${role}`;
 
-export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onDossierRoster, onQuiz, onInfo, onStatus, onError }: Options): RoomConnection {
+export function connectRoom({ room, role, name, names, password, onView, onFeud, onDossier, onDossierRoster, onQuiz, onInfo, onCam, onStatus, onError }: Options): RoomConnection {
   let socket: WebSocket | null = null;
   let closed = false;
   let retry = 0;
@@ -78,8 +82,8 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       socket?.send(JSON.stringify({ type: "room:join", room, role, token, name, names, password } satisfies ClientMessage));
     };
     socket.onmessage = event => {
-      let message: ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | InfoMessage;
-      try { message = JSON.parse(String(event.data)) as ServerMessage | FeudServerMessage | DossierServerMessage | QuizServerMessage | InfoMessage; } catch { return; }
+      let message: Incoming;
+      try { message = JSON.parse(String(event.data)) as Incoming; } catch { return; }
       if (message.type === "room:joined") {
         onStatus("online");
         if (message.token) try { localStorage.setItem(tokenKey(room, role), message.token); } catch { /* voir plus haut */ }
@@ -89,6 +93,7 @@ export function connectRoom({ room, role, name, names, password, onView, onFeud,
       else if (message.type === "dossier:roster") onDossierRoster?.(message.universe, message.roster);
       else if (message.type === "quiz:state") onQuiz?.(message.view, Date.now());
       else if (message.type === "show:state") onInfo?.({ game: message.game, show: message.show, intro: message.intro ?? null, serverNow: message.serverNow ?? Date.now(), names: message.names, avatars: message.avatars, connected: message.connected });
+      else if (message.type === "room:cam") onCam?.(message.player, message.image);
       else if (message.type === "room:error") onError(message.message);
     };
     socket.onclose = () => {
