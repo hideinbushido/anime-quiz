@@ -146,10 +146,24 @@ export function hostFeud(state: FeudState, action: FeudHostAction, now: number, 
       remember(state);
       state.phase = "revealingPoints";
       state.revealStartedAt = now;
+      if (action.manual) state.revealCount = 0; else delete state.revealCount;
       // Les points rejoignent le cumul dès maintenant ; les écrans les font monter au rythme de la révélation
       for (const id of PLAYERS) state.totals[id] += state.roundScore[id];
       emit(state, "pointsReveal", null);
       return null;
+    case "feud:reveal-step": {
+      // Un clic, une valeur, de la moins citée à la plus citée ; le clic d'après annonce le résultat de la manche
+      if (state.phase !== "revealingPoints" || state.revealCount === undefined) return "Aucune révélation en cours.";
+      remember(state);
+      if (state.revealCount >= round.answers.length) {
+        state.phase = state.roundIndex >= rounds.length - 1 ? "gameComplete" : "roundComplete";
+        emit(state, "roundEnd", null);
+        return null;
+      }
+      state.revealCount++;
+      emit(state, "pointsReveal", null, round.answers.length - state.revealCount + 1);
+      return null;
+    }
     case "feud:next":
       if (state.phase !== "roundComplete") return state.phase === "gameComplete" ? "L'épreuve est terminée." : "Révèle d'abord les points de la manche.";
       remember(state);
@@ -161,6 +175,7 @@ export function hostFeud(state: FeudState, action: FeudHostAction, now: number, 
       state.buzzOpen = false;
       state.buzzWinner = null;
       state.revealStartedAt = null;
+      delete state.revealCount;
       emit(state, "nextRound", null);
       return null;
   }
@@ -172,6 +187,8 @@ export const revealDurationMs = (round: FeudRound) => (round.answers.length + 2)
 /** La révélation se termine côté serveur : c'est lui qui déclare la manche comptée. */
 export function tickFeud(state: FeudState, now: number, rounds: FeudRound[] = FEUD_ROUNDS): boolean {
   if (state.phase !== "revealingPoints" || state.revealStartedAt === null) return false;
+  // Révélation au clic : c'est le présentateur qui la termine, pas l'horloge
+  if (state.revealCount !== undefined) return false;
   if (now < state.revealStartedAt + revealDurationMs(feudRound(state, rounds))) return false;
   state.phase = state.roundIndex >= rounds.length - 1 ? "gameComplete" : "roundComplete";
   return true;
@@ -192,6 +209,7 @@ interface Context { room: string; names: Record<PlayerId, string>; avatars?: Rec
 export function feudView(state: FeudState, role: FeudRole, context: Context, rounds: FeudRound[] = FEUD_ROUNDS): FeudView {
   const round = feudRound(state, rounds);
   const revealed = ["revealingPoints", "roundComplete", "gameComplete"].includes(state.phase);
+  const stepping = state.phase === "revealingPoints" && state.revealCount !== undefined;
   const owner = (answerId: string) => state.found.find(item => item.answerId === answerId)?.foundBy ?? null;
   const count = (player: PlayerId) => state.found.filter(item => item.foundBy === player).length;
   const base = {
@@ -201,21 +219,26 @@ export function feudView(state: FeudState, role: FeudRole, context: Context, rou
     strikes: state.strikes, maxStrikes: MAX_STRIKES,
     foundCount: { player1: count("player1"), player2: count("player2") },
     buzzOpen: state.buzzOpen, buzzWinner: state.buzzWinner,
-    totals: state.totals, serverNow: context.now, event: state.event,
+    totals: stepping ? { player1: state.totals.player1 - state.roundScore.player1, player2: state.totals.player2 - state.roundScore.player2 } : state.totals, revealCount: revealed && state.revealCount !== undefined ? state.revealCount : null, serverNow: context.now, event: state.event,
     result: state.phase === "gameComplete" ? feudResult(state) : null,
   };
-  // Le tableau public : une réponse n'y figure qu'une fois trouvée, une valeur qu'à la révélation
+  // Le tableau public : une réponse n'y figure qu'une fois trouvée, une valeur qu'à la révélation.
+  // Au clic, la valeur du rang 8 tombe la première, celle du rang 1 la dernière ; rien ne part en avance.
+  const dropped = (index: number) => revealed && (!stepping || (state.revealCount ?? 0) >= round.answers.length - index);
   const slots: FeudSlot[] = round.answers.map((answer, index) => {
     const foundBy = owner(answer.id);
-    return { rank: index + 1, label: foundBy || revealed ? answer.label : null, foundBy, points: revealed ? answer.points : null };
+    return { rank: index + 1, label: foundBy || dropped(index) ? answer.label : null, foundBy, points: dropped(index) ? answer.points : null };
   });
   if (role === "player1" || role === "player2") {
     const view: FeudPlayerView = { ...base, role, question: round.question, slots, canBuzz: state.phase === "playing" && state.buzzOpen && !state.buzzWinner && eligible(state, role) };
     return view;
   }
   if (role === "live") {
+    // Au clic, le live ne reçoit que les points déjà tombés : le total de la manche ne part pas en avance
+    const shownScore = zero();
+    for (const [index, answer] of round.answers.entries()) { const by = owner(answer.id); if (by && dropped(index)) shownScore[by] += answer.points; }
     const view: FeudLiveView = { ...base, role, question: round.question, slots,
-      roundScore: revealed ? state.roundScore : null, revealStartedAt: revealed ? state.revealStartedAt : null, revealStepMs: REVEAL_STEP_MS };
+      roundScore: revealed ? (stepping ? shownScore : state.roundScore) : null, revealStartedAt: revealed ? state.revealStartedAt : null, revealStepMs: REVEAL_STEP_MS };
     return view;
   }
   const view: FeudHostView = { ...base, role, question: round.question,

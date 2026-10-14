@@ -42,6 +42,51 @@ test('sans buzzer : le présentateur donne la main, juge, et le buzzer des joueu
   assert.equal(state.buzzOpen, false);
 });
 
+test('révélation au clic : une valeur par clic, de la moins citée à la plus citée, rien ne part en avance', () => {
+  const state = createFeud();
+  const answers = FEUD_ROUNDS[0].answers;
+  act(state, 'feud:hand', { player: 'player1' });
+  act(state, 'feud:correct', { answerId: answers[0].id });
+  act(state, 'feud:hand', { player: 'player2' });
+  act(state, 'feud:correct', { answerId: answers[7].id });
+  act(state, 'feud:end-round');
+  assert.equal(act(state, 'feud:reveal-step'), 'Aucune révélation en cours.');
+  assert.equal(act(state, 'feud:reveal', { manual: true }), null);
+  assert.equal(tickFeud(state, 1000 + revealDurationMs(FEUD_ROUNDS[0]) * 10), false, "l'horloge ne termine pas une révélation au clic");
+
+  for (const role of ['live', 'player1']) {
+    const view = feudView(state, role, context);
+    assert.equal(view.revealCount, 0);
+    assert.ok(view.slots.every(slot => slot.points === null), `${role} : aucune valeur avant le premier clic`);
+    assert.equal(view.slots[3].label, null, 'une réponse non trouvée reste cachée tant que son tour ne vient pas');
+    assert.deepEqual(view.totals, { player1: 0, player2: 0 });
+  }
+  assert.deepEqual(feudView(state, 'live', context).roundScore, { player1: 0, player2: 0 });
+
+  // Premier clic : le rang 8, trouvé par le joueur 2
+  assert.equal(act(state, 'feud:reveal-step'), null);
+  const first = feudView(state, 'live', context);
+  assert.equal(first.slots[7].points, answers[7].points);
+  assert.equal(first.slots[6].points, null);
+  assert.deepEqual(first.roundScore, { player1: 0, player2: answers[7].points });
+  assert.ok(!JSON.stringify(feudView(state, 'player2', context)).includes(answers[3].label));
+
+  // Deuxième clic : le rang 7, que personne n'a trouvé, se montre avec sa valeur
+  act(state, 'feud:reveal-step');
+  const phone = feudView(state, 'player1', context);
+  assert.deepEqual(phone.slots[6], { rank: 7, label: answers[6].label, foundBy: null, points: answers[6].points });
+
+  for (let step = 2; step < answers.length; step++) assert.equal(act(state, 'feud:reveal-step'), null);
+  assert.equal(state.phase, 'revealingPoints', 'les huit valeurs sont tombées, le résultat attend un dernier clic');
+  assert.deepEqual(feudView(state, 'live', context).roundScore, { player1: answers[0].points, player2: answers[7].points });
+  assert.equal(act(state, 'feud:reveal-step'), null);
+  assert.equal(state.phase, 'roundComplete');
+  assert.deepEqual(feudView(state, 'player1', context).totals, { player1: answers[0].points, player2: answers[7].points });
+  // Annuler revient d'un clic en arrière
+  act(state, 'feud:undo');
+  assert.equal(state.phase, 'revealingPoints');
+});
+
 test('trois manches de huit réponses, sans classe, aux identifiants uniques', () => {
   assert.equal(FEUD_ROUNDS.length, 3);
   assert.deepEqual(FEUD_ROUNDS.map(round => round.roundNumber), [1, 2, 3]);

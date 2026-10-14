@@ -3,7 +3,10 @@ import type { QuizLiveView } from "../../quiz/types";
 import { QUIZ_LOOK, useQuiz } from "../../quiz/useQuiz";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { StageFx, type FxBurst } from "../fx/StageFx";
+import { useEventSound } from "../../realtime/sound";
 import { PlayerFrame } from "../realtime/PlayerFrame";
+
+const QUIZ_SOUNDS = { buzz: "/sons/buzzer.mp3" };
 
 /** Les tentatives qui restent à un joueur : des pastilles qui s'éteignent. */
 export function QuizAttempts({ left, max }: { left: number; max: number }) {
@@ -19,6 +22,7 @@ export function QuizAttempts({ left, max }: { left: number; max: number }) {
  */
 export function QuizLive() {
   const { view, status, error, lockLeft } = useQuiz<QuizLiveView>("live");
+  useEventSound(view?.event, QUIZ_SOUNDS);
   if (!view) return <main className="ay-screen qz-live"><ConnectionNotice status={status} error={error} /></main>;
   const { names, phase, kind } = view;
   const look = QUIZ_LOOK[kind];

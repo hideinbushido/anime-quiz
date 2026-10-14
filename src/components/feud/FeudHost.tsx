@@ -48,7 +48,7 @@ export function FeudHost() {
         : phase === "waiting" ? "Lis la question. Quand un joueur veut répondre, clique sur son nom."
         : phase === "playing" ? "Qui répond ? Clique sur le joueur qui veut répondre."
         : phase === "roundEnded" ? "La manche est finie. Révèle les points quand tu veux."
-        : phase === "revealingPoints" ? "Les valeurs tombent sur le live…"
+        : phase === "revealingPoints" ? (view.revealCount !== null ? `À toi de révéler : ${view.revealCount} valeur${view.revealCount > 1 ? "s" : ""} sur ${view.answers.length} tombée${view.revealCount > 1 ? "s" : ""}.` : "Les valeurs tombent sur le live…")
         : phase === "roundComplete" ? "Manche comptée. Tu peux lancer la suivante."
         : "Épreuve terminée."}
     </p>
@@ -81,7 +81,11 @@ export function FeudHost() {
     <section className="ay-host-controls" aria-label="Manche">
       <button className="ay-button" disabled={phase !== "buzzLocked"} onClick={() => send({ type: "feud:buzzer-reset" })}>Reprendre la main</button>
       <button className="ay-button" disabled={!inPlay} onClick={() => send({ type: "feud:end-round" })}>Forcer la fin de manche</button>
-      <button className="ay-button is-primary" disabled={phase !== "roundEnded"} onClick={() => send({ type: "feud:reveal" })}>Révéler les points</button>
+      {phase === "revealingPoints" && view.revealCount !== null
+        ? <button className="ay-button is-primary" onClick={() => send({ type: "feud:reveal-step" })}>
+          {view.revealCount >= view.answers.length ? "Annoncer le résultat de la manche" : `Révéler la réponse n° ${view.answers.length - view.revealCount}`}
+        </button>
+        : <button className="ay-button is-primary" disabled={phase !== "roundEnded"} onClick={() => send({ type: "feud:reveal", manual: true })}>Révéler les points, un par un</button>}
       <button className="ay-button" disabled={phase !== "roundComplete"} onClick={() => send({ type: "feud:next" })}>Manche suivante</button>
       <button className="ay-button" onClick={() => { if (confirmRestart) { send({ type: "feud:restart" }); setConfirmRestart(false); } else setConfirmRestart(true); }}>
         {confirmRestart ? "Confirmer : tout effacer" : "Nouvelle partie"}

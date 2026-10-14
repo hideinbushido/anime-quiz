@@ -3,10 +3,12 @@ import type { QuizLiveView } from "../../quiz/types";
 import { useQuiz } from "../../quiz/useQuiz";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { StageFx, type FxBurst } from "../fx/StageFx";
+import { useEventSound } from "../../realtime/sound";
 import { KillerBeeDeck } from "../killerBee/KillerBeeDeck";
 import { PlayerFrame } from "../realtime/PlayerFrame";
 
 const NO_AUDIO = { current: null };
+const QUIZ_SOUNDS = { buzz: "/sons/buzzer.mp3" };
 
 /**
  * L'écran du live des Beats de Killer Bee : la platine au centre, un camp de
@@ -16,6 +18,7 @@ const NO_AUDIO = { current: null };
  */
 export function BeatsLive() {
   const { view, status, error, lockLeft } = useQuiz<QuizLiveView>("live");
+  useEventSound(view?.event, QUIZ_SOUNDS);
   if (!view) return <main className="beats-session beats-live"><ConnectionNotice status={status} error={error} /></main>;
   const { names, phase, buzzWinner, revealed, event } = view;
   const done = phase === "done";

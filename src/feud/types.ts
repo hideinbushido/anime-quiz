@@ -52,6 +52,8 @@ export interface FeudGame {
   /** Le cumul des manches dont la révélation a été lancée. */
   totals: Record<PlayerId, number>;
   revealStartedAt: number | null;
+  /** Révélation au clic : le nombre de valeurs déjà tombées. Absent quand elle défile toute seule. */
+  revealCount?: number;
   event: FeudEvent;
 }
 
@@ -87,6 +89,8 @@ interface FeudBaseView {
   buzzWinner: PlayerId | null;
   /** Le cumul des manches révélées (jamais la manche en cours avant sa révélation). */
   totals: Record<PlayerId, number>;
+  /** Révélation au clic : le nombre de valeurs déjà tombées (null quand elle défile toute seule, ou hors révélation). */
+  revealCount: number | null;
   serverNow: number;
   event: FeudEvent;
   result: FeudResult | null;
@@ -143,7 +147,9 @@ export type FeudHostAction =
   | { type: "feud:wrong" }
   | { type: "feud:already" }
   | { type: "feud:end-round" }
-  | { type: "feud:reveal" }
+  /** `manual` : les valeurs tombent une à une, à chaque `feud:reveal-step` du présentateur. */
+  | { type: "feud:reveal"; manual?: boolean }
+  | { type: "feud:reveal-step" }
   | { type: "feud:next" }
   | { type: "feud:undo" }
   | { type: "feud:restart" };

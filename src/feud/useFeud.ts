@@ -23,16 +23,19 @@ export const FEUD_PHASE_LABEL: Record<FeudPhase, string> = {
  * la plus citée, une par pas ; tout se calcule sur l'heure du serveur, si bien
  * que le live et un écran rechargé en cours de route montrent la même chose.
  */
-export function revealProgress(view: Pick<FeudLiveView, "phase" | "slots" | "revealStartedAt" | "revealStepMs" | "roundScore" | "totals">, now: number) {
+export function revealProgress(view: Pick<FeudLiveView, "phase" | "slots" | "revealStartedAt" | "revealStepMs" | "roundScore" | "totals" | "revealCount">, now: number) {
   const total = view.slots.length;
   const done = view.phase === "roundComplete" || view.phase === "gameComplete";
   const running = view.phase === "revealingPoints" && view.revealStartedAt !== null;
-  const steps = done ? total + 1 : running ? Math.floor((now - view.revealStartedAt!) / view.revealStepMs) : 0;
+  // Au clic, c'est le présentateur qui compte les pas ; sinon c'est l'horloge du serveur
+  const manual = running && view.revealCount !== null;
+  const steps = done ? total + 1 : manual ? view.revealCount! : running ? Math.floor((now - view.revealStartedAt!) / view.revealStepMs) : 0;
   // Le rang 8 tombe au premier pas, le rang 1 au huitième
   const shown = (rank: number) => steps >= total - rank + 1;
   const score = { player1: 0, player2: 0 };
   for (const slot of view.slots) if (slot.foundBy && slot.points !== null && shown(slot.rank)) score[slot.foundBy] += slot.points;
-  const before = view.roundScore
+  // (au clic, le cumul reçu est déjà celui d'avant la manche)
+  const before = view.roundScore && !manual
     ? { player1: view.totals.player1 - view.roundScore.player1, player2: view.totals.player2 - view.roundScore.player2 }
     : view.totals;
   return {
