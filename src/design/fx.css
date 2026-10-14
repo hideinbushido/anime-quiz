@@ -411,3 +411,29 @@
 }
 .rt-intro-stuck p { max-width: 22em; font: 800 clamp(1.2rem, 5vw, 2rem) / 1.15 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold-1); }
 .rt-intro-stuck .rt-intro-sound { position: static; }
+
+/* ══ LES LIENS D'AYANOKOJI, écran du joueur : rien ne doit passer sur les liens ══
+   Les boutons montent au-dessus du plateau, et le plateau se cale sur la hauteur
+   disponible : sur un écran peu haut, les cartes rapetissent au lieu de déborder. */
+.ay-player-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+.ay-player-bar .ay-opponent { flex: 1 1 240px; margin: 0; display: grid; place-items: center; }
+.ay-player-bar .ay-player-actions {
+  position: static;
+  flex: 1 1 320px;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+.ay-player-bar .ay-player-actions .ay-button { min-height: 50px; }
+.ay-player .ay-board { max-width: max(300px, calc((100svh - 270px) * 5)); margin-inline: auto; }
+/* La caméra se range dans l'en-tête, en petit */
+.ay-player-head .cam-toggle { grid-auto-flow: column; align-items: center; gap: 8px; }
+.ay-player-head .cam-toggle video { width: 54px; border-width: 2px; }
+.ay-player-head .cam-toggle button { min-height: 40px; padding: 0 12px; font-size: 10px; letter-spacing: 0.1em; }
+.ay-player-head .cam-toggle p { display: none; }
+@media (max-width: 760px) {
+  .ay-player-head { flex-wrap: wrap; }
+  .ay-player-head .cam-toggle button { font-size: 0; gap: 0; padding: 0 12px; }
+  .ay-player-bar .ay-player-actions .ay-button { min-height: 54px; }
+  .ay-player .ay-board { max-width: none; }
+}

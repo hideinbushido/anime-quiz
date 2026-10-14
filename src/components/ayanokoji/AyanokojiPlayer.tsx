@@ -47,33 +47,35 @@ export function AyanokojiPlayer({ player }: { player: PlayerId }) {
         <h1>{view.names[player]}</h1>
       </div>
       {round && <RoundBadge round={round} />}
+      <CamToggle />
       <AyanokojiTimer timer={view.timer} clockOffset={clockOffset} />
     </header>
     <StageFx density={0.5} />
     <ConnectionNotice status={status} error={error} />
-    <CamToggle />
 
     {!round || phase === "waiting" ? <p className="ay-wait">En attente du présentateur…</p> : <>
-      <p className={"ay-opponent" + (view.seats[opponent].submitted ? " is-alert" : "")} role="status">
-        {revealing ? "Correction" : view.seats[opponent].submitted ? `${view.names[opponent]} a validé` : `${view.names[opponent]} est en réflexion`}
-      </p>
+      {/* L'état de l'adversaire et les deux boutons tiennent sur une ligne, au-dessus du plateau : rien ne passe sur les liens */}
+      <div className="ay-player-bar">
+        <p className={"ay-opponent" + (view.seats[opponent].submitted ? " is-alert" : "")} role="status">
+          {revealing ? "Correction" : view.seats[opponent].submitted ? `${view.names[opponent]} a validé` : `${view.names[opponent]} est en réflexion`}
+        </p>
+        {canPlay && <footer className="ay-player-actions">
+          {confirming ? <>
+            <p>Valider définitivement cette chaîne ?</p>
+            <button type="button" className="ay-button" onClick={() => setConfirming(false)}>Non, je continue</button>
+            <button type="button" className="ay-button is-primary" onClick={() => { setConfirming(false); send({ type: "ayanokoji:submit" }); }}>Oui, je valide</button>
+          </> : <>
+            <button type="button" className="ay-button" disabled={order.join() === view.initialOrder.join()} onClick={() => reorder(view.initialOrder)}>Recommencer</button>
+            <button type="button" className="ay-button is-primary" onClick={() => setConfirming(true)}>Valider</button>
+          </>}
+        </footer>}
+      </div>
 
       <AyanokojiBoard round={round} order={order} hidden={phase === "ready"} locked={!canPlay}
         onReorder={reorder} correctLinks={view.result?.correctLinks} revealed={revealed} />
 
       {phase === "ready" && <p className="ay-wait">La manche va commencer. Les six cartes se retournent au signal.</p>}
       {phase === "paused" && <p className="ay-wait">Pause. Le présentateur reprend dans un instant.</p>}
-
-      {canPlay && <footer className="ay-player-actions">
-        {confirming ? <>
-          <p>Valider définitivement cette chaîne ?</p>
-          <button type="button" className="ay-button" onClick={() => setConfirming(false)}>Non, je continue</button>
-          <button type="button" className="ay-button is-primary" onClick={() => { setConfirming(false); send({ type: "ayanokoji:submit" }); }}>Oui, je valide</button>
-        </> : <>
-          <button type="button" className="ay-button" disabled={order.join() === view.initialOrder.join()} onClick={() => reorder(view.initialOrder)}>Recommencer</button>
-          <button type="button" className="ay-button is-primary" onClick={() => setConfirming(true)}>Valider</button>
-        </>}
-      </footer>}
 
       {submitted && !revealing && phase !== "countdown" && <div className="ay-locked" role="status">
         <LockIcon /><strong>Réponse verrouillée</strong>
