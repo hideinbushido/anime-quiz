@@ -15,7 +15,7 @@ Les règles telles qu'elles se jouent depuis le 2026-10-13 : pas de buzzer, on r
 
 ## Identité
 
-Propre à Anya, pas au gabarit de Killer Bee (demande du présentateur, 2026-10-14) : l'univers Spy × Family. Nuit violette, rose de ses cheveux, vert de ses yeux, papier crème des dossiers secrets, tampons rouges, photo d'identité tenue par un trombone, ondes de télépathie, bulles de pensée, cacahuètes. Titres en Fredoka, dossiers en Special Elite. Phrases simples, sans rimes. La photo d'Anya n'est pas détourée : le détourage automatique échoue sur un dessin.
+Propre à Anya, pas au gabarit de Killer Bee (demande du présentateur, 2026-10-14) : l'univers Spy × Family. Nuit violette, rose de ses cheveux, vert de ses yeux, papier crème des dossiers secrets, tampons rouges, photo d'identité tenue par un trombone, ondes de télépathie, bulles de pensée, cacahuètes. Titres en Fredoka, dossiers en Special Elite. Le texte parle comme Anya en VF : troisième personne, « Trop génial ! » (pas « waku waku », c'est la VO), conjugaisons d'enfant (entendé, tu sortes), mots d'adulte écorchés (présentatateur, strique, « comtracé sur moi »). Sans rimes. La photo d'Anya n'est pas détourée : le détourage automatique échoue sur un dessin.
 
 ## Source des règles
 

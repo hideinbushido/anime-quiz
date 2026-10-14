@@ -126,7 +126,7 @@ poser(coup_sourd(grave=65), 22.0, 0.6)            # hors manche
 for k, freq in enumerate((392.0, 440.0, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99)):
     poser(note(freq), 24.5 + 0.4 * k, 0.6)        # les huit points, du plus petit au plus gros
 poser(coup_sourd(grave=100), 27.9, 0.4)
-poser(scintillement(1046.5, 1.4), 29.5, 1.0)      # waku waku
+poser(scintillement(1046.5, 1.4), 29.5, 1.0)      # trop génial
 poser(vibraphone((587.33, 698.46, 880.0, 1046.5), 3.0), 30.0, 0.5)
 
 mix *= np.clip((DUREE - t) / 1.2, 0, 1)
