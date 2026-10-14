@@ -474,3 +474,7 @@
 @media (max-width: 520px) { .fd-player-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 46px; } }
 .fd-player-board .fd-player-list { flex: none; grid-auto-rows: clamp(46px, 8.4vh, 70px); }
 @media (max-width: 520px) { .fd-player-board .fd-player-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 44px; } }
+
+/* Le Dossier de L, écran du live : l'historique des tours se fait défiler à la molette (sans barre visible dans OBS) */
+main.ds-live .ds-history { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; mask-image: linear-gradient(180deg, #000 90%, transparent); padding-bottom: 6vh; }
+main.ds-live .ds-history::-webkit-scrollbar { display: none; }

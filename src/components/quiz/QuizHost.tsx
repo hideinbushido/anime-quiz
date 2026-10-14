@@ -58,6 +58,8 @@ export function QuizHost() {
         : hasAudio ? "Lance la musique : le buzzer s'ouvre avec elle." : "Lis la réplique, puis ouvre le buzzer."}
     </p>
 
+    {/* Le jingle de la réponse, quand le morceau en a un : il part à la révélation, sur la machine du présentateur */}
+    {view.phase === "revealed" && view.revealAudioSrc && <audio key={view.revealAudioSrc} className="qz-audio" src={view.revealAudioSrc} controls autoPlay />}
     {hasAudio && view.phase !== "done" && <audio ref={audio} key={view.audioSrc} className="qz-audio" src={view.audioSrc ?? undefined} controls preload="auto"
       onPlay={() => { if (view.phase === "idle" && !exhausted) send({ type: "quiz:open" }); }}
       onPause={() => { if (view.phase === "open") send({ type: "quiz:close" }); }} />}

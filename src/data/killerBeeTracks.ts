@@ -5,7 +5,7 @@ import { KILLER_BEE_TRACK_COUNT } from "../duel/killerBee";
 // Les sept extraits rangés dans `public/Beats killer Bee/CLASSE B/`. Pour une autre classe,
 // créer le dossier `CLASSE D`, `CLASSE C` ou `CLASSE A` et y ajouter sa liste ici.
 const dossier = (classe: DifficultyClass, fichier: string) => `/Beats%20killer%20Bee/CLASSE%20${classe}/${fichier.split("/").map(encodeURIComponent).join("/")}`;
-const existing: Partial<Record<DifficultyClass, [anime: string, fichier: string, image?: string][]>> = {
+const existing: Partial<Record<DifficultyClass, [anime: string, fichier: string, image?: string, jingle?: string][]>> = {
   D: [
     ["One Piece", "1er.MP3", "reponse/1er.jpg"],
     ["Soul Eater", "2e.MP3", "reponse/2e.jpg"],
@@ -16,13 +16,13 @@ const existing: Partial<Record<DifficultyClass, [anime: string, fichier: string,
     ["Assassination Classroom", "7e.MP3", "reponse/7e.jpg"],
   ],
   B: [
-    ["One Piece", "1ere manche.MP3"],
-    ["Naruto", "2e manche.MP3"],
-    ["Attack on Titan", "3e Manche.MP3"],
-    ["Demon Slayer", "4e manche.MP3"],
-    ["Jujutsu Kaisen", "5e manche.MP3"],
-    ["À renseigner", "6e manche.MP3"],
-    ["À renseigner", "7e manche.MP3"],
+    ["My Hero Academia", "1ere manche.MP3"],
+    ["One Piece", "2e manche.MP3"],
+    ["Jujutsu Kaisen", "3e Manche.MP3"],
+    ["Psycho-Pass", "4e manche.MP3"],
+    ["Spy x Family", "5e manche.MP3"],
+    ["JoJo's Bizarre Adventure", "6e manche.MP3"],
+    ["Haikyū!!", "7e manche.MP3", "reponse/7 ireponse.png", "reponse/7 mreponse.mp3"],
   ],
 };
 const descriptions = {
@@ -40,6 +40,7 @@ export const killerBeeTracks: Record<DifficultyClass, KillerBeeTrack[]> = Object
       anime: existing[difficulty]?.[index]?.[0] ?? "À renseigner",
       audioSrc: existing[difficulty]?.[index] ? dossier(difficulty, existing[difficulty]![index][1]) : "",
       imageSrc: existing[difficulty]?.[index]?.[2] ? dossier(difficulty, existing[difficulty]![index][2]!) : undefined,
+      revealAudioSrc: existing[difficulty]?.[index]?.[3] ? dossier(difficulty, existing[difficulty]![index][3]!) : undefined,
       audioType: difficulty === "B" && existing[difficulty] ? "instrumental" : "normal",
     })),
   ]),
