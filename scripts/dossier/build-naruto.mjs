@@ -132,7 +132,7 @@ for (const { title, infobox } of sheets) {
       clan,
       typesJutsu,
       naturesChakra: unique(list(fields['nature type']).flatMap(item => (NATURES[item.name] ? [NATURES[item.name]] : []))),
-      statutSpecial: [...(classification.includes('Jinchūriki') ? ['Jinchūriki'] : []), ...(classification.includes('Sage') ? ['Ermite'] : []), ...(summoner ? ['Invocateur'] : []),
+      statutSpecial: [...(classification.includes('Tailed Beast') ? ['Bijû'] : []), ...(classification.includes('Jinchūriki') ? ['Jinchūriki'] : []), ...(classification.includes('Sage') ? ['Ermite'] : []), ...(summoner ? ['Invocateur'] : []),
         ...(classification.includes('Missing-nin') ? ['Ninja déserteur'] : []), ...(classification.includes('Medical-nin') ? ['Ninja médical'] : [])],
       premiereApparition: arc,
     },

@@ -120,6 +120,17 @@ for (const title of titles) {
     // Un groupe que nous n'avons pas traduit garde son nom du wiki, plutôt que de disparaître
     return /#|Will of D\.|^his |^her /i.test(item.name) || item.name.length > 40 ? [] : [item.name];
   }));
+  // Une seule affiliation à l'écran : la principale, celle que le wiki donne en premier (l'équipage actuel,
+  // la famille, ou l'organisation). Tout lister donnait des cases illisibles : Luffy en avait cinq.
+  // Les regroupements qui ne sont ni un équipage ni une famille ne comptent pas.
+  const META = ['Alliance de Wano', 'Quatre Empereurs', 'Sept Grands Corsaires', 'Grande Flotte du Chapeau de Paille'];
+  let principal = affiliations.find(name => !META.includes(name));
+  // Les enfants de Big Mom naviguent sous son pavillon : même case que le reste de l'équipage
+  if (principal === 'Famille Charlotte' && affiliations.includes('Équipage de Big Mom')) principal = 'Équipage de Big Mom';
+  // Corrections à la main : le wiki liste d'abord le groupe de jeunesse de Kuma, pas l'armée où on le connaît
+  if (page.title === 'Bartholomew Kuma') principal = 'Armée Révolutionnaire';
+  principal = { 'Kouzuki Family': 'Famille Kozuki', 'Kurozumi Family': 'Famille Kurozumi' }[principal] ?? principal;
+  affiliations.splice(0, affiliations.length, ...(principal ? [principal] : []));
   // L'origine n'est connue que pour une partie des personnages : les autres sont « Inconnue », jamais vides
   const originName = entries(fields.origin)[0]?.name ?? null;
   const origin = !originName || /[{}|]/.test(originName) ? 'Inconnue' : ORIGINS[originName] ?? (note('origine', originName), originName);

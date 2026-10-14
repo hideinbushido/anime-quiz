@@ -67,7 +67,7 @@ test('Naruto : sept colonnes, une seule affiliation (village et Akatsuki), des l
       if (comparisonType === 'multi') assert.ok(Array.isArray(character.attributes[key]), `${character.id} : ${key} doit être une liste`);
     }
     const { statutSpecial, affiliations, typesJutsu, naturesChakra } = character.attributes;
-    for (const statut of statutSpecial) assert.ok(['Jinchūriki', 'Ermite', 'Invocateur', 'Ninja déserteur', 'Ninja médical'].includes(statut), `${character.id} : ${statut}`);
+    for (const statut of statutSpecial) assert.ok(['Bijû', 'Jinchūriki', 'Ermite', 'Invocateur', 'Ninja déserteur', 'Ninja médical'].includes(statut), `${character.id} : ${statut}`);
     for (const type of typesJutsu) assert.ok(['Ninjutsu', 'Genjutsu', 'Taijutsu'].includes(type), `${character.id} : ${type}`);
     for (const nature of naturesChakra) assert.ok(['Feu', 'Vent', 'Foudre', 'Terre', 'Eau'].includes(nature), `${character.id} : ${nature}`);
     // Le village, plus l'Akatsuki : jamais plus de deux affiliations
@@ -96,7 +96,7 @@ test('cinq rounds dans l\'ordre : Naruto, Naruto, One Piece, One Piece, Dragon B
     }
   }
   const onePiece = DOSSIER_CONFIG.universes['one-piece'], dragonBall = DOSSIER_CONFIG.universes['dragon-ball'];
-  assert.deepEqual(onePiece.attributes.map(attribute => attribute.label), ['Genre', 'Race / Espèce', 'Origine', 'Fruit du démon', 'Haki', 'Affiliation / Équipage', 'Premier arc']);
+  assert.deepEqual(onePiece.attributes.map(attribute => attribute.label), ['Genre', 'Race / Espèce', 'Origine', 'Fruit du démon', 'Haki', 'Équipage / Famille', 'Premier arc']);
   assert.deepEqual(dragonBall.attributes.map(attribute => attribute.label), ['Genre', 'Race / Espèce', 'Origine', 'Résidence', 'Affiliation', 'Peut se transformer', 'Premier arc']);
   const of = (universe, id) => universe.roster.find(character => character.id === id);
 
@@ -108,7 +108,8 @@ test('cinq rounds dans l\'ordre : Naruto, Naruto, One Piece, One Piece, Dragon B
   const cells = compareCharacterGuess(onePiece, of(onePiece, 'nico-robin'), luffy).cells;
   const cell = key => cells.find(item => item.key === key);
   assert.equal(cell('fruit').state, 'partial', 'Paramecia en commun');
-  assert.equal(cell('affiliations').state, 'partial');
+  assert.equal(cell('affiliations').state, 'correct', 'une seule affiliation par personnage : le même équipage');
+  assert.ok(onePiece.roster.every(character => character.attributes.affiliations.length <= 1));
   // Le Haki voyage valeur par valeur, pour être montré en icônes ; sans Haki, la liste est vide
   assert.equal(onePiece.attributes.find(attribute => attribute.key === 'haki').display, 'icons');
   assert.deepEqual(cell('haki').values, []);

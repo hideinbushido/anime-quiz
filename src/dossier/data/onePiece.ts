@@ -18,7 +18,7 @@ export const ONE_PIECE_ATTRIBUTES: AttributeConfig[] = [
   { key: "origine", label: "Origine", comparisonType: "exact" },
   { key: "fruit", label: "Fruit du démon", comparisonType: "multi" },
   { key: "haki", label: "Haki", comparisonType: "multi", display: "icons" },
-  { key: "affiliations", label: "Affiliation / Équipage", comparisonType: "multi" },
+  { key: "affiliations", label: "Équipage / Famille", comparisonType: "multi" },
   { key: "premiereApparition", label: "Premier arc", comparisonType: "exact" },
 ];
 

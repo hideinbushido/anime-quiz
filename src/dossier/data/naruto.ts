@@ -7,7 +7,7 @@ import { NARUTO_ROSTER } from "./naruto.roster";
  * Sept colonnes. L'affiliation tient en une colonne : le village, et l'Akatsuki
  * pour ceux qui en ont fait partie. Les types de jutsu se limitent aux trois
  * grands (ninjutsu, genjutsu, taijutsu), les natures de chakra aux cinq de base.
- * Le statut spécial connaît Jinchūriki, Ermite, Invocateur, Ninja déserteur et
+ * Le statut spécial connaît Bijû (les démons à queues), Jinchūriki, Ermite, Invocateur, Ninja déserteur et
  * Ninja médical.
  *
  * Les personnages (`naruto.roster.ts`) sont construits à partir du wiki
