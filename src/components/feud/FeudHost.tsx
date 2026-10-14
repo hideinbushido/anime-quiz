@@ -44,14 +44,23 @@ export function FeudHost() {
     <p className="fd-host-question">{view.question}</p>
 
     <p className={"fd-host-turn" + (buzzWinner ? ` ${buzzWinner}` : "")} role="status">
-      {judging ? <><strong>{names[buzzWinner]}</strong> a buzzé — clique sa réponse, ou Faux.</>
-        : phase === "waiting" ? "Buzzer fermé. Lis la question, puis ouvre le buzzer."
-        : phase === "playing" ? (view.buzzOpen ? "Buzzer ouvert : en attente d'un buzz." : "Buzzer fermé par la régie.")
+      {judging ? <><strong>{names[buzzWinner]}</strong> a la main : clique sa réponse, ou Faux.</>
+        : phase === "waiting" ? "Lis la question. Quand un joueur veut répondre, clique sur son nom."
+        : phase === "playing" ? "Qui répond ? Clique sur le joueur qui veut répondre."
         : phase === "roundEnded" ? "La manche est finie. Révèle les points quand tu veux."
         : phase === "revealingPoints" ? "Les valeurs tombent sur le live…"
         : phase === "roundComplete" ? "Manche comptée. Tu peux lancer la suivante."
         : "Épreuve terminée."}
     </p>
+
+    <section className="fd-host-hands" aria-label="Donner la main">
+      {PLAYERS.map(id => <button key={id} className={`fd-host-hand ${id}` + (buzzWinner === id ? " is-on" : "")} disabled={!inPlay || view.strikes[id] >= view.maxStrikes}
+        onClick={() => send({ type: "feud:hand", player: id })}>
+        <FeudAvatar player={id} name={names[id]} image={view.avatars[id]} />
+        <span><strong>{names[id]}</strong>{view.strikes[id] >= view.maxStrikes ? "Hors manche" : buzzWinner === id ? "A la main" : "Donner la main"}</span>
+        <FeudStrikes count={view.strikes[id]} max={view.maxStrikes} />
+      </button>)}
+    </section>
 
     <section className="fd-host-answers" aria-label="Les huit réponses">
       {view.answers.map(answer => <button key={answer.id} className={"fd-host-answer" + (answer.foundBy ? ` is-found ${answer.foundBy}` : "")}
@@ -69,10 +78,8 @@ export function FeudHost() {
       <button className="ay-button" disabled={!view.canUndo} onClick={() => send({ type: "feud:undo" })}>Annuler la dernière action</button>
     </section>
 
-    <section className="ay-host-controls" aria-label="Buzzer et manche">
-      <button className="ay-button is-primary" disabled={!(phase === "waiting" || (phase === "playing" && !view.buzzOpen))} onClick={() => send({ type: "feud:buzzer-open" })}>Ouvrir le buzzer</button>
-      <button className="ay-button" disabled={!(phase === "playing" && view.buzzOpen)} onClick={() => send({ type: "feud:buzzer-close" })}>Fermer le buzzer</button>
-      <button className="ay-button" disabled={phase !== "buzzLocked"} onClick={() => send({ type: "feud:buzzer-reset" })}>Reset buzzer</button>
+    <section className="ay-host-controls" aria-label="Manche">
+      <button className="ay-button" disabled={phase !== "buzzLocked"} onClick={() => send({ type: "feud:buzzer-reset" })}>Reprendre la main</button>
       <button className="ay-button" disabled={!inPlay} onClick={() => send({ type: "feud:end-round" })}>Forcer la fin de manche</button>
       <button className="ay-button is-primary" disabled={phase !== "roundEnded"} onClick={() => send({ type: "feud:reveal" })}>Révéler les points</button>
       <button className="ay-button" disabled={phase !== "roundComplete"} onClick={() => send({ type: "feud:next" })}>Manche suivante</button>

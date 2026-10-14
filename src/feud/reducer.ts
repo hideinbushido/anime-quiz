@@ -43,7 +43,7 @@ function settle(state: FeudState, rounds: FeudRound[]) {
   state.buzzWinner = null;
   const over = state.found.length >= feudRound(state, rounds).answers.length || PLAYERS.every(id => !eligible(state, id));
   state.phase = over ? "roundEnded" : "playing";
-  state.buzzOpen = !over;
+  state.buzzOpen = !over && !state.handMode;
   return over;
 }
 
@@ -93,8 +93,22 @@ export function hostFeud(state: FeudState, action: FeudHostAction, now: number, 
       remember(state);
       state.buzzWinner = null;
       state.phase = "playing";
-      state.buzzOpen = true;
+      state.buzzOpen = !state.handMode;
       return null;
+    case "feud:hand": {
+      // Pas de buzzer : on répond à voix haute, et le présentateur désigne qui a la main
+      if (!["waiting", "playing", "buzzLocked"].includes(state.phase)) return "La main ne peut pas être donnée maintenant.";
+      if (action.player !== "player1" && action.player !== "player2") return "Joueur inconnu.";
+      if (!eligible(state, action.player)) return "Ce joueur est hors manche.";
+      if (state.buzzWinner === action.player) return null;
+      remember(state);
+      state.handMode = true;
+      state.buzzWinner = action.player;
+      state.buzzOpen = false;
+      state.phase = "buzzLocked";
+      emit(state, "buzz", action.player);
+      return null;
+    }
     case "feud:correct": {
       const player = state.buzzWinner;
       if (state.phase !== "buzzLocked" || !player) return "Personne n'a buzzé.";
@@ -190,15 +204,16 @@ export function feudView(state: FeudState, role: FeudRole, context: Context, rou
     totals: state.totals, serverNow: context.now, event: state.event,
     result: state.phase === "gameComplete" ? feudResult(state) : null,
   };
+  // Le tableau public : une réponse n'y figure qu'une fois trouvée, une valeur qu'à la révélation
+  const slots: FeudSlot[] = round.answers.map((answer, index) => {
+    const foundBy = owner(answer.id);
+    return { rank: index + 1, label: foundBy || revealed ? answer.label : null, foundBy, points: revealed ? answer.points : null };
+  });
   if (role === "player1" || role === "player2") {
-    const view: FeudPlayerView = { ...base, role, canBuzz: state.phase === "playing" && state.buzzOpen && !state.buzzWinner && eligible(state, role) };
+    const view: FeudPlayerView = { ...base, role, question: round.question, slots, canBuzz: state.phase === "playing" && state.buzzOpen && !state.buzzWinner && eligible(state, role) };
     return view;
   }
   if (role === "live") {
-    const slots: FeudSlot[] = round.answers.map((answer, index) => {
-      const foundBy = owner(answer.id);
-      return { rank: index + 1, label: foundBy || revealed ? answer.label : null, foundBy, points: revealed ? answer.points : null };
-    });
     const view: FeudLiveView = { ...base, role, question: round.question, slots,
       roundScore: revealed ? state.roundScore : null, revealStartedAt: revealed ? state.revealStartedAt : null, revealStepMs: REVEAL_STEP_MS };
     return view;

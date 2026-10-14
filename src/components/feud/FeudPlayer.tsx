@@ -1,23 +1,21 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useRef, type ChangeEvent } from "react";
 import type { PlayerId } from "../../types";
 import type { FeudPlayerView } from "../../feud/types";
 import { useFeud } from "../../feud/useFeud";
 import { ConnectionNotice } from "../ayanokoji/AyanokojiParts";
 import { CamToggle } from "../realtime/CamToggle";
 import { StageFx } from "../fx/StageFx";
-import { FeudAvatar, FeudStrikes } from "./FeudParts";
-
+import { FeudAnswerRow, FeudAvatar, FeudStrikes } from "./FeudParts";
 import { shrinkPhoto } from "../../realtime/avatar";
 
 /**
- * Le téléphone du joueur : un buzzer, ses erreurs, ses réponses trouvées.
- * Le tableau se regarde sur le live ; rien de ce qui s'y cache n'arrive ici.
+ * L'écran du joueur. Pas de buzzer ici : on répond à voix haute, et c'est le
+ * présentateur qui donne la main. Le joueur suit la question, le tableau des
+ * réponses déjà trouvées, ses erreurs et à qui c'est de répondre. Aucune
+ * réponse cachée ni aucune valeur n'arrive sur cet écran.
  */
 export function FeudPlayer({ player }: { player: PlayerId }) {
   const { view, status, error, send } = useFeud<FeudPlayerView>(player);
-  // Le bouton réagit sous le doigt sans attendre le serveur, qui reste seul juge du premier buzz
-  const [pressed, setPressed] = useState(false);
-  const canBuzz = view?.canBuzz ?? false;
   const picker = useRef<HTMLInputElement>(null);
   const onPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -25,22 +23,6 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
     if (!file) return;
     try { send({ type: "room:avatar", image: await shrinkPhoto(file) }); } catch { /* fichier illisible : la photo actuelle reste */ }
   };
-  const buzz = useCallback(() => {
-    // Un appui, un envoi : le doigt qui reste posé ou le clic qui suit ne rebuzzent pas
-    if (!canBuzz || pressed) return;
-    setPressed(true);
-    send({ type: "buzzer:press" });
-  }, [canBuzz, pressed, send]);
-  useEffect(() => { if (!canBuzz) setPressed(false); }, [canBuzz]);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.code !== "Space" || event.repeat) return;
-      event.preventDefault();
-      buzz();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [buzz]);
 
   if (!view) return <main className={`ay-screen fd-player ${player}`}><ConnectionNotice status={status} error={error} /></main>;
   const opponent: PlayerId = player === "player1" ? "player2" : "player1";
@@ -52,12 +34,11 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
   const [label, hint, tone] = phase === "gameComplete" ? ["Épreuve terminée", "Le score final est sur le live.", "is-over"]
     : over ? ["Manche terminée", phase === "roundEnded" ? "Les points arrivent sur le live…" : "Regarde le live.", "is-over"]
     : out ? ["3 strikes", "Hors manche", "is-out"]
-    : mine ? ["Tu as buzzé !", "Donne ta réponse à voix haute.", "is-mine"]
-    : view.buzzWinner ? [`${view.names[opponent]} a buzzé`, "En attente du présentateur…", "is-theirs"]
-    : view.canBuzz ? ["Buzzer ouvert", "Premier arrivé, premier servi.", "is-open"]
-    : ["Buzzer fermé", "En attente du présentateur…", "is-closed"];
+    : mine ? ["À toi de répondre", "Donne ta réponse à voix haute.", "is-mine"]
+    : view.buzzWinner ? [`${view.names[opponent]} répond`, "En attente du présentateur…", "is-theirs"]
+    : ["Une idée ?", "Dis-le à voix haute : le présentateur te donne la main.", "is-open"];
 
-  return <main className={`ay-screen fd-player ${player} ${tone}`}>
+  return <main className={`ay-screen fd-player fd-player-board ${player} ${tone}`}>
     <header className="fd-player-head">
       <button type="button" className="fd-photo" onClick={() => picker.current?.click()} aria-label="Changer ma photo de profil">
         <FeudAvatar player={player} name={view.names[player]} image={view.avatars[player]} />
@@ -72,15 +53,21 @@ export function FeudPlayer({ player }: { player: PlayerId }) {
     <ConnectionNotice status={status} error={error} />
     <CamToggle />
 
+    <p className="fd-player-state" role="status"><strong key={label}>{label}</strong><span>{hint}</span></p>
+
+    <p className="fd-question">{view.question}</p>
+    <ol className="fd-list fd-player-list">
+      {view.slots.map(slot => <FeudAnswerRow key={slot.rank} slot={slot} names={view.names} avatars={view.avatars}
+        valueShown={slot.points !== null} labelShown fresh={view.event.kind === "correct" && view.event.rank === slot.rank} />)}
+    </ol>
+
     <dl className="fd-player-stats">
       <div><dt>Strikes</dt><dd><FeudStrikes count={view.strikes[player]} max={view.maxStrikes} /></dd></div>
-      <div><dt>Réponses trouvées</dt><dd><b>{view.foundCount[player]}</b></dd></div>
+      <div><dt>Trouvées</dt><dd><b>{view.foundCount[player]}</b></dd></div>
+      <div><dt>{view.names[opponent]}</dt><dd><b>{view.foundCount[opponent]}</b></dd></div>
       {(view.roundNumber > 1 || phase === "roundComplete" || phase === "gameComplete") && <div><dt>Total</dt><dd><b>{phase === "revealingPoints" ? "…" : view.totals[player]}</b></dd></div>}
     </dl>
 
-    <button type="button" className={"fd-buzzer" + (pressed || mine ? " is-pressed" : "")} disabled={!view.canBuzz} onPointerDown={buzz} onClick={buzz}>Buzz</button>
-
-    <p className="fd-player-state" role="status"><strong>{label}</strong><span>{hint}</span></p>
     {phase === "gameComplete" && view.result && <p className="fd-player-result">
       {view.result.winner === null ? "Égalité" : view.result.winner === player ? "Tu gagnes l'épreuve" : `${view.names[opponent]} gagne l'épreuve`}
       <b>{view.totals[player]} – {view.totals[opponent]}</b>

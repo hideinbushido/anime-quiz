@@ -15,6 +15,33 @@ const answer = (state, player, verdict, answerId) => {
   assert.equal(act(state, verdict, answerId ? { answerId } : {}), null);
 };
 
+test('sans buzzer : le présentateur donne la main, juge, et le buzzer des joueurs reste fermé', () => {
+  const state = createFeud();
+  const [first] = FEUD_ROUNDS[0].answers;
+  assert.equal(act(state, 'feud:hand', { player: 'quelqu-un' }), 'Joueur inconnu.');
+  assert.equal(act(state, 'feud:hand', { player: 'player1' }), null);
+  assert.equal(state.phase, 'buzzLocked');
+  assert.equal(state.buzzWinner, 'player1');
+  // Le présentateur peut se raviser et donner la main à l'autre
+  assert.equal(act(state, 'feud:hand', { player: 'player2' }), null);
+  assert.equal(state.buzzWinner, 'player2');
+  assert.equal(act(state, 'feud:correct', { answerId: first.id }), null);
+  assert.deepEqual(state.found, [{ answerId: first.id, foundBy: 'player2' }]);
+  assert.equal(state.phase, 'playing');
+  assert.equal(state.buzzOpen, false, 'le buzzer ne se rouvre pas');
+  assert.equal(pressBuzzer(state, 'player1'), 'Le buzzer est fermé.');
+  // Trois erreurs : hors manche, la main ne peut plus lui être donnée
+  for (let strike = 0; strike < MAX_STRIKES; strike++) { assert.equal(act(state, 'feud:hand', { player: 'player1' }), null); assert.equal(act(state, 'feud:wrong'), null); }
+  assert.equal(state.strikes.player1, MAX_STRIKES);
+  assert.equal(act(state, 'feud:hand', { player: 'player1' }), 'Ce joueur est hors manche.');
+  assert.equal(state.phase, 'playing', "l'autre joueur continue seul");
+  // Reprendre la main ne rouvre pas le buzzer non plus
+  act(state, 'feud:hand', { player: 'player2' });
+  assert.equal(act(state, 'feud:buzzer-reset'), null);
+  assert.equal(state.buzzWinner, null);
+  assert.equal(state.buzzOpen, false);
+});
+
 test('trois manches de huit réponses, sans classe, aux identifiants uniques', () => {
   assert.equal(FEUD_ROUNDS.length, 3);
   assert.deepEqual(FEUD_ROUNDS.map(round => round.roundNumber), [1, 2, 3]);
@@ -62,9 +89,13 @@ test('une bonne réponse est attribuée, sa valeur reste cachée au live et inco
   assert.deepEqual(live.avatars, { player1: null, player2: null });
   assert.ok(!JSON.stringify(live).includes(first.label), 'une réponse cachée ne part pas vers le live');
 
-  const player = JSON.stringify(feudView(state, 'player2', context));
-  for (const item of FEUD_ROUNDS[0].answers) assert.ok(!player.includes(item.label), 'le téléphone ne reçoit aucune réponse');
-  assert.ok(!player.includes('"points"') && !player.includes('roundScore') && !player.includes('question'));
+  // L'écran du joueur montre ce que le public voit : la question et les réponses trouvées, jamais les cachées ni les valeurs
+  const phone = feudView(state, 'player2', context);
+  assert.deepEqual(phone.slots, live.slots);
+  assert.equal(phone.question, FEUD_ROUNDS[0].question);
+  const player = JSON.stringify(phone);
+  for (const item of FEUD_ROUNDS[0].answers) if (item.id !== third.id) assert.ok(!player.includes(item.label), 'le téléphone ne reçoit aucune réponse cachée');
+  assert.ok(!/"points":\d/.test(player) && !player.includes('roundScore') && !player.includes('"answers"'));
 
   const host = feudView(state, 'host', context);
   assert.equal(host.answers[0].points, first.points);
@@ -305,7 +336,8 @@ test('en temps réel : le serveur tranche le buzz, garde les valeurs secrètes e
 
     // Jusqu'ici, aucune valeur n'a quitté le serveur vers le live ou les joueurs
     for (const client of [live, p1, p2]) assert.ok(client.seen.every(raw => !/"points":\d/.test(raw) && !raw.includes('"roundScore":{')), 'valeurs secrètes');
-    for (const client of [p1, p2]) assert.ok(client.seen.every(raw => !raw.includes('"slots"') && !raw.includes('"answers"') && !raw.includes(host.feud.answers[2].label)), 'aucune réponse sur les téléphones');
+    const hidden = host.feud.answers.filter(item => !item.foundBy).map(item => item.label);
+    for (const client of [p1, p2]) assert.ok(client.seen.every(raw => !raw.includes('"answers"') && hidden.every(label => !raw.includes(label))), 'aucune réponse cachée sur les téléphones');
 
     // Fin forcée, puis révélation : les valeurs arrivent, le cumul aussi
     host.send({ type: 'feud:end-round' });

@@ -45,6 +45,8 @@ export interface FeudGame {
   strikes: Record<PlayerId, number>;
   buzzOpen: boolean;
   buzzWinner: PlayerId | null;
+  /** Le présentateur donne la main lui-même : le buzzer des joueurs ne s'ouvre plus. */
+  handMode?: boolean;
   /** Les points de la manche en cours : calculés au fil de l'eau, jamais diffusés avant la révélation. */
   roundScore: Record<PlayerId, number>;
   /** Le cumul des manches dont la révélation a été lancée. */
@@ -94,6 +96,9 @@ interface FeudBaseView {
 export interface FeudPlayerView extends FeudBaseView {
   role: PlayerId;
   canBuzz: boolean;
+  /** Ce que le public voit aussi : la question et les réponses déjà trouvées. */
+  question: string;
+  slots: FeudSlot[];
 }
 
 /** Une case du tableau telle que le public la voit. */
@@ -132,6 +137,8 @@ export type FeudHostAction =
   | { type: "feud:buzzer-open" }
   | { type: "feud:buzzer-close" }
   | { type: "feud:buzzer-reset" }
+  /** Le présentateur donne la main à un joueur, qui répond à voix haute. */
+  | { type: "feud:hand"; player: PlayerId }
   | { type: "feud:correct"; answerId: string }
   | { type: "feud:wrong" }
   | { type: "feud:already" }

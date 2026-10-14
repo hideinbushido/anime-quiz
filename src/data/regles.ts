@@ -49,7 +49,7 @@ export const REGLES: Record<string, RegleEpreuve> = {
   "pensees-anya": {
     principe: "Une question de sondage, huit réponses cachées. Il faut retrouver ce que les gens ont le plus répondu.",
     etapes: [
-      "Les deux joueurs buzzent librement. Le premier buzz a la main et répond à voix haute.",
+      "Pas de buzzer : celui qui a une idée la dit à voix haute, et le présentateur lui donne la main.",
       "Bonne réponse : elle s'affiche au tableau avec la photo de celui qui l'a trouvée. Sa valeur reste cachée.",
       "Mauvaise réponse : un strike. À trois strikes, le joueur est hors manche ; l'autre continue seul.",
       "À la fin de la manche, le présentateur révèle les points de chaque réponse, un par un.",

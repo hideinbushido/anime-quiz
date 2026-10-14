@@ -88,7 +88,7 @@ export function FeudLive() {
       {side("player2")}
     </div>
 
-    {view.buzzWinner && <div key={view.event.seq} className={`fd-buzz ${view.buzzWinner}`} role="status"><strong>{names[view.buzzWinner]}</strong><span>Buzz !</span></div>}
+    {view.buzzWinner && <div key={view.event.seq} className={`fd-buzz ${view.buzzWinner}`} role="status"><strong>{names[view.buzzWinner]}</strong><span>répond</span></div>}
     {(view.event.kind === "wrong" || view.event.kind === "strike3") && view.event.player && !view.buzzWinner && phase === "playing"
       && <div key={view.event.seq} className={`fd-flash ${view.event.player}`} aria-hidden="true">
         <FeudStrikes count={view.strikes[view.event.player]} max={view.maxStrikes} />

@@ -437,3 +437,40 @@
   .ay-player-bar .ay-player-actions .ay-button { min-height: 54px; }
   .ay-player .ay-board { max-width: none; }
 }
+
+/* ══ LES PENSÉES D'ANYA sans buzzer : le présentateur donne la main ══ */
+.fd-host-hands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1.4vw, 22px); }
+.fd-host-hand {
+  --c: var(--gold-2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  padding: 10px 16px;
+  border: 3px solid color-mix(in srgb, var(--c) 60%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c-deep) 70%, transparent), rgba(10, 8, 6, 0.4));
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 400ms var(--spring), box-shadow 200ms, border-color 160ms;
+}
+.fd-host-hand.player1 { --c: var(--sapphire); --c-deep: var(--sapphire-deep); }
+.fd-host-hand.player2 { --c: var(--ruby); --c-deep: var(--ruby-deep); }
+.fd-host-hand .fd-avatar { font-size: 1.5rem; }
+.fd-host-hand > span:not(.fd-avatar):not(.fd-strikes) { flex: 1; display: grid; gap: 4px; font: 700 12px / 1 var(--f-accent); letter-spacing: 0.2em; text-transform: uppercase; color: var(--paper-dim); }
+.fd-host-hand strong { font: 900 clamp(1.5rem, 2.6vw, 2.6rem) / 1 var(--f-title); letter-spacing: 0.03em; color: var(--c); }
+.fd-host-hand:hover:enabled { transform: translateY(-3px); border-color: var(--c); }
+.fd-host-hand.is-on { border-color: var(--c); background: color-mix(in srgb, var(--c) 30%, var(--ink)); box-shadow: 0 0 0 3px var(--c), 0 0 50px color-mix(in srgb, var(--c) 60%, transparent); }
+.fd-host-hand.is-on > span:not(.fd-avatar):not(.fd-strikes) { color: var(--paper); }
+.fd-host-hand:disabled { opacity: 0.45; cursor: default; }
+
+/* L'écran du joueur : la question et le tableau, sans buzzer */
+.fd-player-board { max-width: 760px; }
+.fd-player-board .fd-question { width: 100%; font-size: clamp(1rem, 4.4vw, 1.7rem); }
+.fd-player-list { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: clamp(46px, 8.4vh, 70px); gap: 6px; }
+.fd-player-list .fd-row { padding: 0 8px; gap: 8px; }
+.fd-player-board .fd-player-state strong { font-size: clamp(1.5rem, 6.4vw, 2.6rem); }
+.fd-player-board.is-mine .fd-player-state { padding: 10px 16px; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 22%, transparent); animation: fxGlow 900ms ease-in-out infinite alternate; }
+@media (max-width: 520px) { .fd-player-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 46px; } }
+.fd-player-board .fd-player-list { flex: none; grid-auto-rows: clamp(46px, 8.4vh, 70px); }
+@media (max-width: 520px) { .fd-player-board .fd-player-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 44px; } }
