@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Big Shoulders Display";
+        font-weight: 900;
+        src: url("assets/fonts/BigShouldersDisplay-900.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Cinzel";
+        font-weight: 700;
+        src: url("assets/fonts/Cinzel-700.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Outfit";
+        font-weight: 600;
+        src: url("assets/fonts/Outfit-600.woff2") format("woff2");
+      }
+
+      :root {
+        --ink: #0a0806;
+        --ink-2: #120e09;
+        --ink-3: #1d1710;
+        --gold-1: #fff6d2;
+        --gold-2: #f3d67e;
+        --gold-3: #d7ab3f;
+        --gold-4: #8c6618;
+        --foil-text: linear-gradient(180deg, #fff6d2 0%, #f3d67e 42%, #d7ab3f 100%);
+        --sapphire: #4b8cff;
+        --sapphire-deep: #0c2a6b;
+        --ruby: #ff3d62;
+        --ruby-deep: #6b0c22;
+        --paper: #fbf6e9;
+        --paper-dim: #b8ac92;
+        --hair: rgba(243, 214, 126, 0.24);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ink);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        color: var(--paper);
+      }
+
+      /* Le décor, commun à toutes les scènes */
+      .decor {
+        position: absolute;
+        inset: 0;
+        background: var(--ink);
+      }
+      .halo {
+        position: absolute;
+        border-radius: 50%;
+      }
+      .halo-a {
+        left: 1020px;
+        top: -420px;
+        width: 1300px;
+        height: 1300px;
+        background: radial-gradient(closest-side, rgba(215, 171, 63, 0.3), rgba(215, 171, 63, 0) 100%);
+      }
+      .halo-b {
+        left: -520px;
+        top: 420px;
+        width: 1200px;
+        height: 1200px;
+        background: radial-gradient(closest-side, rgba(255, 140, 180, 0.16), rgba(255, 140, 180, 0) 100%);
+      }
+      .trame {
+        position: absolute;
+        inset: -200px;
+        background: repeating-linear-gradient(115deg, rgba(243, 214, 126, 0.05) 0 2px, rgba(243, 214, 126, 0) 2px 90px);
+      }
+      .cadre {
+        position: absolute;
+        inset: 34px;
+        border: 2px solid var(--hair);
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+      }
+      .foil {
+        background: var(--foil-text);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      /* Un masque par ligne : les mots montent depuis dessous, accents compris */
+      .ln {
+        display: block;
+        overflow: hidden;
+        padding-top: 0.14em;
+        margin-top: -0.14em;
+      }
+      .w {
+        display: inline-block;
+        white-space: nowrap;
+        padding-top: 0.14em;
+        margin-top: -0.14em;
+      }
+      .hl {
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 150px;
+        line-height: 1.05;
+        letter-spacing: 0.005em;
+        text-transform: uppercase;
+      }
+
+      /* Scènes 2 à 5 : le texte à gauche, l'image de la règle à droite */
+      .regle {
+        display: grid;
+        grid-template-columns: 900px 1fr;
+        align-items: center;
+        padding: 96px 120px 170px 130px;
+        column-gap: 60px;
+      }
+      .num {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        margin-bottom: 30px;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 44px;
+        letter-spacing: 0.2em;
+        color: var(--gold-2);
+      }
+      .num i {
+        display: block;
+        width: 150px;
+        height: 3px;
+        background: var(--gold-3);
+      }
+      .subs {
+        margin-top: 46px;
+        display: grid;
+        gap: 18px;
+      }
+      .sub {
+        font-size: 46px;
+        line-height: 1.2;
+        color: var(--paper);
+      }
+      .sub b {
+        font-weight: 600;
+        color: var(--gold-2);
+      }
+      .visuel {
+        position: relative;
+        height: 660px;
+      }
+
+      /* Scène 1 */
+      .titre {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 80px;
+      }
+      .blason {
+        position: relative;
+        width: 520px;
+        height: 520px;
+        flex: none;
+      }
+      .blason img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .anneau {
+        position: absolute;
+        inset: 40px;
+        border-radius: 50%;
+        border: 4px solid var(--gold-2);
+      }
+      .titre .hl {
+        font-size: 190px;
+      }
+
+      /* Le tableau : les cases du live */
+      .question {
+        padding: 18px 26px 14px;
+        border-top: 3px solid var(--gold-3);
+        border-bottom: 3px solid var(--gold-3);
+        text-align: center;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 50px;
+        line-height: 1.05;
+        text-transform: uppercase;
+        color: var(--gold-1);
+      }
+      .exemple {
+        display: block;
+        margin-bottom: 8px;
+        font-family: "Cinzel", serif;
+        font-size: 22px;
+        letter-spacing: 0.3em;
+        color: var(--paper-dim);
+      }
+      .tableau {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-flow: column;
+        grid-template-rows: repeat(4, 104px);
+        gap: 14px 18px;
+        margin-top: 24px;
+      }
+      .case {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 20px;
+        border: 3px solid rgba(243, 214, 126, 0.55);
+        background: linear-gradient(180deg, var(--ink-3), var(--ink-2));
+      }
+      .rang {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(115deg, #8c6618, #f3d67e 40%, #fff6d2 52%, #d7ab3f 75%);
+        color: var(--ink);
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 40px;
+        padding-top: 4px;
+      }
+      .voile {
+        flex: 1;
+        height: 30px;
+        background: repeating-linear-gradient(115deg, rgba(243, 214, 126, 0.32) 0 14px, rgba(243, 214, 126, 0.1) 14px 28px);
+      }
+      .reponse {
+        position: absolute;
+        inset: -3px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 20px;
+        border: 3px solid var(--sapphire);
+        background: linear-gradient(90deg, var(--sapphire-deep), var(--ink-2) 80%);
+      }
+      .reponse strong,
+      .valeur-case strong {
+        flex: 1;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 56px;
+        line-height: 1;
+        text-transform: uppercase;
+        padding-top: 4px;
+      }
+      .pastille {
+        display: grid;
+        place-items: center;
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        border: 4px solid var(--sapphire);
+        background: var(--sapphire-deep);
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 36px;
+        padding-top: 3px;
+      }
+      .valeur {
+        position: absolute;
+        right: 22px;
+        top: 50%;
+        margin-top: -34px;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 68px;
+        line-height: 1;
+        color: var(--gold-1);
+      }
+
+      /* Scène 3 : les deux cadres, et la main donnée */
+      .joueurs {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 120px;
+        display: flex;
+        justify-content: center;
+        gap: 110px;
+      }
+      .joueur {
+        position: relative;
+        width: 300px;
+        text-align: center;
+      }
+      .portrait {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
+        display: grid;
+        place-items: center;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 190px;
+        padding-top: 14px;
+      }
+      .j1 .portrait {
+        background: radial-gradient(circle at 50% 32%, #2e5fc0, var(--sapphire-deep) 78%);
+        box-shadow: inset 0 0 0 8px var(--sapphire);
+      }
+      .j2 .portrait {
+        background: radial-gradient(circle at 50% 32%, #b8203f, var(--ruby-deep) 78%);
+        box-shadow: inset 0 0 0 8px var(--ruby);
+      }
+      .joueur p {
+        margin-top: 26px;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 30px;
+        letter-spacing: 0.24em;
+      }
+      .j1 p {
+        color: var(--sapphire);
+      }
+      .j2 p {
+        color: var(--ruby);
+      }
+      .bulle {
+        position: absolute;
+        left: -70px;
+        top: -96px;
+        padding: 14px 30px 12px;
+        border-radius: 40px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 64px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .bulle::after {
+        content: "";
+        position: absolute;
+        left: 120px;
+        bottom: -22px;
+        border: 14px solid transparent;
+        border-top: 16px solid var(--paper);
+      }
+      .main {
+        text-transform: uppercase;
+        position: absolute;
+        left: -20px;
+        right: -20px;
+        bottom: 70px;
+        padding: 12px 0 8px;
+        background: var(--sapphire);
+        color: var(--ink);
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 64px;
+        line-height: 1;
+        letter-spacing: 0.06em;
+      }
+      .pas-de-buzzer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 30px;
+        text-align: center;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 28px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--paper-dim);
+      }
+      .pas-de-buzzer s {
+        color: var(--ruby);
+        text-decoration-thickness: 4px;
+      }
+
+      /* Scène 4 : la case retournée, puis les strikes */
+      .seule {
+        position: absolute;
+        left: 40px;
+        right: 40px;
+        top: 40px;
+        height: 130px;
+      }
+      .seule .rang {
+        width: 76px;
+        height: 76px;
+        font-size: 50px;
+      }
+      .seule .reponse strong {
+        font-size: 74px;
+      }
+      .seule .pastille {
+        width: 84px;
+        height: 84px;
+        font-size: 46px;
+      }
+      .strikes {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 290px;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+      }
+      .strike {
+        position: relative;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        border: 6px solid rgba(243, 214, 126, 0.55);
+      }
+      .strike b {
+        position: absolute;
+        inset: -6px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 150px;
+        line-height: 1;
+        padding-top: 10px;
+      }
+      .hors {
+        text-transform: uppercase;
+        position: absolute;
+        left: 50%;
+        top: 500px;
+        width: 620px;
+        margin-left: -310px;
+        padding: 14px 0 8px;
+        background: var(--ruby);
+        color: var(--ink);
+        text-align: center;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 74px;
+        line-height: 1;
+        letter-spacing: 0.06em;
+      }
+
+      /* Scène 5 : les points qui tombent */
+      .note {
+        text-align: center;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 26px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--paper-dim);
+      }
+      #s5 .tableau {
+        margin-top: 30px;
+        grid-template-rows: repeat(4, 112px);
+      }
+      #s5 .case {
+        padding-right: 110px;
+      }
+      .valeur-case {
+        position: absolute;
+        inset: -3px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 110px 0 20px;
+        border: 3px dashed rgba(243, 214, 126, 0.55);
+        background: var(--ink-2);
+      }
+      .valeur-case strong {
+        font-size: 44px;
+        color: var(--paper-dim);
+      }
+      .valeur-case.trouvee {
+        border: 3px solid var(--sapphire);
+        background: linear-gradient(90deg, var(--sapphire-deep), var(--ink-2) 80%);
+      }
+      .valeur-case.trouvee-2 {
+        border: 3px solid var(--ruby);
+        background: linear-gradient(90deg, var(--ruby-deep), var(--ink-2) 80%);
+      }
+      .valeur-case.trouvee strong,
+      .valeur-case.trouvee-2 strong {
+        color: var(--paper);
+      }
+      .manches {
+        margin-top: 30px;
+        text-align: center;
+        font-family: "Big Shoulders Display", sans-serif;
+        font-weight: 900;
+        font-size: 44px;
+        text-transform: uppercase;
+        color: var(--gold-2);
+      }
+
+      /* Scène 6 */
+      .fin {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .fin .sceau {
+        width: 230px;
+        height: 230px;
+        object-fit: contain;
+        margin-bottom: 4px;
+      }
+      .fin .hl {
+        font-size: 220px;
+        text-align: center;
+        line-height: 1;
+      }
+      .chute {
+        margin-top: 10px;
+        font-size: 46px;
+        color: var(--paper);
+      }
+      .chute b {
+        font-weight: 600;
+        color: var(--gold-2);
+      }
+      .rayon {
+        position: absolute;
+        top: 500px;
+        width: 420px;
+        height: 14px;
+        border-radius: 7px;
+      }
+      .rayon.r1 {
+        left: 60px;
+        background: var(--sapphire);
+        transform-origin: 0 50%;
+      }
+      .rayon.r2 {
+        right: 60px;
+        background: var(--ruby);
+        transform-origin: 100% 50%;
+      }
+
+      /* Le bandeau du bas, des scènes 2 à 5 */
+      .bandeau {
+        position: absolute;
+        left: 130px;
+        right: 120px;
+        bottom: 78px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding-top: 24px;
+        border-top: 2px solid var(--hair);
+      }
+      .bandeau img {
+        width: 68px;
+        height: 68px;
+        object-fit: contain;
+      }
+      .bandeau span {
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 26px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--paper-dim);
+      }
+      .pips {
+        margin-left: auto;
+        display: flex;
+        gap: 14px;
+      }
+      .pips i {
+        display: block;
+        width: 74px;
+        height: 10px;
+        border-radius: 5px;
+        background: rgba(243, 214, 126, 0.2);
+      }
+
+      /* La coupe d'or */
+      .coupe {
+        position: absolute;
+        left: 0;
+        top: -160px;
+        width: 2700px;
+        height: 1400px;
+        background: var(--gold-3);
+        border-left: 60px solid var(--gold-1);
+        border-right: 60px solid var(--gold-4);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="33" data-width="1920" data-height="1080">
+      <div class="decor clip" data-start="0" data-duration="33" data-track-index="0">
+        <div class="halo halo-a"></div>
+        <div class="halo halo-b"></div>
+        <div class="trame"></div>
+        <div class="cadre"></div>
+      </div>
+
+      <!-- 1 · Titre -->
+      <section id="s1" class="scene titre clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="blason">
+          <div class="anneau"></div>
+          <div class="anneau"></div>
+          <div class="anneau"></div>
+          <img src="assets/logo-anya.png" alt="" />
+        </div>
+        <div>
+          <h1 class="hl">
+            <span class="ln"><span class="w foil">Les Pensées</span></span>
+            <span class="ln"><span class="w foil">d'Anya</span></span>
+          </h1>
+        </div>
+      </section>
+
+      <!-- 2 · Huit réponses cachées -->
+      <section id="s2" class="scene regle clip" data-start="4" data-duration="6" data-track-index="1">
+        <div>
+          <p class="num">01 <i></i></p>
+          <h2 class="hl">
+            <span class="ln"><span class="w foil">Huit réponses</span></span>
+            <span class="ln"><span class="w foil">cachées</span></span>
+          </h2>
+          <div class="subs">
+            <p class="sub">Une question posée au public, <b>huit réponses.</b></p>
+            <p class="sub">Retrouve ce que les gens ont <b>répondu.</b></p>
+          </div>
+        </div>
+        <div class="visuel">
+          <p class="question"><span class="exemple">Exemple</span>Le personnage le plus gourmand ?</p>
+          <div class="tableau">
+            <div class="case"><span class="rang" data-layout-allow-occlusion>1</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>2</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>3</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>4</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>5</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>6</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>7</span><span class="voile"></span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>8</span><span class="voile"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 · À voix haute -->
+      <section id="s3" class="scene regle clip" data-start="10" data-duration="6" data-track-index="1">
+        <div>
+          <p class="num">02 <i></i></p>
+          <h2 class="hl">
+            <span class="ln"><span class="w foil">À voix</span></span>
+            <span class="ln"><span class="w foil">haute</span></span>
+          </h2>
+          <div class="subs">
+            <p class="sub">Une idée ? Dis-la <b>à voix haute.</b></p>
+            <p class="sub">Le présentateur te donne <b>la main.</b></p>
+          </div>
+        </div>
+        <div class="visuel">
+          <div class="joueurs">
+            <div class="joueur j1">
+              <div class="bulle">Luffy !</div>
+              <div class="portrait">J1</div>
+              <p>Joueur 1</p>
+              <div class="main">À la main</div>
+            </div>
+            <div class="joueur j2">
+              <div class="portrait">J2</div>
+              <p>Joueur 2</p>
+            </div>
+          </div>
+          <p class="pas-de-buzzer"><s>Pas de buzzer</s> · on parle, il désigne</p>
+        </div>
+      </section>
+
+      <!-- 4 · Bonne réponse ou strike -->
+      <section id="s4" class="scene regle clip" data-start="16" data-duration="7" data-track-index="1">
+        <div>
+          <p class="num">03 <i></i></p>
+          <h2 class="hl">
+            <span class="ln"><span class="w foil">Trouvé,</span></span>
+            <span class="ln"><span class="w foil">ou strike</span></span>
+          </h2>
+          <div class="subs">
+            <p class="sub">Bonne réponse ? Elle s'affiche <b>avec ta photo.</b></p>
+            <p class="sub">Mauvaise ? Un strike. À trois, <b>hors manche.</b></p>
+          </div>
+        </div>
+        <div class="visuel">
+          <div class="case seule">
+            <span class="rang" data-layout-allow-occlusion>1</span><span class="voile"></span>
+            <div class="reponse" data-layout-allow-occlusion><span class="rang">1</span><strong>Luffy</strong><span class="pastille">J1</span></div>
+          </div>
+          <div class="strikes">
+            <div class="strike"><b>✕</b></div>
+            <div class="strike"><b>✕</b></div>
+            <div class="strike"><b>✕</b></div>
+          </div>
+          <div class="hors">Hors manche</div>
+        </div>
+      </section>
+
+      <!-- 5 · Les points tombent à la fin -->
+      <section id="s5" class="scene regle clip" data-start="23" data-duration="6" data-track-index="1">
+        <div>
+          <p class="num">04 <i></i></p>
+          <h2 class="hl">
+            <span class="ln"><span class="w foil">Les points</span></span>
+            <span class="ln"><span class="w foil">à la fin</span></span>
+          </h2>
+          <div class="subs">
+            <p class="sub">Les valeurs restent <b>secrètes</b> jusqu'au bout,</p>
+            <p class="sub">puis tombent une à une : <b>la plus citée vaut le plus.</b></p>
+          </div>
+        </div>
+        <div class="visuel">
+          <p class="note">Exemple · une valeur par clic</p>
+          <div class="tableau">
+            <div class="case"><span class="rang" data-layout-allow-occlusion>1</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case trouvee"><span class="rang">1</span><strong>Luffy</strong></div><span class="valeur">27</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>2</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case trouvee-2"><span class="rang">2</span><strong>Goku</strong></div><span class="valeur">21</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>3</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case"><span class="rang">3</span><strong>Naruto</strong></div><span class="valeur">16</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>4</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case trouvee"><span class="rang">4</span><strong>Choji</strong></div><span class="valeur">13</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>5</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case trouvee-2"><span class="rang">5</span><strong>Sasha</strong></div><span class="valeur">9</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>6</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case"><span class="rang">6</span><strong>Inosuke</strong></div><span class="valeur">7</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>7</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case trouvee"><span class="rang">7</span><strong>Toriko</strong></div><span class="valeur">4</span></div>
+            <div class="case"><span class="rang" data-layout-allow-occlusion>8</span><span class="voile"></span><div data-layout-allow-occlusion class="valeur-case"><span class="rang">8</span><strong>Jiraiya</strong></div><span class="valeur">3</span></div>
+          </div>
+          <p class="manches">Trois manches · les strikes repartent à zéro</p>
+        </div>
+      </section>
+
+      <!-- 6 · À vous de jouer -->
+      <section id="s6" class="scene fin clip" data-start="29" data-duration="4" data-track-index="1">
+        <div class="rayon r1"></div>
+        <div class="rayon r2"></div>
+        <img class="sceau" src="assets/logo-anya.png" alt="" />
+        <h2 class="hl">
+          <span class="ln"><span class="w foil">Lis dans</span></span>
+          <span class="ln"><span class="w foil">leurs pensées</span></span>
+        </h2>
+        <p class="chute">Assez parlé, il est temps de <b>jouer.</b></p>
+      </section>
+
+      <div id="bandeau" class="bandeau clip" data-start="4" data-duration="25" data-track-index="2">
+        <img src="assets/logo-anya.png" alt="" />
+        <span>Les Pensées d'Anya · Les règles</span>
+        <div class="pips"><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <audio id="bande-son" src="assets/bande-son.mp3" data-start="0" data-duration="33" data-track-index="4" data-volume="1"></audio>
+
+      <div class="clip" data-start="0" data-duration="33" data-track-index="3">
+        <div id="coupe" class="coupe"></div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const COUPES = [4, 10, 16, 23, 29];
+
+      // Le décor dérive lentement d'un bout à l'autre de la vidéo
+      tl.fromTo(".halo-a", { x: 0, y: 0 }, { x: -260, y: 120, duration: 33, ease: "none" }, 0);
+      tl.fromTo(".halo-b", { x: 0, y: 0 }, { x: 240, y: -140, duration: 33, ease: "none" }, 0);
+      tl.fromTo(".trame", { x: 0 }, { x: -180, duration: 33, ease: "none" }, 0);
+
+      // La coupe d'or : le pan couvre tout l'écran à l'instant exact du changement de scène
+      gsap.set("#coupe", { x: -3100, skewX: -12 });
+      COUPES.forEach((t) => {
+        tl.fromTo("#coupe", { x: -3100 }, { x: 2400, duration: 0.9, ease: "power2.inOut", immediateRender: false }, t - 0.45);
+      });
+
+      // Ce que partagent les scènes 2 à 5 : le numéro, le titre qui monte, les phrases une à une
+      function regle(id, t, subs) {
+        tl.from(`${id} .num`, { opacity: 0, x: -50, duration: 0.5, ease: "power3.out" }, t + 0.25);
+        tl.from(`${id} .num i`, { scaleX: 0, transformOrigin: "0 50%", duration: 0.7, ease: "expo.out" }, t + 0.35);
+        tl.from(`${id} .w`, { yPercent: 118, duration: 0.8, ease: "expo.out", stagger: 0.13 }, t + 0.35);
+        gsap.utils.toArray(`${id} .sub`).forEach((sub, i) => {
+          tl.from(sub, { opacity: 0, y: 34, duration: 0.55, ease: "back.out(1.6)" }, subs[i]);
+        });
+      }
+
+      // ── 1 · Titre
+      tl.fromTo("#s1 .blason img", { scale: 2.4, rotation: -14, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.5, ease: "back.out(1.5)" }, 0.18);
+      gsap.utils.toArray("#s1 .anneau").forEach((anneau, i) => {
+        gsap.set(anneau, { opacity: 0 });
+        tl.fromTo(anneau, { scale: 0.8, opacity: 0.9 }, { scale: 1.9 + i * 0.35, opacity: 0, duration: 1.5, ease: "power2.out", immediateRender: false }, 0.5 + i * 0.16);
+      });
+      tl.from("#s1 .w", { yPercent: 118, duration: 0.85, ease: "expo.out", stagger: 0.14 }, 1.0);
+      tl.to("#s1 .blason img", { scale: 1.05, rotation: 2, duration: 2.6, ease: "sine.inOut" }, 1.0);
+
+      // ── 2 · Huit réponses cachées : la question, puis les cases une à une
+      regle("#s2", 4, [5.6, 7.4]);
+      tl.from("#s2 .question", { opacity: 0, y: -30, duration: 0.6, ease: "power3.out" }, 4.5);
+      tl.from("#s2 .case", { opacity: 0, rotationX: -90, transformPerspective: 900, duration: 0.55, ease: "back.out(1.6)", stagger: 0.12 }, 4.8);
+      tl.fromTo("#s2 .voile", { backgroundPositionX: 0 }, { backgroundPositionX: 168, duration: 4.4, ease: "none" }, 5.4);
+
+      // ── 3 · À voix haute : le joueur 1 parle, le présentateur lui donne la main
+      regle("#s3", 10, [11.4, 13.2]);
+      tl.from("#s3 .joueur", { y: 90, opacity: 0, duration: 0.6, ease: "back.out(1.7)", stagger: 0.14 }, 10.6);
+      tl.from("#s3 .pas-de-buzzer", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" }, 11.0);
+      tl.fromTo("#s3 .bulle", { scale: 0, opacity: 0, transformOrigin: "30% 100%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2.2)" }, 12.0);
+      tl.fromTo("#s3 .main", { scale: 2.6, opacity: 0, rotation: -6 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.32, ease: "power4.in" }, 13.2);
+      tl.to("#s3 .j1 .portrait", { scale: 1.06, duration: 0.25, ease: "power2.out" }, 13.5);
+      tl.to("#s3 .j1 .portrait", { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.4)" }, 13.75);
+      tl.to("#s3 .j2", { opacity: 0.4, duration: 0.4, ease: "power2.out" }, 13.5);
+
+      // ── 4 · Trouvé ou strike : la case se retourne, puis trois strikes tombent
+      regle("#s4", 16, [17.0, 19.2]);
+      tl.from("#s4 .seule", { opacity: 0, y: 40, duration: 0.5, ease: "power3.out" }, 16.5);
+      tl.fromTo("#s4 .reponse", { rotationX: -95, transformPerspective: 900, opacity: 0 }, { rotationX: 0, opacity: 1, duration: 0.6, ease: "back.out(1.5)" }, 17.5);
+      // Sous la case retournée, le rang et le voile disparaissent : rien ne se superpose
+      tl.set("#s4 .seule > .rang, #s4 .seule > .voile", { opacity: 0 }, 18.1);
+      tl.from("#s4 .pastille", { scale: 0, duration: 0.45, ease: "back.out(2.4)" }, 17.9);
+      tl.from("#s4 .strike", { opacity: 0, y: 30, duration: 0.45, ease: "power3.out", stagger: 0.1 }, 18.4);
+      gsap.utils.toArray("#s4 .strike b").forEach((b, i) => {
+        tl.fromTo(b, { scale: 2.6, opacity: 0, rotation: -30 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.3, ease: "power4.in" }, 19.6 + i * 0.85);
+        tl.to("#s4 .visuel", { keyframes: { x: [0, -10, 8, -4, 0], y: [0, 8, -6, 3, 0] }, duration: 0.3, ease: "none" }, 19.9 + i * 0.85);
+      });
+      tl.fromTo("#s4 .hors", { scale: 2.4, opacity: 0, rotation: 4 }, { scale: 1, opacity: 1, rotation: -3, duration: 0.32, ease: "power4.in" }, 21.9);
+
+      // ── 5 · Les points à la fin : une valeur par clic, de la moins citée à la plus citée
+      regle("#s5", 23, [24.0, 25.4]);
+      tl.from("#s5 .note", { opacity: 0, y: -20, duration: 0.5, ease: "power3.out" }, 23.6);
+      tl.from("#s5 .case", { opacity: 0, duration: 0.4, stagger: 0.05 }, 23.6);
+      gsap.utils.toArray("#s5 .case").reverse().forEach((c, i) => {
+        const at = 24.4 + i * 0.42;
+        tl.fromTo(c.querySelector(".valeur-case"), { rotationX: -95, transformPerspective: 900, opacity: 0 }, { rotationX: 0, opacity: 1, duration: 0.35, ease: "back.out(1.5)" }, at);
+        tl.set(c.querySelectorAll(":scope > .rang, :scope > .voile"), { opacity: 0 }, at + 0.36);
+        tl.fromTo(c.querySelector(".valeur"), { y: -50, scale: 1.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, at + 0.08);
+      });
+      tl.from("#s5 .manches", { opacity: 0, y: 20, duration: 0.5, ease: "back.out(1.6)" }, 27.9);
+
+      // ── 6 · À vous de jouer
+      tl.from("#s6 .sceau", { scale: 2.6, rotation: -18, opacity: 0, duration: 0.4, ease: "back.out(1.5)" }, 29.22);
+      tl.from("#s6 .w", { yPercent: 118, duration: 0.8, ease: "expo.out", stagger: 0.14 }, 29.6);
+      tl.from("#s6 .rayon", { scaleX: 0, duration: 0.7, ease: "expo.out" }, 30.0);
+      tl.from("#s6 .chute", { opacity: 0, y: 34, duration: 0.55, ease: "back.out(1.6)" }, 30.5);
+      tl.fromTo("#s6 .hl", { scale: 1 }, { scale: 1.05, duration: 2.6, ease: "sine.out" }, 30.4);
+
+      // ── Le bandeau et ses quatre repères
+      tl.from("#bandeau", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, 4.5);
+      [4, 10, 16, 23].forEach((t, i) => {
+        tl.to(`#bandeau .pips i:nth-child(${i + 1})`, { backgroundColor: "#f3d67e", duration: 0.4, ease: "power2.out" }, t + 0.6);
+      });
+
+      tl.set({}, {}, 33);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

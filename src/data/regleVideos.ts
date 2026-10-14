@@ -6,6 +6,7 @@
  */
 export const REGLE_VIDEOS: Record<string, string> = {
   "blind-test-openings": "/regles/blind-test-openings.mp4",
+  "pensees-anya": "/regles/pensees-anya.mp4",
 };
 
 /** L'adresse de la vidéo des règles d'une épreuve, si le fichier existe. */
